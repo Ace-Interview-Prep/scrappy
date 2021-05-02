@@ -1,0 +1,13 @@
+*.fake
+*.o
+*.hi
+*.hie
+*.chi
+*.chs.h
+*.dyn_o
+*.dyn_hi
+*-result
+*.*~
+*~
+*#
+.#*
