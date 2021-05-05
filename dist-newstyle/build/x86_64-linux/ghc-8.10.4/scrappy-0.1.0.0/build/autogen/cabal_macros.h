@@ -99,6 +99,17 @@
   (major1) == 0 && (major2) == 3 && (minor) <= 5)
 #endif /* MIN_VERSION_http_client_tls */
 
+/* package http-types-0.12.3 */
+#ifndef VERSION_http_types
+#define VERSION_http_types "0.12.3"
+#endif /* VERSION_http_types */
+#ifndef MIN_VERSION_http_types
+#define MIN_VERSION_http_types(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  12 || \
+  (major1) == 0 && (major2) == 12 && (minor) <= 3)
+#endif /* MIN_VERSION_http_types */
+
 /* package megaparsec-9.0.1 */
 #ifndef VERSION_megaparsec
 #define VERSION_megaparsec "9.0.1"
@@ -132,6 +143,17 @@
   (major1) == 2 && (major2) == 2 && (minor) <= 2)
 #endif /* MIN_VERSION_mtl */
 
+/* package parallel-3.2.2.0 */
+#ifndef VERSION_parallel
+#define VERSION_parallel "3.2.2.0"
+#endif /* VERSION_parallel */
+#ifndef MIN_VERSION_parallel
+#define MIN_VERSION_parallel(major1,major2,minor) (\
+  (major1) <  3 || \
+  (major1) == 3 && (major2) <  2 || \
+  (major1) == 3 && (major2) == 2 && (minor) <= 2)
+#endif /* MIN_VERSION_parallel */
+
 /* package parsec-3.1.14.0 */
 #ifndef VERSION_parsec
 #define VERSION_parsec "3.1.14.0"
@@ -153,6 +175,17 @@
   (major1) == 1 && (major2) <  4 || \
   (major1) == 1 && (major2) == 4 && (minor) <= 4)
 #endif /* MIN_VERSION_replace_megaparsec */
+
+/* package stm-2.5.0.0 */
+#ifndef VERSION_stm
+#define VERSION_stm "2.5.0.0"
+#endif /* VERSION_stm */
+#ifndef MIN_VERSION_stm
+#define MIN_VERSION_stm(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  5 || \
+  (major1) == 2 && (major2) == 5 && (minor) <= 0)
+#endif /* MIN_VERSION_stm */
 
 /* package text-1.2.4.1 */
 #ifndef VERSION_text

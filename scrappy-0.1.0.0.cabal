@@ -56,20 +56,18 @@ library
   -- Modules exported by the library.
   exposed-modules:    Find
                     , Scrape
-                    , Types
                     , BuildActions
-                     -- , ResearchPaperScraper
                     , Elem.Types
                     , Elem.TreeElemParser
                     , Elem.SimpleElemParser
                     , Elem.ElemHeadParse
                     , Elem.ITextElemParser
-                    -- , HtmlPatternLib
-                    -- , MyLib
+                    , Elem.ChainHTML
                     , Links
-                    , Test
                     , Requests
-                     
+                    -- , Concurrencies
+                    , Proxies
+
 
 
   -- Modules included in this library but not exported.
@@ -96,6 +94,9 @@ library
                      , transformers
                      , mtl
                      , exceptions
+                     , http-types
+                     , stm
+                     , parallel
                      -- , raw-strings-qq
   -- Directories containing source files.
   hs-source-dirs:      src

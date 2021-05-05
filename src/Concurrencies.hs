@@ -1,193 +1,54 @@
+{-# LANGUAGE RankNTypes #-}
+{-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE TypeFamilies #-}
+
 module Concurrencies where
+
+
+import Control.Monad.IO.Class (MonadIO)
+import Control.Concurrent.STM.TVar (TVar)
+import Control.Concurrent (ThreadId, forkIO )
+import Data.Time.Clock.System (SystemTime)
+
+
+
+
+
+
+
+
+
+-- | To set threading to using all available processors
+-- getNumProcessors >>= setNumCapabilities
+
+
+
 
 -- | Goal: Use STM to model " has it been enough time in between scrapes? "
   -- `retry` if not
 
 -- | May need to have sub datatype for (RemainingLinksOnPage + Maybe PdfLink) 
 
-data Site = ([Genre], SiteState)
-
-data SiteState = BasicPages [Text]
-               -- | Search SearchResults
-               | AdvancedSearchPage String -- URL 
-               | PerformSearch (Maybe PageKey) (Maybe CurrentQuery) [Queries] [PageItem]
-               -- also could Merge (Maybe CurrentQuery ++ Queries)
-                 -- just perform head then put back 
-               | SiteEndState
 
 
-initQuery :: String -> CurrentQuery
-initQuery queryUrl = CurrentQuery 0 url
-  -- case key of
-  -- Just qKey -> ""
-  -- Nothing -> 
+-- Where stream represents a complex homogenous type
+class DataStream (a :: * -> *) where
+  concurrentStream :: (b -> b) -> a b -> a b  
+  headS :: a b -> b
+  tailS :: a b -> a b
+  singleton :: b -> a b
+  --any other list-like functions
 
--- data CurrentQuery = CurrentQuery PageNumber (Maybe PageKey) Url
 
--- execSiteState :: SiteState -> IO (Either ScrapeError SiteState)
--- execSiteState state = case state of
---   BasicPages knownUrls ->
---     ""
---   AdvancedSearchPage url -> do
---     body <- mkRequest url 
---     let formParser :: [Query] -- where we generate a fuck ton of query possibilities
---         formParser = undefined
-
---     (return . return) $ PerformSearch (initQuery Nothing (head formParser)) (tail formParser) [] 
-    
---   PerformSearch maybePageKey maybeCurrentQuery queriesToDo leftoverPageItems ->
---     case leftoverPageItems of
---       (item:items) ->
---         --EDIT LOGIC, need if item is done
---         case item of
---           PdfLink url -> do
---             performDownloadPdf url 
---           TryUrl (url:urls) -> do
---             (x :: Maybe ResearchResult) <- tryToScrapeResearchResult url
---             case x of
---               Nothing -> PerformSearch maybePageKey maybeCurrentQuery queriesToDo (TryUrl urls)
---               Just -> PerformSearch maybePageKey maybeCurrentQuery queriesToDo (PdfLink url) 
---         -- (performItem item) {- :: IO () -} (:) items
+instance DataStream [] where
+  concurrentStream f stream = stream <> (f (head stream):[])
 
 
 
-        
---       [] ->
---         case maybeCurrentQuery of
---           Just (CurrentQuery num url) ->
---             let derivedKey = fromMaybe ("derivePagination") key 
---             in
---               do
---                 -- pageKey is the same as maybePageKey (using Just) if it already existed 
---                 (pageKey, items) <- return $ scrapeQueryListingPage maybePageKey query :: SiteState
---                 return $ PerformSearch (Just pageKey) (CurrentQuery (num + 1) url) queriesToDo items 
---             -- let url = 
---             -- 
---             {- _ :: 'PerformSearch -}
---           Nothing -> {- we have signaled and finished the last query -}
---             case queriesToDo of
---               [] -> (return . return) SiteEndState
---               (query:queriesToDo') ->
---                 do
---                 -- pageKey is the same as maybePageKey (using Just) if it already existed 
---                   (pageKey, items) <- return $ scrapeQueryListingPage maybePageKey initQuery (head queriesToDo) 
---                   return $ PerformSearch (Just pageKey) (CurrentQuery (num + 1) queriesToDo' items 
---                 -- scrapeQueryListingPage maybePageKey $ 
---           -- Inside of scrapeQueryListingPage is gonna be conditional derivation of page key 
---   SiteEndState ->
---     -- in theory this should never happen due to selectNext logic 
---     undefined
-
-
-scrapeQueryListingPage :: Either ParsecError (PageKey, [Item])
-scrapeQueryListingPage = undefined
-
-
--- mkItem :: [String] -> Item
--- mkItem urls = TryUrls urls 
-
-
-
--- RemainingQueries are the result of generating search options
-
--- do head of [TryUrl] if Nothing 
--- data PageItem = PageItem (Maybe PdfLink) [TryUrl]
-
--- data PageItem = PdfLink String
---                | TryUrl [String]
-
--- SearchResults is a very "main"-esque data structure; lots happening 
--- data SearchResults =
-  -- SearchResults (Maybe CurrentQuery) [Queries] [PageItem] --(RemainingLinksOnPage) (Maybe PdfLink)
-  -- get (head [PageItem]) if not []
-     -- > case x of { Just pdf -> downloadPdf params; Nothing -> get,do head [TryUrl]
-  -- do case currentQuery
-       -- { Just q -> get (iteratePageNum)
-       --   Nothing -> get,do (head [Queries] <> pgKey) 
-       -- put to currentQuery (note that PageItem will == [])
-
--- data Link = OuterPage String
---           | SearchFormURL  String
---           | ListingPage [GeneratedLink] PageNumber PageKey String
---           | PageHasPdf String
---           | PdfLink String
---           | Sourcery (PdfLink) ReferenceSys
-
-
--- SearchResults
-
-  -- | Bottom one would work better for not needing to do every single time
-     -- Could literally append " page_key = ${Int} " at end
-     -- Derivable by using current method + logic : (prefixed with parser@(char '&' <* some Letter *> char '=')
-        -- could just cut off at index, reverse the string then parse with `parser` (except reversed)
-        -- then just reverse the key again
-     
-
-
-     -- data UrlPagination = UrlPagination String Int String -- deprecated
-     --  || OR ||
-     -- data CurrentQuery = CurrentQuery PageNumber (Maybe PageKey) Url
-
-  -- type RemainingQueries = [Url] -- should be lazy stream
-  -- type RemainingLinksOnPage = [Url]
-
--- Int signifies if one link is known to be the most promising
-  -- in order to limit number of requests (from eg. 5 to 1)
--- data RemainingLinksOnPage' = MkRemLinks (Maybe Int) [[String]]
-
--- this could also become RemainingLinksOnPage and just move that index to the front for first try then just do
--- same old try each logic
-
--- for iterating through RemainingLinksOnPage, should iterate not on [a] but [[a]]
-
--- f :: [[a]] -> [IO ()] 
--- f (x:xs) = g x -- stops iterating through x if a result was found ? 
---   where
---     g (x:xs) = 
-
-data NewGlobalState = Proxies SafeScrape ScrapeAway
-
-type Proxy = String 
-type Proxies = [Proxy]
 
 -- Note: this may call for table parser 
 
-type ScrapeAway = [Site]
--- type SafeScrape = [SiteState] 
-
---OR
-data SafeSiteScrape = (LastScraped, Site)
-type SafeScrape = [SafeSiteScrape]
-type LastScraped = SystemTime 
-
 -- We need a global proxy list thats passed with state
-
-
--- will be imported and run in main, after the genres have been scraped 
--- execGlobal = 
---   if (timeOfAll3TooLittle)
---   then
---     let numOfScrapeAwayToDo = fromTimeToEstimatedNumberOftodo $ maxOfthe3 (basedOn randint)
---     in
---       execFiniteNumTimes numOfScrapeAwayToDo (ScrapeAway concurrentStream)
---   else
---     let
---       chosen = choose (the3)
---     in execState chosen
-
-
--- Note: Need proxies for ScrapeAway sites 
-
-
-
-
--- concurrent stream
--- running any scraper in parallel
-
-
-
-
-
 
 -------------------------------------------------------------------------------------------------------------------
 
@@ -255,12 +116,12 @@ applyProcessorsToState (processor:ys) prevGlobState = do
 
 -- applyProcessorsToState [] (x:xs) = xs 
 
-mkProcessor :: Int -> (a -> b) -> IO (ThreadId, Int)
+mkProcessor :: Int -> (state -> IO b) -> state -> IO (ThreadId, Int)
 mkProcessor i f x = do
-  tId <- forkIO f x
+  tId <- forkIO (f x)
   return (tId, i)
 
--- concurrentStream :: Stream s => (a -> b) -> s a -> s b
+concurrentStream :: Stream s => (a -> b) -> s a -> s b
 runConcurrentStreamParallel :: DataStream s => (a -> a) -> s a -> IO (s a) 
 runConcurrentStreamParallel evalStatef prevGlobState = do
   let
@@ -369,7 +230,7 @@ runConcurrentStreamParallel evalStatef prevGlobState = do
 -- choose :: [(STM a, a -> IO ())] -> IO ()
 
 --helper func
-manageConcurrentStream :: DataStream s => s TVar -> (s TVar, TVar)
+-- manageConcurrentStream :: DataStream s => s TVar -> (s TVar, TVar)
 manageConcurrentStream = undefined
   -- Duplicates TVar, (at end of stream and and in snd of tuple)
 
@@ -379,16 +240,16 @@ manageConcurrentStream = undefined
 
 
 -- concurrentStream :: Stream s => (a -> b) -> s a -> s b
-runConcurrentStream' :: DataStream s => (a -> a) -> s a -> IO ()
-runConcurrentStream' runStatef prevGlobState = do
-  let
-    globalState = findStartingPoint prevGlobState
-    next = head globalState
+-- runConcurrentStream' :: DataStream s => (a -> a) -> s a -> IO ()
+-- runConcurrentStream' runStatef prevGlobState = do
+--   let
+--     globalState = findStartingPoint prevGlobState
+--     next = head globalState
       
-  x <- evalStatef next
-  if x == mempty
-    then return ()
-    else runConcurrentStream execStatef (tail globalState <> (singleton x))
+--   x <- evalStatef next
+--   if x == mempty
+--     then return ()
+--     else runConcurrentStream execStatef (tail globalState <> (singleton x))
 
 -- ( a -> a ) ~~ (StateT Manager IO SiteState -> StateT Manager IO SiteState)
 
@@ -421,19 +282,19 @@ runConcurrentStream'' evalStatef prevGlobState = do
 -- All recursive apply is meant to do is apply some `f` to head then
 -- move the result of the end of the stream
 -- concurrentStream :: Stream s => (a -> b) -> s a -> s b
-runConcurrentStream :: DataStream s => (a -> a) -> s a -> IO ()
-runConcurrentStream execStatef prevGlobState = do
-  -- let generalizes to all stream types 
-  let
-    globalState = findStartingPoint prevGlobState
-    next = head globalState
+-- runConcurrentStream :: DataStream s => (a -> a) -> s a -> IO ()
+-- runConcurrentStream execStatef prevGlobState = do
+--   -- let generalizes to all stream types 
+--   let
+--     globalState = findStartingPoint prevGlobState
+--     next = head globalState
       
-  x <- execStatef next
-  case x of
-    [] -> return () 
-    x':xs -> runConcurrentStream execStatef (tail globalState <> (singleton x))
-    -- runConcurrentStream execStatef (globalState <> (singleton x))
-  {- execState reads state then applies the proper step -}
+--   x <- execStatef next
+--   case x of
+--     [] -> return () 
+--     x':xs -> runConcurrentStream execStatef (tail globalState <> (singleton x))
+--     -- runConcurrentStream execStatef (globalState <> (singleton x))
+--   {- execState reads state then applies the proper step -}
     -- Note:
      -- theres really no reason we couldnt generalize "func" :: SiteState -> SiteState for any use case
      -- that wants to use "concurrent scrape-streaming"

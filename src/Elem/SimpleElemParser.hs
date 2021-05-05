@@ -9,7 +9,7 @@ import Elem.Types (ShowHTML, InnerHTMLRep, Elem, Attrs, Elem'(Elem'), InnerTextR
                   , _fullInner, _matchesITR, innerText, matches, showH, foldHtmlMatcher
                   , HTMLMatcher(IText, Match, Element), ElementRep, matches, matches'
                   , _matchesITR, _fullInner -- only for deprecated function elemParserOld 
-                  , foldFuncTup, endTag, selfClosingTextful)
+                  , foldFuncTup, endTag, selfClosingTextful, enoughMatches)
 
   
 
@@ -178,38 +178,14 @@ elemParser elemList innerSpec attrs = do
   let required = case innerSpec of { Nothing -> 0; _ -> 1 }
   (elem', attrs') <- parseOpeningTag elemList attrs
   innerH <- fmap (foldr foldFuncTup mempty)
-
             -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
-              
             $ (try (string "/>") >> return [])
             <|> (try $ innerElemParser elem' innerSpec)
             -- need to be sure that we have exhausted looking for an end tag
             -- then we can do the following safely
             <|> (selfClosingTextful innerSpec)
+
   enoughMatches required elem' attrs' innerH
-
-  -- return $ Elem' elem' attrs' [] []
-------------------------------------------------------------------
-
--- | May rename parseOpeningTag to elemHeadParser
-  -- |  -> Case of input tag: <input ...."> DONE ie no innerhtml or end tag
-  -- |     then this would be more efficient or even maybe we should add an option via
-  -- |     a  datatype: InnerTextOpts a = DoesntExist --efficient parser | AnyText | ParserText a
--- parseOpeningTag :: Stream s m Char => Maybe [Elem] -> [(String, Maybe String)] -> ParsecT s u m (Elem, Attrs)
--- parseOpeningTag elemOpts attrsSubset = do
---   -- _ <- MParsec.manyTill anyToken (char '<' >> elemOpts >> attrsParser attrsSubset) -- the buildElemsOpts [Elem]
---   _ <- char '<'
---   elem <- mkElemtagParser elemOpts
---   attrs <- attrsParser attrsSubset
-
---   case attrs of
---     Left IncorrectAttrs -> parserZero
---     Right whateva -> return (elem, whateva)
--- --------------------------------------------------------------------
--- --------------------------------------------------------------------
--- --------------------------------------------------------------------
-
--- effectively a re-implementation of htmlGenParserFlex
 
 innerElemParser :: (ShowHTML a, Stream s m Char) =>
                    String
@@ -219,12 +195,6 @@ innerElemParser eTag innerSpec = char '>'
                                  >> manyTill (try (Match <$> (fromMaybe parserZero innerSpec))
                                               <|> try (Element <$> sameElTag eTag innerSpec)
                                               <|> ((IText . (:[])) <$> anyChar)) (endTag eTag)
-
-enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ParsecT s u m (Elem' a)
-enoughMatches required e a (asString, matches) = 
-  if required <= (length matches)
-  then return $ Elem' e a matches (reverse asString)
-  else parserFail "not enough matches" -- should throw real error 
 
   -- matches : Reversed >-> RW
   

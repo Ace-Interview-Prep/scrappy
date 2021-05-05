@@ -11,11 +11,11 @@ import Replace.Megaparsec (findAll)
 import Elem.SimpleElemParser (elemParser)
 -- import Elem.ElemHeadParse 
 import Elem.Types (TreeHTML, Elem, Elem', ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..))
-import Elem.ElemHeadParse (hrefParser')
+import Elem.ElemHeadParse (hrefParser', hrefParser)
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
 import Links (maybeUsefulUrl)
-import Find (findNaive)
+import Find (findNaive, findSomeHTMLNaive)
 
 import Text.Parsec (ParsecT, ParseError, Stream, many, parse, string, (<|>), parserZero)
 import Text.Parsec.Error (Message (Message))
@@ -118,10 +118,10 @@ type FormOptionRadio' = Map Namespace [Option]
                       
 
 
+getContainedUrls :: Elem' a -> Maybe [String]
+getContainedUrls e = findSomeHTMLNaive hrefParser (innerText' e)
 
 
-scrapeUwoDbLinks :: ParsecT s u m [String]
-scrapeUwoDbLinks = undefined
 
 
 -------------------------------------------------------------------------------------------------------

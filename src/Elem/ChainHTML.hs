@@ -1,5 +1,16 @@
-module ChainHTML where
+{-# LANGUAGE FlexibleContexts #-}
 
+module Elem.ChainHTML where
+
+
+import Elem.Types (Elem', ShowHTML, innerText')
+import Find (findNaive)
+import Links (maybeUsefulUrl)
+import Elem.ElemHeadParse (hrefParser)
+
+import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse)
+import Data.Functor.Identity (Identity)
+import Data.Maybe (catMaybes)
 -- functions for chaining free-range html patterns based on the previous
 -- patterns to allow for maximum flexibility 
 
@@ -11,8 +22,8 @@ clean = undefined -- drop if == ( \n | \" | '\\' )
 
 
 -- same site is guranteed
-allLinks :: ParsecT String () Identity [String] 
-allLinks = do
+allLinks :: String -> ParsecT String () Identity [String] 
+allLinks baseUrl = do
   x <- findNaive hrefParser 
   return $ case x of
     Just (x':xs') -> catMaybes $ fmap (maybeUsefulUrl baseUrl) (x':xs')

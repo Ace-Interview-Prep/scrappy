@@ -7,7 +7,7 @@ import Elem.Types (Elem, Elem', Attrs, AttrsError(IncorrectAttrs)) -- Attr)
 
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
-                   alphaNum, many1, between, many)
+                   alphaNum, many1, between, many, letter)
 import Data.Map as Map (Map, fromList, lookup) 
 
 
@@ -182,8 +182,8 @@ mkElemtagParser :: Stream s m Char => Maybe [Elem] -> ParsecT s u m String
 mkElemtagParser x = case x of
                    -- Nothing -> MParsec.some (noneOf [' ', '>'])
                       --commented out in case below is wrong
-                   Nothing -> MParsec.some alphaNum
-                   Just elemsOpts -> buildElemsOpts elemsOpts
+                      Nothing -> MParsec.some letter
+                      Just elemsOpts -> buildElemsOpts elemsOpts
 
 
 -- | FUTURE USE CASES: buildElemsOpts :: [ParsecT s u m a] -> ParsecT s u m a -- using <|>

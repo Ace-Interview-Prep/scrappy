@@ -1,12 +1,24 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Requests where 
 
+import Find (findNaive)
+import Elem.SimpleElemParser (el)
+import Elem.Types (innerText')
+import Elem.ChainHTML (contains)
 
+import Data.List (isInfixOf)
+import Network.HTTP.Types.Header 
+import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Data.Functor.Identity (Identity)
-import Text.Parsec (ParsecT, ParseError, parse)
-import Network.HTTP.Client (Manager, httpLbs, responseBody, parseRequest)
-import Data.Text (Text)
+import Text.Parsec (ParsecT, ParseError, parse, Stream, many)
+import Network.HTTP.Client (Manager, Proxy(..), HttpException, httpLbs, responseBody, parseRequest
+                           , secure, requestHeaders, newManager, useProxy, managerSetSecureProxy)
+import Data.Text (Text, unpack, pack)
+import Data.Text.Encoding (encodeUtf8)
 import Data.Text.Lazy (toStrict)
 import Data.Text.Lazy.Encoding (decodeUtf8)
+import Control.Exception (catch)
 
 type Link = String
 type ParsecError = ParseError
@@ -59,7 +71,7 @@ getHtml manager url = do
               , (hReferer, "https://www.amazon.ca/")
               , (hTE, "Trailers")
               ]
-    req = requ { requestHeaders = headers
+    req = requ { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
                , secure = True
                }
 

@@ -2,6 +2,11 @@
 
 module Links where
 
+
+import Elem.Types (Elem', innerText')
+import Elem.ElemHeadParse (hrefParser)
+-- import Find (findSomeHTMLNaive)
+
 import qualified Data.List.NonEmpty as NE (length, last)
 import Data.Text (Text, pack, unpack)
 import Text.URI (URI, uriQuery, mkURI, uriPath, unRText )
@@ -10,18 +15,14 @@ import Data.Maybe (catMaybes, fromJust)
 import Data.Char (toLower)
 import Data.List.Extra (isSuffixOf, isInfixOf)
 import Data.Functor.Classes (eq1)
+import Data.Map (Map)
 
-import Elem.Types (Elem', innerText')
-import Elem.ElemHeadParse (hrefParser)
-import Find (findSomeHTMLNaive)
-
-type PageKey = String
 
 type PageNumber = Int
 
 type Url = Text
 
-type SiteTree = [(Text, Bool)] 
+
 
 type HrefURI = String 
 
@@ -55,7 +56,7 @@ data Link = OuterPage String
           | Sourcery (PdfLink) ReferenceSys
 
 -- pageKey=param
-type PageKey = Text
+type PageKey = String
 
 data ReferenceSys = RefSys [String] [String]
 
@@ -79,14 +80,14 @@ data QParams = Opt (Map Namespace [Option]) | SimpleKV (Text, Text)
 
 -- SiteTree can be modelled as a stream ; just depends on how we apply it -- if lazily
 type SiteTree = [(Text, Bool)]
-type HrefURI = String
+
 
 
 -- Note following ideas
 
-data Source = Source (Citations, Html)
+-- data Source = Source (Citations, Html)
 
-type Citations = Int
+
 type Html = String -- or could be just the pdf, but maybe even URL for storage sake --> could become research graph
                    -- but in a sense, would be a forest of uncited (yet) publicationsop
 
@@ -95,9 +96,6 @@ findAdvancedSearchLinks = undefined
 
 
 
-
-getContainedUrls :: Elem' a -> Maybe [String]
-getContainedUrls e = findSomeHTMLNaive hrefParser (innerText' e)
 
 
 

@@ -15,7 +15,8 @@ import Data.Map (Map, toList)
 
 import Data.Graph (Tree (Node), Forest)
 import Text.Megaparsec as MParsec (some)
-import Text.Parsec (ParsecT, Stream, parserZero, string, (<|>), anyChar, char, optional, try, manyTill, alphaNum)
+import Text.Parsec (ParsecT, Stream, parserZero, string, (<|>), anyChar, char, optional, try, manyTill, alphaNum
+                   , parserFail)
 import Data.Maybe (fromMaybe)
 -- Goals: eliminate need for sub tree and inner datatypes ; so Element --> foldr [HTMLMatcher] empty :: Element 
 
@@ -213,7 +214,7 @@ data TreeHTML a = TreeHTML { _topEl :: Elem
                            , _matches' :: [a]
                            , _innerText' :: String
                            , _innerTree' :: Forest ElemHead 
-                           }
+                           } deriving Show 
 
 
 ---Future: Make both below into semigroups
@@ -447,7 +448,8 @@ fHM_c hMatcher ithT = case hMatcher of
 
 
 makeBranch :: TreeHTML a -> Tree ElemHead
-makeBranch treeH = Node (elTag treeH, attrs treeH) (_innerTree' treeH)
+makeBranch treeH = Node (elTag treeH, attrs treeH) (_innerTree' treeH) -- 2 cases: 
+                   
 
 
 
@@ -455,6 +457,17 @@ endTag :: Stream s m Char => String -> ParsecT s u m String
 endTag elem = try (string ("</" <> elem <> ">"))
 
 
+enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ParsecT s u m (Elem' a)
+enoughMatches required e a (asString, matches) = 
+  if required <= (length matches)
+  then return $ Elem' e a matches (reverse asString)
+  else parserFail "not enough matches" -- should throw real error 
+
+enoughMatchesTree :: Int -> String -> Map String String -> (String, [a], Forest ElemHead) -> ParsecT s u m (TreeHTML a)
+enoughMatchesTree required e a (asString, matches, forest) = 
+  if required <= (length matches)
+  then return $ TreeHTML e a matches (reverse asString) forest
+  else parserFail "not enough matches" -- should throw real error 
 
 
 -- | This is valid according to my knowledge but need to see if better to
@@ -596,3 +609,4 @@ data UrlPagination = UrlPagination String Int String
 
 
 --- > A prerequisite would need to be Universe instance 
+type Tag = String 

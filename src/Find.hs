@@ -2,7 +2,7 @@
 
 module Find where
 
-import Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH)
+import Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem')
 import Types (ScrapeFail(..))
 
 import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero) 
@@ -146,4 +146,21 @@ findAllHtml = undefined
 --   x <- skipManyTill anyChar parser <|> return []
 --   xs <- findAll' parser
 --   return (x : xs)
+
+
+    
+        
+findAllBetween = undefined
+
+
+
+-- | Use with constructed for parsing datatype 
+buildSequentialElemsParser :: ParsecT s u m [a]
+buildSequentialElemsParser = undefined
+-- | to be applied to inner text of listlike elem
+
+
+findOnChangeInput :: ParsecT s u m (Elem' a)
+findOnChangeInput = undefined
+-- eg : <select id="s-lg-sel-subjects" name="s-lg-sel-subjects" class="form-control" data-placeholder="All Subjects" onchange="springSpace.publicObj.filterAzBySubject(jQuery(this).val(), 3848);">
 

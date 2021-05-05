@@ -150,6 +150,10 @@ someFunc' url = do
 baseUrl = "https://www.amazon.ca/"
 
 title :: Stream s m Char => ParsecT s u m String
+import Elem.Types (Elem', innerText')
+import Elem.ElemHeadParse (hrefParser)
+import Find (findSomeHTMLNaive)
+         
 title = do
   let
     p :: Stream s m Char => ParsecT s u m (Elem' String)
