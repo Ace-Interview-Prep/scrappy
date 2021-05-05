@@ -182,7 +182,7 @@ mkElemtagParser :: Stream s m Char => Maybe [Elem] -> ParsecT s u m String
 mkElemtagParser x = case x of
                    -- Nothing -> MParsec.some (noneOf [' ', '>'])
                       --commented out in case below is wrong
-                      Nothing -> MParsec.some letter
+                      Nothing -> MParsec.some alphaNum
                       Just elemsOpts -> buildElemsOpts elemsOpts
 
 

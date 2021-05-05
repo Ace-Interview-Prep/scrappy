@@ -5,6 +5,7 @@
 
 module Elem.TreeElemParser where
 
+import Control.Monad.IO.Class
 
 import Elem.ElemHeadParse (parseOpeningTag, hrefParser')
 import Elem.Types (Elem, Attrs, ElemHead, TreeHTML(TreeHTML), HTMLMatcher (IText, Element, Match)
@@ -17,6 +18,7 @@ import Elem.Types (Elem, Attrs, ElemHead, TreeHTML(TreeHTML), HTMLMatcher (IText
 import Elem.SimpleElemParser (elemParser)
 import Find (findNaive)
 
+import Control.Monad (when)
 import Text.Megaparsec as MParsec (many, manyTill_, skipManyTill, manyTill, some)
 import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse, char)
 import qualified Data.Map as Map (Map, toList) 
@@ -192,17 +194,60 @@ unfoldBuildTreeElemMatcher = undefined
 
 --  return $ TreeHTML tag attrs' (matches itr) (innerText itr) (innerTree itr)
 
+-- | Note: Both parsers should change to checking if enough matches at end of execution due to "sameElTag" logic
 
 -- | Very close to being able to generalize to one elemParser with fully interchangable innerText parsing 
 
-treeElemParser :: (Stream s m Char, ShowHTML a) => Maybe [Elem]
+
+
+treeElemParser' :: (Stream s m Char, ShowHTML a) =>
+                   Maybe [Elem]
+                -> Maybe (ParsecT s u m a)
+                -> [(String, Maybe String)]
+                -> ParsecT s u m (TreeHTML a)
+treeElemParser' elemOpts matchh attrsSubset = do
+  e <- treeElemParser elemOpts matchh attrsSubset
+  when (length (matches' e) < (case matchh of { Nothing -> 0; _ -> 1 })) (parserFail "not enough matches")
+  return e
+
+
+treeElemParser :: (Stream s m Char, ShowHTML a) =>
+                  Maybe [Elem]
                -> Maybe (ParsecT s u m a)
                -> [(String, Maybe String)]
                -> ParsecT s u m (TreeHTML a)
 treeElemParser  elemOpts matchh attrsSubset = do
+ (elem', attrs') <- parseOpeningTag elemOpts attrsSubset
+ -- let
+   -- f = f :: ShowHTML a => [HTMLMatcher TreeHTML a]
+   -- f = char '>' >> manyTill (htmlGenParserFlex matchh) (endTag elem')
+ (inText, matchBook, treees) <- fmap (foldr foldFuncTrup mempty)
+                                $ (try (string "/>") >> return [])  
+                                <|> (try $ innerElemParser2 elem' matchh)
+                                <|> (selfClosingTextful matchh)
+ return $ TreeHTML elem' attrs' matchBook (reverse inText) treees
+ -- | Need to redo at end of execution
+ -- enoughMatchesTree required elem' attrs' htmlTreesNstuff 
+
+
+-- For testing!!!
+-- allows for minimal steps and ensuring that low level parsing is working
+-- data HTMLBare e a = HTMLBare { tag :: Elem
+--                              , attrs :: Attrs
+--                              , htmlM :: [HTMLMatcher e a]
+--                              }
+
+
+treeElemParser2 :: (MonadIO m, Stream s m Char, ShowHTML a) =>
+                   Maybe [Elem]
+                -> Maybe (ParsecT s u m a)
+                -> [(String, Maybe String)]
+                -> ParsecT s u m (TreeHTML a)
+treeElemParser2  elemOpts matchh attrsSubset = do
   -- | Need to redo at end of execution
   -- let required = case matchh of { Nothing -> 0; _ -> 1 }
  (elem', attrs') <- parseOpeningTag elemOpts attrsSubset
+ -- liftIO $ print elem'
  -- let
    -- f = f :: ShowHTML a => [HTMLMatcher TreeHTML a]
    -- f = char '>' >> manyTill (htmlGenParserFlex matchh) (endTag elem')
@@ -225,7 +270,7 @@ innerElemParser2 :: (ShowHTML a, Stream s m Char) =>
 innerElemParser2 eTag innerSpec = char '>'
                                   -- >> manyTill (try (Element <$> treeElemParser Nothing innerSpec [])) (try (endTag eTag))
                                   >> manyTill (try (Match <$> (fromMaybe parserZero innerSpec))
-                                               <|> try (Element <$> treeElemParser (Just [eTag]) innerSpec [])
+                                               <|> try (Element <$> treeElemParser Nothing innerSpec [])
                                                <|> ((IText . (:[])) <$> anyChar)) (try $ endTag eTag)
 
 -- f :: ShowHTML a => [HTMLMatcher TreeHTML a]
@@ -238,7 +283,7 @@ treeElemParserAnyInside match = treeElemParser Nothing match []
 -- we would need to set the inside tree element parser + we would also need to think about how to     handle matches -->> maybe check after for matches > 0?
 htmlGenParserFlex :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a) -> ParsecT s u m (HTMLMatcher TreeHTML a)
 htmlGenParserFlex a = (try (Match <$> (fromMaybe parserZero a)))
-                      <|> try (parseOpeningTag Nothing [] >> Element <$> treeElemParser Nothing Nothing [])   --(treeElemParserAnyInside a))
+                      <|> try (parseOpeningTag Nothing [] >> Element <$> treeElemParser Nothing a [])   --(treeElemParserAnyInside a))
                       <|> ((IText . (:[])) <$> anyChar)
 
 

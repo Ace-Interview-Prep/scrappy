@@ -17,6 +17,7 @@ import Text.Megaparsec as MParsec (manyTill_, eitherP, some, manyTill)
 import Text.Parsec (ParsecT, Stream, string, try, (<|>), parserZero, anyChar, char, optional, anyToken, parserFail)
 import Data.Map (Map, toList)
 import Data.Maybe (fromMaybe)
+import Control.Monad (when)
 
 -- | Try to cut out Megaparsec for now - get direct export from Control.Applicative
 
@@ -168,14 +169,46 @@ selfClosingTagPattern :: Stream s m Char =>
                       -> ParsecT s u m (Elem' String)
                       -> ParsecT s u m (Elem' String)
 selfClosingTagPattern = undefined 
- 
+
+-- enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ParsecT s u m (Elem' a)
+-- enoughMatches required e a (asString, matches) = 
+  -- if required <= (length matches)
+  -- then return $ Elem' e a matches (reverse asString)
+  -- else parserFail "not enough matches" -- should throw real error 
+
+elemParser' :: (ShowHTML a, Stream s m Char) =>
+              Maybe [Elem]
+           -> Maybe (ParsecT s u m a)
+           -> [(String, Maybe String)]
+           -> ParsecT s u m (Elem' a)
+elemParser' elemList innerSpec attrs = do
+  e <- elemParserInternal elemList innerSpec attrs
+  when (length (matches' e) < (case innerSpec of { Nothing -> 0; _ -> 1 })) (parserFail "not enough matches")
+  return e
+  
+elemParserInternal :: (ShowHTML a, Stream s m Char) =>
+              Maybe [Elem]
+           -> Maybe (ParsecT s u m a)
+           -> [(String, Maybe String)]
+           -> ParsecT s u m (Elem' a)
+elemParserInternal elemList innerSpec attrs = do
+  (elem', attrs') <- parseOpeningTag elemList attrs
+  (asString, matches) <- fmap (foldr foldFuncTup mempty)  -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
+    $ (try (string "/>") >> return [])
+    <|> (try $ innerElemParser elem' innerSpec) -- need to be sure that we have exhausted looking for an end tag, then we can do the following safely
+    <|> (selfClosingTextful innerSpec)
+  return $ Elem' elem' attrs' matches (reverse asString)
+
+
+
+  
 elemParser :: (ShowHTML a, Stream s m Char) =>
               Maybe [Elem]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
            -> ParsecT s u m (Elem' a)
 elemParser elemList innerSpec attrs = do
-  let required = case innerSpec of { Nothing -> 0; _ -> 1 }
+  -- let required = case innerSpec of { Nothing -> 0; _ -> 1 }
   (elem', attrs') <- parseOpeningTag elemList attrs
   innerH <- fmap (foldr foldFuncTup mempty)
             -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
@@ -184,8 +217,8 @@ elemParser elemList innerSpec attrs = do
             -- need to be sure that we have exhausted looking for an end tag
             -- then we can do the following safely
             <|> (selfClosingTextful innerSpec)
+  enoughMatches 0 elem' attrs' innerH
 
-  enoughMatches required elem' attrs' innerH
 
 innerElemParser :: (ShowHTML a, Stream s m Char) =>
                    String

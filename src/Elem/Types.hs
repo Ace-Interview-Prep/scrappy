@@ -44,17 +44,17 @@ instance ShowHTML Text where
   showH = unpack 
 
 -- a b c are the three main types
-class RecursiveTree a b c where
-  type (Element c)
-  type (InnerForest c)
-  type (HMatcher c) -- may not need this tho
+-- class RecursiveTree a b c where
+--   type (Element c)
+--   type (InnerForest c)
+--   type (HMatcher c) -- may not need this tho
                  
-  toHtmlGen :: Element c -> HMatcher c
-  elToITR :: Element c -> InnerForest c
-  htmlGenToITR :: HMatcher c -> InnerForest c 
-  concatForest :: InnerForest c -> InnerForest c -> InnerForest c
-   -- must be instance of monoid -- dont need to declare each time 
-  label :: ElemHead -> InnerForest c -> Element c
+--   toHtmlGen :: Element c -> HMatcher c
+--   elToITR :: Element c -> InnerForest c
+--   htmlGenToITR :: HMatcher c -> InnerForest c 
+--   concatForest :: InnerForest c -> InnerForest c -> InnerForest c
+--    -- must be instance of monoid -- dont need to declare each time 
+--   label :: ElemHead -> InnerForest c -> Element c
 
 -- need system too for 
 -- Just shared accessors of html datatypes 
@@ -183,8 +183,8 @@ instance ElementRep (Elem') where
 instance ElementRep (TreeHTML) where
   elTag = _topEl
   attrs = _topAttrs
-  innerText' = innerText'
-  matches' = matches'
+  innerText' = _innerText'
+  matches' = _matches'
 
 
 
@@ -347,7 +347,7 @@ treeElemToStr :: (ShowHTML a) => TreeHTML a -> String
 treeElemToStr (TreeHTML{..}) =
   "<" <> _topEl <> mdToStringPairs _topAttrs <> ">" <> _innerText'  <> "</" <>  _topEl <> ">"
   where mdToStringPairs attrsSet = go (toList attrsSet)
-
+        go [] = ""
         go (atr:[])        = (fst atr) <> "=" <> ('"' : snd atr) <> ('"' : []) 
         go (atr: attrsSet) = (fst atr) <> "=" <> ('"' : snd atr) <> ('"' : []) <> go attrsSet
 
@@ -395,9 +395,17 @@ foldFuncTrup hMatcher itr = case hMatcher of
     (fst' itr <> (showH mat), snd' itr <> [mat], thd' itr)
   --concat to fullInnerText
   Element elem  -> --interEl :: ElemHead [HtmlMatcher]
-    (fst' itr <> (innerText' elem), snd' itr <> matches' elem, thd' itr <> ((makeBranch elem):[]))
+    (fst' itr <> (reverse $ showH elem), snd' itr <> matches' elem, thd' itr <> ((makeBranch elem):[]))
+
+-- | In our failed test case with the command : parse f "" "<a></div></a>"
+  -- where f :: (Stream s m Char) => ParsecT s u m (TreeHTML String); f = treeElemParser (Just ["a"]) Nothing []
+  --
+  -- we can tell that foldFuncTrup has been called twice (we believe)
+  --
+  -- we will test how an element named "div" inside of "a" element would behave
 
 
+ 
 
 -- -- |data ElemHead = (Elem/Text, Attrs)
 -- -- | Note: Attrs will be changed to being a Map String String
