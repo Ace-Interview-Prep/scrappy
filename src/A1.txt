@@ -1,0 +1,1436 @@
+<html class="firefox" lang="en"><head><script src="https://www.googletagservices.com/activeview/js/current/osd.js"></script><script type="text/javascript" src="https://m.addthis.com/live/red_lojson/300lo.json?si=60fb46f2f3cd868d&amp;bkl=0&amp;bl=1&amp;pdt=1271&amp;sid=60fb46f2f3cd868d&amp;pub=ra-5c93d5a7430408fd&amp;rev=v8.28.8-wp&amp;ln=en&amp;pc=men&amp;cb=0&amp;ab=-&amp;dp=meridian-allenpress-com.proxy1.lib.uwo.ca&amp;fp=aaa&amp;fr=aaa&amp;of=2&amp;pd=0&amp;irt=1&amp;vcl=1&amp;md=0&amp;ct=1&amp;tct=0&amp;abt=0&amp;cdn=0&amp;pi=1&amp;rb=2&amp;gen=100&amp;chr=UTF-8&amp;colc=1627080434483&amp;jsl=1&amp;uvs=60fb45910f71254f007&amp;skipb=1&amp;callback=addthis.cbs.jsonp__211456192518560850"></script><script type="text/javascript" src="https://v1.addthisedge.com/live/boost/ra-5c93d5a7430408fd/_ate.track.config_resp"></script><script type="text/javascript" src="https://z.moatads.com/addthismoatframe568911941483/moatframe.js"></script>
+
+        <title>American Accounting Association</title>
+
+        <script async="" src="https://www.googletagmanager.com/gtm.js?id=GTM-PSPZRJ2"></script><script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js" type="text/javascript"></script>
+<script>window.jQuery || document.write('<script src="//allen.silverchair-cdn.com/Themes/Silver/app/js/jquery.3.4.1.min.js" type="text/javascript">\x3C/script>')</script>
+<script src="//allen.silverchair-cdn.com/Themes/Silver/app/vendor/v-637604929810021655/jquery-migrate-3.1.0.min.js" type="text/javascript"></script>
+
+
+
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+
+    
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
+    <!-- Turn off telephone number detection. -->
+    <meta name="format-detection" content="telephone=no">
+
+<!-- Bookmark Icons -->
+  <link rel="apple-touch-icon" sizes="180x180" href="//allen.silverchair-cdn.com/Themes/Client/app/img/favicons/v-637604929082283270/apple-touch-icon.png">
+  <link rel="icon" type="image/png" href="//allen.silverchair-cdn.com/Themes/Client/app/img/favicons/v-637604929082283270/favicon-32x32.png" sizes="32x32">
+  <link rel="icon" type="image/png" href="//allen.silverchair-cdn.com/Themes/Client/app/img/favicons/v-637604929082283270/favicon-16x16.png" sizes="16x16">
+  <link rel="mask-icon" href="//allen.silverchair-cdn.com/Themes/Client/app/img/favicons/v-637604929082333267/safari-pinned-tab.svg" color="#5bbad5">
+  <link rel="shortcut icon" href="//allen.silverchair-cdn.com/Themes/Client/app/img/favicons/v-637604929082283270/favicon.ico">
+  <link rel="manifest" href="//allen.silverchair-cdn.com/Themes/Client/app/img/favicons/v-637604929082283270/manifest.json">
+  <meta name="msapplication-config" content="//allen.silverchair-cdn.com/Themes/Client/app/img/favicons/v-637604929082283270/browserconfig.xml">
+  <meta name="theme-color" content="#002f65">
+
+
+    
+
+
+  <link rel="stylesheet" type="text/css" href="//allen.silverchair-cdn.com/Themes/Client/app/css/v-637618634634204871/site.min.css">
+  <link rel="stylesheet" type="text/css" href="//allen.silverchair-cdn.com/Themes/Client/app/css/icons/v-637604929082283270/style.css">
+  <link rel="stylesheet" type="text/css" href="//allen.silverchair-cdn.com/Themes/Client/app/css/v-637604929082233262/bg_img.css">
+
+<link href="//fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700|PT+Sans+Narrow:400,700&amp;display=swap" rel="stylesheet">
+
+
+                <link href="//allen.silverchair-cdn.com/data/SiteBuilderAssets/Live/CSS/aaa/aaa-891439272.css" rel="stylesheet" type="text/css">
+
+            <script>
+                (function (w, d, s, l, i) {
+                    w[l] = w[l] || []; w[l].push({
+                        'gtm.start':
+                            new Date().getTime(), event: 'gtm.js'
+                    }); var f = d.getElementsByTagName(s)[0],
+                        j = d.createElement(s), dl = l != 'dataLayer' ? '&l=' + l : ''; j.async = true; j.src =
+                        'https://www.googletagmanager.com/gtm.js?id=' + i + dl; f.parentNode.insertBefore(j, f);
+                })(window, document, 'script', 'dataLayer', 'GTM-PSPZRJ2');
+            </script>
+
+    
+
+        <script type="text/javascript">
+            var App = App || {};
+            App.LoginUserInfo = {
+                isInstLoggedIn: 1,
+                isIndividualLoggedIn: 0
+            };
+
+            App.CurrentSubdomain = 'aaa';
+            App.SiteURL = 'meridian.allenpress.com/aaa';
+        </script>
+    
+    
+
+
+
+    <link rel="canonical" href="https://meridian-allenpress-com.proxy1.lib.uwo.ca/aaa">
+
+
+
+
+
+
+
+
+    
+    
+
+
+<script async="async" src="https://www.googletagservices.com/tag/js/gpt.js"></script>
+<script>
+    var googletag = googletag || {};
+    googletag.cmd = googletag.cmd || [];
+
+    googletag.cmd.push(function () {
+    googletag.pubads().disableInitialLoad();
+
+    
+    });
+</script>
+
+
+    
+    
+
+
+
+<script src="https://servedbyadbutler.com/app.js" type="text/javascript"></script>
+    
+
+
+
+
+
+<style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 5px 0px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 5px; -webkit-border-radius: 5px; -moz-border-radius: 5px; -khtml-border-radius: 5px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 1px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: .7em}
+.MathJax_MenuRadioCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuLabel {padding: 1px 2em 3px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #DDDDDD; margin: 4px 3px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: #606872; color: white}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1px; bottom: 2px; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><meta http-equiv="origin-trial" content="A88otRz1Fd3Nt567e2IYshC18LL3KGVXpVJW9oTCId4RYaygt23pbb4JqrbdIO/bwZPWEmRjBIRBu/bZbDR7Pg4AAABueyJvcmlnaW4iOiJodHRwczovL2ltYXNkay5nb29nbGVhcGlzLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzVGhpcmRQYXJ0eSI6dHJ1ZX0="><meta http-equiv="origin-trial" content="A0gCLbXCcL0R1Oc8tFPDs0G4Elz17w3zHp+Zst66+D17veE2o7fUcPsA114QtSTRqfVJLMeTSdeWOom0CcyCsgYAAAB7eyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A9RQ+LxFazAousxUwSCzaihJjHLO1UyjQp0teZKHl7WdbVjPDfHSKMd6D/ZI5MTjqClFycbl70EFd7cBJWXqKQEAAACBeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A6WKeWsdn1Ct+ZPqS9NCxxaiBoQ7wdTkK2/gE69Yu0gfBKJfo1gOvgkGmf5/xaIajT/RUb9AbnF1FsSZ47cCcQcAAACBeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiVHJ1c3RUb2tlbnMiLCJleHBpcnkiOjE2MzQwODMxOTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="A04ZCu7yjrHgwQJK5ISHhH1DSg0qqowEay3n70KO6wV3D2Mj+OX3Kw20aSMitzgdG1xfrN7sOJV/dZIk+RvCzA4AAAB2eyJvcmlnaW4iOiJodHRwczovL2dvb2dsZS5jb206NDQzIiwiZmVhdHVyZSI6IlRydXN0VG9rZW5zIiwiZXhwaXJ5IjoxNjM0MDgzMTk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A3HucHUo1oW9s+9kIKz8mLkbcmdaj5lxt3eiIMp1Nh49dkkBlg1Fhg4Fd/r0vL69mRRA36YutI9P/lJUfL8csQoAAACFeyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjI2MjIwNzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="A0OysezhLoCRYomumeYlubLurZTCmsjTb087OvtCy95jNM65cfEsbajrJnhaGwiTxhz38ZZbm+UhUwQuXfVPTg0AAACLeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjI2MjIwNzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="AxoOxdZQmIoA1WeAPDixRAeWDdgs7ZtVFfH2y19ziTgD1iaHE5ZGz2UdSjubkWvob9C5PrjUfkWi4ZSLgWk3Xg8AAACLeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiQ29udmVyc2lvbk1lYXN1cmVtZW50IiwiZXhwaXJ5IjoxNjI2MjIwNzk5LCJpc1N1YmRvbWFpbiI6dHJ1ZSwiaXNUaGlyZFBhcnR5Ijp0cnVlfQ=="><meta http-equiv="origin-trial" content="AwfG8hAcHnPa/kJ1Co0EvG/K0F9l1s2JZGiDLt2mhC3QI5Fh4qmsmSwrWObZFbRC9ieDaSLU6lHRxhGUF/i9sgoAAACBeyJvcmlnaW4iOiJodHRwczovL2RvdWJsZWNsaWNrLm5ldDo0NDMiLCJmZWF0dXJlIjoiSW50ZXJlc3RDb2hvcnRBUEkiLCJleHBpcnkiOjE2MjYyMjA3OTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="AwQ7dCmHkvR6FuOFxAuNnktYSQrGbL4dF+eBkrwNLALc69Wr//PnO1yzns3pjUoCaYbKHtVcnng2hU+8OUm0PAYAAACHeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXN5bmRpY2F0aW9uLmNvbTo0NDMiLCJmZWF0dXJlIjoiSW50ZXJlc3RDb2hvcnRBUEkiLCJleHBpcnkiOjE2MjYyMjA3OTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><meta http-equiv="origin-trial" content="AysVDPGQTLD/Scn78x4mLwB1tMfje5jwUpAAzGRpWsr1NzoN7MTFhT3ClmImi2svDZA7V6nWGIV8YTPsSRTe0wYAAACHeyJvcmlnaW4iOiJodHRwczovL2dvb2dsZXRhZ3NlcnZpY2VzLmNvbTo0NDMiLCJmZWF0dXJlIjoiSW50ZXJlc3RDb2hvcnRBUEkiLCJleHBpcnkiOjE2MjYyMjA3OTksImlzU3ViZG9tYWluIjp0cnVlLCJpc1RoaXJkUGFydHkiOnRydWV9"><script src="https://securepubads.g.doubleclick.net/gpt/pubads_impl_2021071401.js" async=""></script><style type="text/css">.at-icon{fill:#fff;border:0}.at-icon-wrapper{display:inline-block;overflow:hidden}a .at-icon-wrapper{cursor:pointer}.at-rounded,.at-rounded-element .at-icon-wrapper{border-radius:12%}.at-circular,.at-circular-element .at-icon-wrapper{border-radius:50%}.addthis_32x32_style .at-icon{width:2pc;height:2pc}.addthis_24x24_style .at-icon{width:24px;height:24px}.addthis_20x20_style .at-icon{width:20px;height:20px}.addthis_16x16_style .at-icon{width:1pc;height:1pc}#at16lb{display:none;position:absolute;top:0;left:0;width:100%;height:100%;z-index:1001;background-color:#000;opacity:.001}#at_complete,#at_error,#at_share,#at_success{position:static!important}.at15dn{display:none}#at15s,#at16p,#at16p form input,#at16p label,#at16p textarea,#at_share .at_item{font-family:arial,helvetica,tahoma,verdana,sans-serif!important;font-size:9pt!important;outline-style:none;outline-width:0;line-height:1em}* html #at15s.mmborder{position:absolute!important}#at15s.mmborder{position:fixed!important;width:250px!important}#at15s{background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABtJREFUeNpiZGBgaGAgAjAxEAlGFVJHIUCAAQDcngCUgqGMqwAAAABJRU5ErkJggg==);float:none;line-height:1em;margin:0;overflow:visible;padding:5px;text-align:left;position:absolute}#at15s a,#at15s span{outline:0;direction:ltr;text-transform:none}#at15s .at-label{margin-left:5px}#at15s .at-icon-wrapper{width:1pc;height:1pc;vertical-align:middle}#at15s .at-icon{width:1pc;height:1pc}.at4-icon{display:inline-block;background-repeat:no-repeat;background-position:top left;margin:0;overflow:hidden;cursor:pointer}.addthis_16x16_style .at4-icon,.addthis_default_style .at4-icon,.at4-icon,.at-16x16{width:1pc;height:1pc;line-height:1pc;background-size:1pc!important}.addthis_32x32_style .at4-icon,.at-32x32{width:2pc;height:2pc;line-height:2pc;background-size:2pc!important}.addthis_24x24_style .at4-icon,.at-24x24{width:24px;height:24px;line-height:24px;background-size:24px!important}.addthis_20x20_style .at4-icon,.at-20x20{width:20px;height:20px;line-height:20px;background-size:20px!important}.at4-icon.circular,.circular .at4-icon,.circular.aticon{border-radius:50%}.at4-icon.rounded,.rounded .at4-icon{border-radius:4px}.at4-icon-left{float:left}#at15s .at4-icon{text-indent:20px;padding:0;overflow:visible;white-space:nowrap;background-size:1pc;width:1pc;height:1pc;background-position:top left;display:inline-block;line-height:1pc}.addthis_vertical_style .at4-icon,.at4-follow-container .at4-icon{margin-right:5px}html>body #at15s{width:250px!important}#at15s.atm{background:none!important;padding:0!important;width:10pc!important}#at15s_inner{background:#fff;border:1px solid #fff;margin:0}#at15s_head{position:relative;background:#f2f2f2;padding:4px;cursor:default;border-bottom:1px solid #e5e5e5}.at15s_head_success{background:#cafd99!important;border-bottom:1px solid #a9d582!important}.at15s_head_success a,.at15s_head_success span{color:#000!important;text-decoration:none}#at15s_brand,#at15sptx,#at16_brand{position:absolute}#at15s_brand{top:4px;right:4px}.at15s_brandx{right:20px!important}a#at15sptx{top:4px;right:4px;text-decoration:none;color:#4c4c4c;font-weight:700}#at15sptx:hover{text-decoration:underline}#at16_brand{top:5px;right:30px;cursor:default}#at_hover{padding:4px}#at_hover .at_item,#at_share .at_item{background:#fff!important;float:left!important;color:#4c4c4c!important}#at_share .at_item .at-icon-wrapper{margin-right:5px}#at_hover .at_bold{font-weight:700;color:#000!important}#at_hover .at_item{width:7pc!important;padding:2px 3px!important;margin:1px;text-decoration:none!important}#at_hover .at_item.athov,#at_hover .at_item:focus,#at_hover .at_item:hover{margin:0!important}#at_hover .at_item.athov,#at_hover .at_item:focus,#at_hover .at_item:hover,#at_share .at_item.athov,#at_share .at_item:hover{background:#f2f2f2!important;border:1px solid #e5e5e5;color:#000!important;text-decoration:none}.ipad #at_hover .at_item:focus{background:#fff!important;border:1px solid #fff}.at15t{display:block!important;height:1pc!important;line-height:1pc!important;padding-left:20px!important;background-position:0 0;text-align:left}.addthis_button,.at15t{cursor:pointer}.addthis_toolbox a.at300b,.addthis_toolbox a.at300m{width:auto}.addthis_toolbox a{margin-bottom:5px;line-height:initial}.addthis_toolbox.addthis_vertical_style{width:200px}.addthis_button_facebook_like .fb_iframe_widget{line-height:100%}.addthis_button_facebook_like iframe.fb_iframe_widget_lift{max-width:none}.addthis_toolbox a.addthis_button_counter,.addthis_toolbox a.addthis_button_facebook_like,.addthis_toolbox a.addthis_button_facebook_send,.addthis_toolbox a.addthis_button_facebook_share,.addthis_toolbox a.addthis_button_foursquare,.addthis_toolbox a.addthis_button_linkedin_counter,.addthis_toolbox a.addthis_button_pinterest_pinit,.addthis_toolbox a.addthis_button_tweet{display:inline-block}.addthis_toolbox span.addthis_follow_label{display:none}.addthis_toolbox.addthis_vertical_style span.addthis_follow_label{display:block;white-space:nowrap}.addthis_toolbox.addthis_vertical_style a{display:block}.addthis_toolbox.addthis_vertical_style.addthis_32x32_style a{line-height:2pc;height:2pc}.addthis_toolbox.addthis_vertical_style .at300bs{margin-right:4px;float:left}.addthis_toolbox.addthis_20x20_style span{line-height:20px}.addthis_toolbox.addthis_32x32_style span{line-height:2pc}.addthis_toolbox.addthis_pill_combo_style .addthis_button_compact .at15t_compact,.addthis_toolbox.addthis_pill_combo_style a{float:left}.addthis_toolbox.addthis_pill_combo_style a.addthis_button_tweet{margin-top:-2px}.addthis_toolbox.addthis_pill_combo_style .addthis_button_compact .at15t_compact{margin-right:4px}.addthis_default_style .addthis_separator{margin:0 5px;display:inline}div.atclear{clear:both}.addthis_default_style .addthis_separator,.addthis_default_style .at4-icon,.addthis_default_style .at300b,.addthis_default_style .at300bo,.addthis_default_style .at300bs,.addthis_default_style .at300m{float:left}.at300b img,.at300bo img{border:0}a.at300b .at4-icon,a.at300m .at4-icon{display:block}.addthis_default_style .at300b,.addthis_default_style .at300bo,.addthis_default_style .at300m{padding:0 2px}.at300b,.at300bo,.at300bs,.at300m{cursor:pointer}.addthis_button_facebook_like.at300b:hover,.addthis_button_facebook_like.at300bs:hover,.addthis_button_facebook_send.at300b:hover,.addthis_button_facebook_send.at300bs:hover{opacity:1}.addthis_20x20_style .at15t,.addthis_20x20_style .at300bs{overflow:hidden;display:block;height:20px!important;width:20px!important;line-height:20px!important}.addthis_32x32_style .at15t,.addthis_32x32_style .at300bs{overflow:hidden;display:block;height:2pc!important;width:2pc!important;line-height:2pc!important}.at300bs{overflow:hidden;display:block;background-position:0 0;height:1pc;width:1pc;line-height:1pc!important}.addthis_default_style .at15t_compact,.addthis_default_style .at15t_expanded{margin-right:4px}#at_share .at_item{width:123px!important;padding:4px;margin-right:2px;border:1px solid #fff}#at16p{background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABtJREFUeNpiZGBgaGAgAjAxEAlGFVJHIUCAAQDcngCUgqGMqwAAAABJRU5ErkJggg==);z-index:10000001;position:absolute;top:50%;left:50%;width:300px;padding:10px;margin:0 auto;margin-top:-185px;margin-left:-155px;font-family:arial,helvetica,tahoma,verdana,sans-serif;font-size:9pt;color:#5e5e5e}#at_share{margin:0;padding:0}#at16pt{position:relative;background:#f2f2f2;height:13px;padding:5px 10px}#at16pt a,#at16pt h4{font-weight:700}#at16pt h4{display:inline;margin:0;padding:0;font-size:9pt;color:#4c4c4c;cursor:default}#at16pt a{position:absolute;top:5px;right:10px;color:#4c4c4c;text-decoration:none;padding:2px}#at15sptx:focus,#at16pt a:focus{outline:thin dotted}#at15s #at16pf a{top:1px}#_atssh{width:1px!important;height:1px!important;border:0!important}.atm{width:10pc!important;padding:0;margin:0;line-height:9pt;letter-spacing:normal;font-family:arial,helvetica,tahoma,verdana,sans-serif;font-size:9pt;color:#444;background:url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABtJREFUeNpiZGBgaGAgAjAxEAlGFVJHIUCAAQDcngCUgqGMqwAAAABJRU5ErkJggg==);padding:4px}.atm-f{text-align:right;border-top:1px solid #ddd;padding:5px 8px}.atm-i{background:#fff;border:1px solid #d5d6d6;padding:0;margin:0;box-shadow:1px 1px 5px rgba(0,0,0,.15)}.atm-s{margin:0!important;padding:0!important}.atm-s a:focus{border:transparent;outline:0;transition:none}#at_hover.atm-s a,.atm-s a{display:block;text-decoration:none;padding:4px 10px;color:#235dab!important;font-weight:400;font-style:normal;transition:none}#at_hover.atm-s .at_bold{color:#235dab!important}#at_hover.atm-s a:hover,.atm-s a:hover{background:#2095f0;text-decoration:none;color:#fff!important}#at_hover.atm-s .at_bold{font-weight:700}#at_hover.atm-s a:hover .at_bold{color:#fff!important}.atm-s a .at-label{vertical-align:middle;margin-left:5px;direction:ltr}.at_PinItButton{display:block;width:40px;height:20px;padding:0;margin:0;background-image:url(//s7.addthis.com/static/t00/pinit00.png);background-repeat:no-repeat}.at_PinItButton:hover{background-position:0 -20px}.addthis_toolbox .addthis_button_pinterest_pinit{position:relative}.at-share-tbx-element .fb_iframe_widget span{vertical-align:baseline!important}#at16pf{height:auto;text-align:right;padding:4px 8px}.at-privacy-info{position:absolute;left:7px;bottom:7px;cursor:pointer;text-decoration:none;font-family:helvetica,arial,sans-serif;font-size:10px;line-height:9pt;letter-spacing:.2px;color:#666}.at-privacy-info:hover{color:#000}.body .wsb-social-share .wsb-social-share-button-vert{padding-top:0;padding-bottom:0}.body .wsb-social-share.addthis_counter_style .addthis_button_tweet.wsb-social-share-button{padding-top:40px}.body .wsb-social-share.addthis_counter_style .addthis_button_facebook_like.wsb-social-share-button{padding-top:21px}@media print{#at4-follow,#at4-share,#at4-thankyou,#at4-whatsnext,#at4m-mobile,#at15s,.at4,.at4-recommended{display:none!important}}@media screen and (max-width:400px){.at4win{width:100%}}@media screen and (max-height:700px) and (max-width:400px){.at4-thankyou-inner .at4-recommended-container{height:122px;overflow:hidden}.at4-thankyou-inner .at4-recommended .at4-recommended-item:first-child{border-bottom:1px solid #c5c5c5}}</style><style type="text/css">.at-branding-logo{font-family:helvetica,arial,sans-serif;text-decoration:none;font-size:10px;display:inline-block;margin:2px 0;letter-spacing:.2px}.at-branding-logo .at-branding-icon{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAMAAAC67D+PAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAAZQTFRF////+GlNUkcc1QAAAB1JREFUeNpiYIQDBjQmAwMmkwEM0JnY1WIxFyDAABGeAFEudiZsAAAAAElFTkSuQmCC")}.at-branding-logo .at-branding-icon,.at-branding-logo .at-privacy-icon{display:inline-block;height:10px;width:10px;margin-left:4px;margin-right:3px;margin-bottom:-1px;background-repeat:no-repeat}.at-branding-logo .at-privacy-icon{background-image:url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAkAAAAKCAMAAABR24SMAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABhQTFRF8fr9ot/xXcfn2/P5AKva////////AKTWodjhjAAAAAd0Uk5T////////ABpLA0YAAAA6SURBVHjaJMzBDQAwCAJAQaj7b9xifV0kUKJ9ciWxlzWEWI5gMF65KUTv0VKkjVeTerqE/x7+9BVgAEXbAWI8QDcfAAAAAElFTkSuQmCC")}.at-branding-logo span{text-decoration:none}.at-branding-logo .at-branding-addthis,.at-branding-logo .at-branding-powered-by{color:#666}.at-branding-logo .at-branding-addthis:hover{color:#333}.at-cv-with-image .at-branding-addthis,.at-cv-with-image .at-branding-addthis:hover{color:#fff}a.at-branding-logo:visited{color:initial}.at-branding-info{display:inline-block;padding:0 5px;color:#666;border:1px solid #666;border-radius:50%;font-size:10px;line-height:9pt;opacity:.7;transition:all .3s ease;text-decoration:none}.at-branding-info span{border:0;clip:rect(0 0 0 0);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}.at-branding-info:before{content:'i';font-family:Times New Roman}.at-branding-info:hover{color:#0780df;border-color:#0780df}</style><link rel="preload" href="https://adservice.google.ca/adsid/integrator.js?domain=meridian-allenpress-com.proxy1.lib.uwo.ca" as="script"><script type="text/javascript" src="https://adservice.google.ca/adsid/integrator.js?domain=meridian-allenpress-com.proxy1.lib.uwo.ca"></script><link rel="preload" href="https://adservice.google.com/adsid/integrator.js?domain=meridian-allenpress-com.proxy1.lib.uwo.ca" as="script"><script type="text/javascript" src="https://adservice.google.com/adsid/integrator.js?domain=meridian-allenpress-com.proxy1.lib.uwo.ca"></script><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head>
+
+<body data-sitename="americanaccountingassociation" class="off-canvas pg_Index pg_index" theme-aaa="" data-sitestyletemplate="Journal"><div id="MathJax_Message" style="display: none;"></div>
+            <noscript>
+                <iframe src="https://www.googletagmanager.com/ns.html?id=GTM-PSPZRJ2"
+                        height="0" width="0" style="display:none;visibility:hidden"></iframe>
+            </noscript>
+            <a href="#skipNav" class="skipnav">Skip to Main Content</a>
+<input id="hdnSiteID" name="hdnSiteID" type="hidden" value="1000291"><input id="hdnAdDelaySeconds" name="hdnAdDelaySeconds" type="hidden" value="3000"><input id="hdnAdConfigurationTop" name="hdnAdConfigurationTop" type="hidden" value="basic"><input id="hdnAdConfigurationRightRail" name="hdnAdConfigurationRightRail" type="hidden" value="basic">
+    
+
+
+
+
+    <section class="master-header row vt-site-header">
+
+    <div class="ad-banner js-ad-banner">
+
+    <div class="widget-AdBlock widget-instance-HeaderAd">
+            <input type="hidden" class="hfAdBlockInfo" data-divid="div-gpt-ad-1586293835643-0" data-slotname="/21839082257/leader.ros.1/aaa_leaderboard_728x90" data-targetname="" data-sizes="[[728, 90]]" data-enabled-on-mobile="True" data-adprovider-typeid="1" data-accountid="" data-outofpagead="False">
+    <div class="adblock-wrap js-adblock-wrap" style="width:728px;">
+
+            <div id="div-gpt-ad-1586293835643-0" adslot="/21839082257/leader.ros.1/aaa_leaderboard_728x90" class="adblock-slot-placeholder js-adblock" style="width: 728px; height: 90px; display: none;" data-google-query-id="CLrCgvui-vECFYNTAQodENkJhA"><div id="google_ads_iframe_/21839082257/leader.ros.1/aaa_leaderboard_728x90_0__container__" style="border: 0pt none; width: 728px; height: 0px;"></div></div>
+
+    </div>
+ 
+    </div>
+
+    </div>
+
+    <div class="widget-SitePageHeader widget-instance-SitePageHeader">
+            <div class="site-theme-header">
+        <div class="site-theme-header_contents global-nav-base">
+
+
+<div class="global-nav">
+        
+</div>
+
+
+
+    <div class="mobile-menu-trigger_wrap mobile-search_wrap">
+        <a href="javascript:;" class="js-mobile-search_toggle mobile-search_toggle at-search-toggle"><i class="icon-menu_search"><span class="screenreader-text">Search</span></i></a>
+    </div>
+    <div class="navbar-search-container js-mobile-search-dropdown mobile-dropdown search-dropdown">
+        <div class="navbar-search">
+            <div id="MicrositeSearch" class="microsite-search">
+                <div class="navbar-search-input_wrap">
+                    <fieldset>
+                        <legend><span class="screenreader-text">nav  search</span></legend>
+                        <label for="MicrositeSearchTerm"><span class="screenreader-text">search input</span></label>
+                        
+                        <input class="navbar-search-input microsite-search-term at-microsite-search-term search-term-autosuggest" data-autosuggest-hint="micrositeSearchTermInputHint-SitePageHeader" data-autosuggest-results="micrositeAutoCompleteResults-SitePageHeader" data-autosuggest-id="MicrositeSearchTerm-SitePageHeader" data-searchfilter="search-filter-SitePageHeader" placeholder="Search..." type="text" maxlength="255" id="MicrositeSearchTerm" title="search input">
+                        
+                        <input type="hidden" name="hfSolrAutoSuggestMinimumCharactersLength" id="hfSolrAutoSuggestMinimumCharactersLength" value="2">
+                        <input type="hidden" name="hfSolrJournalName" id="hfSolrJournalName" value="">
+                        <input type="hidden" name="hfSolrJournalID" id="hfSolrJournalID" value="">
+                        <label for="micrositeSearchTermInputHint">
+                            <span class="screenreader-text">Search input auto suggest</span>
+                        </label>
+                        <input type="text" id="micrositeSearchTermInputHint" data-autosuggest-id="micrositeSearchTermInputHint-SitePageHeader" class="microsite-search-term-input-hint" autocomplete="off">
+                        <ul id="micrositeAutoCompleteResults" data-autosuggest-id="micrositeAutoCompleteResults-SitePageHeader" class="term-list term-list--hidden"></ul>
+                    </fieldset>
+                </div>
+                <div class="navbar-search-submit_wrap">
+                    <a href="javascript:;" id="MicrositeSearchIcon" class="microsite-search-icon navbar-search-submit icon-menu_search"><span class="screenreader-text">Search</span></a>
+                </div>
+            </div><!-- /#MicrositeSearch -->
+        </div><!-- /.navbar-search -->
+    </div><!-- /.navbar-search-container -->
+
+    <input type="hidden" name="parentSiteName" id="hfParentSiteName" value="Journals Gateway">    
+    <input type="hidden" id="hfSolrMaxAllowSearchChar" value="100">
+    <input type="hidden" id="hfJournalShortName" value="">
+    <input type="hidden" id="hfSearchPlaceholder" value="">
+    <input type="hidden" name="hfGlobalSearchSiteURL" id="hfGlobalSearchSiteURL" value="">
+    <input type="hidden" name="hfSearchSiteURL" id="hfSiteURL" value="meridian-allenpress-com.proxy1.lib.uwo.ca/aaa">
+    <input type="hidden" id="hfQuickSearchUrl">    
+    <script type="text/javascript">
+        (function() {
+            var hfSiteUrl = document.getElementById('hfSiteURL');
+            var siteUrl = hfSiteUrl.value;
+            var subdomainIndex = siteUrl.indexOf('/');
+
+            hfSiteUrl.value = location.host + (subdomainIndex >= 0 ? siteUrl.substring(subdomainIndex) : '');
+            })();
+    </script>
+
+ 
+
+<div class="tablet-menu-trigger_wrap">
+    <!-- MOBILE SHOPPING CART ICON -->
+    <a href="javascript:;" class="js-tablet-menu-toggle tablet-sign-in">
+        <i class="icon-menu_account"><span class="screenreader-text">User Tools</span></i>
+    </a>
+</div>
+<div class="site-theme-header-menu-item_wrap tablet-menu">
+    <!-- DESKTOP SHOPPING CART ICON -->
+
+    <!-- DESKTOP REGISTRATION -->
+        <div class="site-theme-header-menu-item"><a href="/my-account/register?siteId=1000291&amp;returnUrl=%2faaa" class="register at-register">Register</a></div>
+
+    <!-- DESKTOP INSTITUTIONS -->
+        <div class="site-theme-header-menu-item">
+            
+                <a href="javascript:;" class="dropdown-toggle institution at-institution">Western University <i class="icon-general_arrow-down arrow-icon"></i></a>
+            <div class="dropdown-panel dropdown-panel-institution" style="display: none;">
+                
+                <div class="dropdown-menu">
+
+                            <div class="dropdown-institution-item">
+
+                                Western University
+                            </div>
+                                    </div><!-- /.dropdown-menu -->
+            </div><!-- /.dropdown-panel .dropdown-panel-institution -->
+        </div><!-- /.site-theme-header-menu-item .desktop -->
+
+    <!-- DESKTOP SIGN IN -->
+
+
+    <div class="site-theme-header-menu-item not-authenicated">
+        <a href="javascript:;" class="dropdown-toggle signin at-signin-dropdown at-signin-username" id="header-account-info-user-fullname">
+            
+Sign In            <i class="icon-general_arrow-down arrow-icon"></i>
+        </a>
+        <div class="dropdown-panel dropdown-panel-signin dropdown-panel-form at-signin-dropdown-panel" style="display: none;">
+            <div class="spinner"></div>
+        </div><!-- /.dropdown-panel -->
+    </div>
+</div>
+
+        </div><!-- /.site-theme-header_content -->
+    </div><!-- /.site-theme-header- -->
+
+<div class="journal-header journal-bg">
+    <div class="journal-header_content with-society-logo">
+
+
+    <div class="journal-logo_wrap">
+        <a href="https://meridian-allenpress-com.proxy1.lib.uwo.ca/aaa" class="journal-logo-link">
+            <picture>
+                <source media="(min-width: 601px)" srcset="//allen.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/aaa/AAA-Logo1672845533.png">
+                <img class="logo-AmericanAccountingAssociation journal-logo" src="//allen.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/aaa/AAA-Logo1672845533.png" alt="American Accounting Association">
+            </picture>
+        </a>
+    </div>
+
+
+
+<div class="navbar-menu_wrap">
+            <a class="js-mobile-site-menu-toggle mobile-site-menu-toggle" href="javascript:;"><i class="icon-menu_hamburger"><span class="screenreader-text">Toggle Menu</span></i><span class="tablet-menu-label">Menu</span></a>
+            <nav class="navbar-menu">
+                        <ul class="site-menu site-menu-lvl-0">
+                <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-198851">
+
+                        <a href="/aaa" class="nav-link">AAA Digital Library</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-198849">
+
+                        <a href="javascript:;" class="nav-link js-nav-link">Browse Publications<i class="nav-arrow icon-general_arrow-down arrow-icon"></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1" style="display: none;">
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198852">
+
+                        <a href="/accounting-review" class="nav-link">The Accounting Review</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198853">
+
+                        <a href="/iae" class="nav-link">Issues in Accounting Education</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198854">
+
+                        <a href="/iaetn" class="nav-link">Issues in Accounting Education Teaching Notes</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198855">
+
+                        <a href="/accounting-horizons" class="nav-link">Accounting Horizons</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198856">
+
+                        <a href="/ahj" class="nav-link">Accounting Historians Journal</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198857">
+
+                        <a href="/api" class="nav-link">Accounting and the Public Interest</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198858">
+
+                        <a href="/atajltr" class="nav-link">The ATA Journal of Legal Tax Research</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198859">
+
+                        <a href="/ajpt" class="nav-link">AUDITING: A Journal of Practice and Theory</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198860">
+
+                        <a href="http://commons.aaahq.org.proxy1.lib.uwo.ca/groups/e5075f0eec/summary" class="nav-link" target="_blank">Auditing Research Summaries</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198861">
+
+                        <a href="/bria" class="nav-link">Behavorial Research in Accounting</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198862">
+
+                        <a href="/cia" class="nav-link">Current Issues in Auditing</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198863">
+
+                        <a href="/ciatn" class="nav-link">Current Issues in Auditing Teaching Notes</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198864">
+
+                        <a href="/jeta" class="nav-link">Journal of Emerging Technologies in Accounting</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198865">
+
+                        <a href="/jetatn" class="nav-link">Journal of Emerging Technologies in Accounting Teaching Notes</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198866">
+
+                        <a href="/jfr" class="nav-link">Journal of Financial Reporting</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198867">
+
+                        <a href="/jogna" class="nav-link">Journal of Governmental &amp; Nonprofit Accounting</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198868">
+
+                        <a href="/jognatn" class="nav-link">Journal of Governmental &amp; Nonprofit Accounting Teaching Notes</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198869">
+
+                        <a href="/jis" class="nav-link">Journal of Information Systems</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198870">
+
+                        <a href="/jistn" class="nav-link">Journal of Information Systems Teaching Notes</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198871">
+
+                        <a href="/jiar" class="nav-link">Journal of International Accounting Research</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198872">
+
+                        <a href="/jmar" class="nav-link">Journal of Management Accounting Research</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198873">
+
+                        <a href="/jata" class="nav-link">The Journal of the American Taxation Association</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198874">
+
+                        <a href="/jfar" class="nav-link">Journal of Forensic Accounting Research</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198875">
+
+                        <a href="/jfartn" class="nav-link">Journal of Forensic Accounting Research Teaching Notes</a>
+
+                     
+                </li>
+        </ul>
+ 
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-198876">
+
+                        <a href="/aaa/pages/information-for-authors" class="nav-link">Information for Authors</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-198877">
+
+                        <a href="http://aaahq.org.proxy1.lib.uwo.ca/About/Governance/Policies-Procedures" class="nav-link" target="_blank">Publication Policies &amp; Procedures</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-0 " id="site-menu-item-198850">
+
+                        <a href="javascript:;" class="nav-link js-nav-link">Help<i class="nav-arrow icon-general_arrow-down arrow-icon"></i></a>
+
+                            <ul class="site-menu site-menu-lvl-1" style="display: none;">
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198878">
+
+                        <a href="/aaa/pages/faq" class="nav-link">FAQ</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198879">
+
+                        <a href="https://allenpress-com.proxy1.lib.uwo.ca/meridian-support" class="nav-link" target="_blank">Support</a>
+
+                     
+                </li>
+                <li class="site-menu-item site-menu-lvl-1 " id="site-menu-item-198880">
+
+                        <a href="/aaa/pages/Contact-Us" class="nav-link">Contact Us</a>
+
+                     
+                </li>
+        </ul>
+ 
+                </li>
+        </ul>
+
+            </nav>
+</div><!-- /.navbar -->
+    <div class="society-block_wrap">
+            <a href="http://aaahq.org.proxy1.lib.uwo.ca/" target="_blank" class="society-logo-link">
+                <img id="logo-AmericanAccountingAssociationSocietyLogo" class="society-logo" src="//allen.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/aaa/AAA-Logo1672845533.png" alt="American Accounting Association Society Logo">
+            </a>
+            </div><!-- /.society-block-inner-wrap - NOTE: used to vertically center one or more society logos -->
+
+    </div><!-- /.center-inner-row -->
+
+</div><!-- /.journal-header -->
+
+
+<input id="routename" name="RouteName" type="hidden" value="aaa"> 
+    </div>
+
+</section>
+
+    <div id="main" class="content-main js-main ui-base">
+        <section class="master-main row">
+            <div class="content-main_content">
+                <a href="#" id="skipNav" class="screenreader-text" tabindex="-1">Skip Nav Destination</a>
+                
+
+
+
+
+
+    <div class="large-12">
+        <div class="index-inner-wrap">
+            <div class="location-main-content vt-index-widget-wrap">
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContent">
+        <div class="widget widget-dynamic " data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0">
+        <div class="widget widget-dynamic theme-homepage-layout allen journal" data-count="8">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B0">
+        <div class="widget widget-dynamic home-row1 header-row" data-count="2">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B0B0">
+        <div class="widget widget-dynamic header-row-left home-issue-info issue-info" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-society-label">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-text white-text">
+<h1 class="white-text">American Accounting Association</h1>
+<hr>
+<ul>
+    <li class="site-menu-item site-menu-lvl-0">
+    <a href="javascript:;" class="nav-link js-nav-link button">Browse Publications&nbsp;<em class="nav-arrow icon-general_arrow-down arrow-icon"></em></a>
+    <ul class="site-menu site-menu-lvl-1" style="display: none;">
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/accounting-review" class="nav-link button">The Accounting Review</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/iae" class="nav-link button">Issues in Accounting Education</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/iaetn" class="nav-link button">Issues in Accounting Education Teaching Notes</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/accounting-horizons" class="nav-link button">Accounting Horizons</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/ahj" class="nav-link button">Accounting Historians Journal</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/api" class="nav-link button">Accounting and the Public Interest</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/atajltr" class="nav-link button">The ATA Journal of Legal Tax Research</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/ajpt" class="nav-link button">AUDITING: A Journal of Practice and Theory</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="http://commons.aaahq.org.proxy1.lib.uwo.ca/groups/e5075f0eec/summary" class="nav-link button" target="_blank">Auditing Research Summaries</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/bria" class="nav-link button">Behavorial Research in Accounting</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/cia" class="nav-link button">Current Issues in Auditing</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/ciatn" class="nav-link button">Current Issues in Auditing Teaching Notes</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jeta" class="nav-link button">Journal of Emerging Technologies in Accounting</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jetatn" class="nav-link button">Journal of Emerging Technologies in Accounting Teaching Notes</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jfr" class="nav-link button">Journal of Financial Reporting</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jogna" class="nav-link button">Journal of Governmental &amp; Nonprofit Accounting</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jognatn" class="nav-link button">Journal of Governmental &amp; Nonprofit Accounting Teaching Notes</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jis" class="nav-link button">Journal of Information Systems</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jistn" class="nav-link button">Journal of Information Systems Teaching Notes</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jiar" class="nav-link button">Journal of International Accounting Research</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jmar" class="nav-link button">Journal of Management Accounting Research</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jata" class="nav-link button">The Journal of the American Taxation Association</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jfr" class="nav-link button">Journal of Forensic Accounting Research</a></li>
+        <li class="site-menu-item site-menu-lvl-1">
+        <a href="/jfartn" class="nav-link button">Journal of Forensic Accounting Research Teaching Notes</a></li>
+    </ul>
+    </li>
+    <li><a href="https://aaahq-org.proxy1.lib.uwo.ca/Membership" class="button" target="_blank">Subscriptions</a></li>
+    <li><a href="https://aaahq-org.proxy1.lib.uwo.ca/Research/Journals" class="button" target="_blank">Publish</a></li>
+</ul>
+</div>
+</div>
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B0B1">
+        <div class="widget widget-dynamic header-row-right" data-count="1">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-about-this-journal">
+        
+<div class="homepage-panel-wrap pd-05">
+<div class="homepage-panel-text">
+<h3>About the American Accounting Association</h3>
+<p>The American Accounting Association is the premier community of accountants in academia. Founded in 1916, we have a rich and reputable history built on leading-edge research and publications. The diversity of our membership creates a fertile environment for collaboration and innovation. Collectively, we shape the future of accounting through teaching, research and a powerful network, ensuring our position as thought leaders in accounting.</p>
+</div>
+<div class="btn-wrap d-b">
+<a href="https://aaahq-org.proxy1.lib.uwo.ca" class="btn d-b" target="_blank">American Accounting Association Homepage</a>
+</div>
+</div>
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B1">
+        <div class="widget widget-dynamic home-row3 home-self-serve-content-features self-serve-content-features" data-count="3">
+    
+        <div class="widget-dynamic__header">
+            <h3>
+                The American Accounting Association Journals
+                <div class="widget-dynamic__underbar journal-bg"></div>
+            </h3>
+        </div>
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-one">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Education.png?versionId=9492"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/iae">Issues in Accounting Education</a></h3>
+<p><a href="/iaetn">Teaching Notes</a></p>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-two">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Horizons.png?versionId=7742"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/accounting-horizons">Accounting Horizons</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-three">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Review.png?versionId=7744"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/accounting-review">The Accounting Review</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B2">
+        <div class="widget widget-dynamic home-row3 home-self-serve-content-features self-serve-content-features" data-count="3">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-four">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Auditing.png?versionId=7745"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/ajpt">AUDITING: A Journal of Practice and Theory</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-five">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Behavioral.png?versionId=7746"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/bria">Behavioral Research in Accounting</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-six">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/CurrentIssues.png?versionId=9493"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/cia">Current Issues in Auditing</a></h3>
+<p><a href="/ciatn">Teaching Notes</a></p>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B3">
+        <div class="widget widget-dynamic home-row3 home-self-serve-content-features self-serve-content-features" data-count="3">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-seven">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="Journal of Emerging Technologies in Accounting" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Emerging.png?versionId=9496">
+</center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jeta">Journal of Emerging Technologies in Accounting</a></h3>
+<p><a href="/jetatn">Teaching Notes</a></p>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-eight">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Forensic.png?versionId=9494"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jfar">Journal of Forensic Accounting Research</a></h3>
+<p><a href="/jfartn">Teaching Notes</a></p>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-nine">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Governmental.png?versionId=10702"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jogna">Journal of Governmental &amp; Nonprofit Accounting</a></h3>
+<p><a href="/jognatn">Teaching Notes</a></p>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B4">
+        <div class="widget widget-dynamic home-row3 home-self-serve-content-features self-serve-content-features" data-count="3">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-ten">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/historians.jpg?versionId=7794"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/ahj">Accounting Historians Journal</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-eleven">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/International.png?versionId=7795"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jiar">Journal of International Accounting Research</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-twelve">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/LegalTax.png?versionId=7796"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/atajltr">The ATA Journal of Legal Tax Research</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B5">
+        <div class="widget widget-dynamic home-row3 home-self-serve-content-features self-serve-content-features" data-count="3">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-thirteen">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Management.png?versionId=7797"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jmar">Journal of Management Accounting Research</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-fourteen">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/PublicInterest.png?versionId=7798"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/api">Accounting and the Public Interest</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-fifteen">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Reporting.png?versionId=7799"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jfr">Journal of Financial Reporting</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B6">
+        <div class="widget widget-dynamic home-row3 home-self-serve-content-features self-serve-content-features" data-count="3">
+    
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-sixteen">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Systems.png?versionId=9495"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jis">Journal of Information Systems</a></h3>
+<p><a href="/jistn">Teaching Notes</a></p>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-eighteen">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<center><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/Taxation.png?versionId=7801"></center>
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<center>
+<h3><a href="/jata">The Journal of the American Taxation Association</a></h3>
+</center>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-AdBlock widget-instance-Home_MainContentB0B6Pillow_Ad">
+            <input type="hidden" class="hfAdBlockInfo" data-divid="div-gpt-ad-1587149110744-0" data-slotname="21839082257/tile.ros.1/aaa_tile1_300x250" data-targetname="" data-sizes="[[300, 250]]" data-enabled-on-mobile="True" data-adprovider-typeid="1" data-accountid="" data-outofpagead="False">
+    <div class="adblock-wrap js-adblock-wrap" style="width:300px;">
+
+            <div id="div-gpt-ad-1587149110744-0" adslot="21839082257/tile.ros.1/aaa_tile1_300x250" class="adblock-slot-placeholder js-adblock" style="width: 300px; height: 250px;" data-google-query-id="CJq_hPui-vECFUMQPwodV3cAgw"><div id="google_ads_iframe_21839082257/tile.ros.1/aaa_tile1_300x250_0__container__" style="border: 0pt none;"><iframe id="google_ads_iframe_21839082257/tile.ros.1/aaa_tile1_300x250_0" title="3rd party ad content" name="google_ads_iframe_21839082257/tile.ros.1/aaa_tile1_300x250_0" scrolling="no" marginwidth="0" marginheight="0" style="border: 0px none; vertical-align: bottom;" srcdoc="" data-google-container-id="2" data-load-complete="true" width="180" height="150" frameborder="0"></iframe></div></div>
+
+    </div>
+ 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+    <div class="widget-DynamicWidgetLayout widget-instance-Home_MainContentB0B7">
+        <div class="widget widget-dynamic home-row3 home-self-serve-content-features self-serve-content-features" data-count="3">
+    
+        <div class="widget-dynamic__header">
+            <h3>
+                Features &amp; Information
+                <div class="widget-dynamic__underbar journal-bg"></div>
+            </h3>
+        </div>
+
+    <div class="widget-dynamic-inner-wrap">
+
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-1">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image"><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/crosscheck_depositor.png?versionId=10638"></div>
+<div class="homepage-panel-text">
+<p>Crossref Similarity Check is a multi-publisher initiative to screen published and submitted content for originality. The American Accounting Association uses the iThenticate software to detect instances of overlapping and similar text in submitted manuscripts. View American Accounting Association's plagiarism policy here. To find out more about Crossref Similarity Check visit <a href="https://www.crossref.org/services/similarity-check/" target="_blank">www.crossref.org/services/similarity-check</a></p>
+</div>
+</div>
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-2">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/altmetric.png?versionId=10639">
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<p>Altmetric is a data science company that tracks where published research is mentioned online, and provides tools and services to institutions, publishers, researchers, funders and other organisations to monitor this activity, commonly referred to as altmetrics. For more information about Altmetric visit <a href="https://en-wikipedia-org.proxy1.lib.uwo.ca/wiki/Altmetric" target="_blank">en.wikipedia.org/wiki/Altmetric</a>
+</p>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+    <div class="widget-SelfServeContent widget-instance-aaa_home-self-serve-content-feature-3">
+        
+<div class="homepage-panel-wrap">
+<div class="homepage-panel-image">
+<img alt="ORCID logo" src="//allen.silverchair-cdn.com/ImageLibrary/AAAN/ORCID.png?versionId=9713">
+</div>
+<!-- close .homepage-panel-image-->
+<div class="homepage-panel-text">
+<p>ORCID provides a persistent digital identifier (an ORCID iD) that you own and control, and that distinguishes you from every other researcher. You can connect your iD with your professional information — affiliations, grants, publications, peer review, and more. You can use your iD to share your information with other systems, ensuring you get recognition for all your contributions, saving you time and hassle, and reducing the risk of errors.</p>
+</div>
+<!-- close .homepage-panel-text -->
+</div>
+<!-- close .homepage-panel-wrap -->
+
+
+     
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+    </div>
+
+</div> 
+    </div>
+
+
+
+            </div>
+        </div>
+    </div>
+
+
+            </div><!-- /.content-main_content -->
+        </section>
+    </div>
+    <div class="mobile-mask">
+    </div>
+    <section class="footer_wrap vt-site-footer">
+        
+
+
+<div class="ad-banner js-ad-banner ad-banner-footer">
+
+    <div class="widget-AdBlock widget-instance-FooterAd">
+            <input type="hidden" class="hfAdBlockInfo" data-divid="div-gpt-ad-1586292620960-0" data-slotname="/21839082257/footer.ros.1/aaa_footer_728x90" data-targetname="" data-sizes="[[728, 90]]" data-enabled-on-mobile="True" data-adprovider-typeid="1" data-accountid="" data-outofpagead="False">
+    <div class="adblock-wrap js-adblock-wrap" style="width:728px;">
+
+            <div id="div-gpt-ad-1586292620960-0" adslot="/21839082257/footer.ros.1/aaa_footer_728x90" class="adblock-slot-placeholder js-adblock" style="width: 728px; height: 90px; display: none;" data-google-query-id="CMGGhfui-vECFQs-AQodBNoK1g"><div id="google_ads_iframe_/21839082257/footer.ros.1/aaa_footer_728x90_0__container__" style="border: 0pt none; width: 728px; height: 0px;"></div></div>
+
+    </div>
+ 
+    </div>
+
+</div>
+
+    <div class="widget-SitePageFooter widget-instance-SitePageFooter">
+            <div class="journal-footer journal-bg">
+        <div class="journal-footer_content clearfix foot-left">
+
+
+
+
+    <div class="journal-footer-affiliations aff-1">
+        <a href="/aaa" target="">
+            <img id="footer-logo-AmericanAccountingAssociationSocietyLogo" class="journal-footer-affiliations-logo" src="//allen.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/aaa/AAA-Logo1672845533.png" alt="American Accounting Association Society Logo">
+        </a>
+    </div>
+    <div class="journal-footer-menu">
+            <ul>
+                <li class="link-0">
+                    <a href="https://meridian-allenpress-com.proxy1.lib.uwo.ca/aaa/pages/information-for-authors">Information for Authors</a>
+                </li>
+                <li class="link-1">
+                    <a href="/DocumentLibrary/AAAN/Authorship.pdf">Publication Ethics: Authorship Policy</a>
+                </li>
+                <li class="link-2">
+                    <a href="/DocumentLibrary/AAAN/Citing.pdf">Publication Ethics: Plagiarism Policy</a>
+                </li>
+                <li class="link-3">
+                    <a href="/DocumentLibrary/AAAN/Data-Integrity.pdf">Publication Ethics: Data Integrity Policy</a>
+                </li>
+            </ul>
+            <ul>
+                <li class="link-0">
+                    <a href="/DocumentLibrary/AAAN/Decision-Rights.pdf">Publication Ethics: Citing Corrected Articles Policy</a>
+                </li>
+                <li class="link-1">
+                    <a href="/DocumentLibrary/AAAN/Plagiarism-Policy.pdf">Publication Ethics: Minimizing Overlapping Decision Rights Policy</a>
+                </li>
+                <li class="link-2">
+                    <a href="/DocumentLibrary/AAAN/Prior-Publication.pdf">Prior Publication Policy</a>
+                </li>
+            </ul>
+        
+    </div>
+
+
+
+
+    <div class="journal-footer-affiliations aff-2">
+        <a href="http://aaahq.org.proxy1.lib.uwo.ca/" target="_blank">
+            <img id="footer-logo-AmericanAccountingAssociationSocietyLogo" class="journal-footer-affiliations-logo" src="//allen.silverchair-cdn.com/data/SiteBuilderAssets/Live/Images/aaa/AAA-Logo1672845533.png" alt="American Accounting Association Society Logo">
+        </a>
+    </div>
+        </div>
+    </div>
+ 
+    </div>
+
+
+
+<div class="site-theme-footer">    
+            <div class="site-theme-footer_content">
+    <div class="widget-SelfServeContent widget-instance-UmbrellaFooterSelfServe">
+        
+<div class="theme-footer">
+<div class="flex-row">
+<div class="col-12">
+<div class="legal-links-wrap">
+<ul class="legal-links">
+    <li><a href="https://www-allenpress-com.proxy1.lib.uwo.ca/privacy-policy/" target="_blank">Privacy Policy</a></li>
+    <li><a href="https://get.adobe.com/reader/" target="_blank">Get Adobe Acrobat Reader</a></li>
+    <li><a href="https://www-allenpress-com.proxy1.lib.uwo.ca/meridian-support" target="_blank">Support</a></li>
+    <li class="copyright"><a href="https://www-allenpress-com.proxy1.lib.uwo.ca/" target="_blank"><img alt="" src="//allen.silverchair-cdn.com/ImageLibrary/allenpress-logo_Registered-01.svg?versionId=10744"></a></li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+
+
+     
+    </div>
+                    
+            </div><!-- /.center-inner-row -->
+</div><!-- /.site-theme-footer -->
+<div class="ss-ui-only">
+
+    <div class="widget-SelfServeContent widget-instance-SSuiOnlySelfServe">
+        
+<style>
+    body.leftRailModalOpen .page-column--center.can-stick {
+    z-index: 1;
+    }
+</style>
+
+
+     
+    </div>
+
+</div>
+
+<div class="ad-banner js-ad-interstitial">
+
+    <div class="widget-AdBlock widget-instance-Interstitial">
+         
+    </div>
+
+</div>
+    </section>
+
+
+
+
+
+    
+    
+
+
+    <div class="widget-SiteWideModals widget-instance-SiteWideModals">
+        <div id="revealModal" class="reveal-modal" data-reveal="" style="top: 25vh;">
+    <div id="revealContent"></div>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close"><span class="screenreader-text">Close Modal</span></i></a>
+</div>
+
+<div id="globalModalContainer" class="modal-global-container">
+    <div id="globalModalContent"></div>
+    <a class="close-modal js-close-modal" href="javascript:;"><i class="icon-general-close"><span class="screenreader-text">Close Modal</span></i></a>
+</div>
+<div id="globalModalOverlay" class="modal-overlay js-modal-overlay"></div>
+
+<div id="NeedSubscription" class="reveal-modal small" data-reveal="" style="top: 25vh;">
+    <div class="subscription-needed">
+        <h5 class="modal-heading">This Feature Is Available To Subscribers Only</h5>
+        <p><a class="btn modal-sign_in-btn" href="/sign-in?returnUrl=%2faaa">Sign In</a> or <a class="modal-register-link" href="/my-account/register?siteId=1000291&amp;returnUrl=%2faaa">Create an Account</a></p>
+    </div>
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close"><span class="screenreader-text">Close Modal</span></i></a>
+</div>
+
+<div id="noAccessReveal" class="reveal-modal tiny" data-reveal="" style="top: 25vh;">
+    <a class="close-reveal-modal" href="javascript:;"><i class="icon-general-close"><span class="screenreader-text">Close Modal</span></i></a>
+    <div id="noAccessForm">
+        <div class="spinner"></div>
+    </div>
+</div>
+ 
+    </div>
+
+    
+
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<script src="//cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js"></script>
+
+    <script type="text/javascript" src="//allen.silverchair-cdn.com/Themes/Client/app/jsdist/v-637618634716560850/site.min.js"></script>
+    <script async="" src="//s7.addthis.com/js/300/addthis_widget.js#pubid=ra-5c93d5a7430408fd&amp;domready=1"></script>
+
+
+    
+  
+
+
+    
+
+        <script type="text/javascript">
+        $(document).ready(function () {
+            App.SearchAutoComplete.init(["Keywords"]);
+        });
+        </script><iframe src="https://eb38a44037b4eb2e246ab53b3906f8b0.safeframe.googlesyndication.com/safeframe/1-0-38/html/container.html" style="visibility: hidden; display: none;"></iframe>
+    
+    
+
+
+    <div class="widget-GdprCookieBanner widget-instance-GdprCookieBanner">
+        <div class="gdpr-cookie-wrapper at-gdprprompt">
+    <div class="gdpr-cookie-body">
+        This site uses cookies. By continuing to use our website, you are agreeing to <a href="https://www-allenpress-com.proxy1.lib.uwo.ca/privacy-policy/" target="_blank">our privacy policy.</a>
+    </div>
+    <div class="gdpr-cookie-links_wrap">
+        <a href="javascript:;" class="js-gdpr-cookie-acceptLink at-acceptgdpr">Accept</a>
+    </div>
+            <input id="hdnDomain" type="hidden" value="meridian.allenpress.com">
+
+    <input id="hdnDomainGdpr" type="hidden" value="meridian.allenpress.com">
+    <input id="hdnClientIdGdpr" type="hidden" value="34">
+</div> 
+    </div>
+
+
+    
+
+
+
+
+    <div class="ad-banner js-ad-riser ad-banner-riser">
+
+    <div class="widget-AdBlock widget-instance-RiserAd">
+         
+    </div>
+
+    </div>
+
+
+
+
+
+<div style="visibility: hidden; height: 1px; width: 1px; position: absolute; top: -9999px; z-index: 100000;" id="_atssh"><iframe id="_atssh778" title="AddThis utility frame" style="height: 1px; width: 1px; position: absolute; top: 0px; z-index: 100000; border: 0px none; left: 0px;" src="https://s7.addthis.com/static/sh.f48a1a04fe8dbf021b4cda1d.html#rand=0.40435433886686933&amp;iit=1627080434470&amp;tmr=load%3D1627080434420%26core%3D1627080434457%26main%3D1627080434462%26ifr%3D1627080434478&amp;cb=0&amp;cdn=0&amp;md=0&amp;kw=&amp;ab=-&amp;dh=meridian-allenpress-com.proxy1.lib.uwo.ca&amp;dr=https%3A%2F%2Fmeridian-allenpress-com.proxy1.lib.uwo.ca%2Faaa&amp;du=https%3A%2F%2Fmeridian-allenpress-com.proxy1.lib.uwo.ca%2Faaa&amp;href=https%3A%2F%2Fmeridian-allenpress-com.proxy1.lib.uwo.ca%2Faaa&amp;dt=American%20Accounting%20Association&amp;dbg=0&amp;cap=tc%3D0%26ab%3D0&amp;inst=1&amp;jsl=1&amp;prod=undefined&amp;lng=en&amp;ogt=&amp;pc=men&amp;pub=ra-5c93d5a7430408fd&amp;ssl=1&amp;sid=60fb46f2f3cd868d&amp;srf=0.01&amp;ver=300&amp;xck=0&amp;xtr=0&amp;og=&amp;csi=undefined&amp;rev=v8.28.8-wp&amp;ct=1&amp;xld=1&amp;xd=1"></iframe></div><style id="service-icons-0"></style><iframe id="google_osd_static_frame_9124494965838" name="google_osd_static_frame" style="display: none; width: 0px; height: 0px;"></iframe><iframe src="https://www.google.com/recaptcha/api2/aframe" style="display: none;" width="0" height="0"></iframe></body></html>

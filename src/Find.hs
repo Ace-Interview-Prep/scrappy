@@ -2,7 +2,8 @@
 
 module Find where
 
-import Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem')
+import Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', TreeHTML, ShowHTML)
+-- import Elem.TreeElemParser (findSameTreeH)
 import Types (ScrapeFail(..))
 
 import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero) 
@@ -164,3 +165,40 @@ findOnChangeInput :: ParsecT s u m (Elem' a)
 findOnChangeInput = undefined
 -- eg : <select id="s-lg-sel-subjects" name="s-lg-sel-subjects" class="form-control" data-placeholder="All Subjects" onchange="springSpace.publicObj.filterAzBySubject(jQuery(this).val(), 3848);">
 
+
+-- | Rewrite to being any pattern "a"
+
+-- -- | Note: this isnt necessarily deprecated but just useful for when we want to find many of some pattern
+-- -- | that doesnt need to exist right after the previous successful match
+-- {-# DEPRECATED findSomeSameEl "need manytill out and useful for find, findAll" #-}
+-- findSomeSameEl :: (Stream s m Char, ShowHTML a)
+--                => Maybe (ParsecT s u m a)
+--                -> Maybe [Elem]
+--                -> [(String, Maybe String)]
+--                -> ParsecT s u m [TreeHTML a]
+-- findSomeSameEl matchh elemOpts attrsSubset = do
+--   -- (_, treeH) <- manyTill_ (anyChar) (try $ treeElemParser elemOpts matchh attrsSubset)
+--   treeH <- treeElemParser elemOpts matchh attrsSubset
+--   treeHs <- findMore matchh treeH
+--   case treeHs of
+--     [] -> parserFail "no matches" -- by definition: this func should return at least 1 copy 
+--     _ -> return (treeH : treeHs)
+--   where
+--     findMore :: (Stream s m Char, ShowHTML a) =>
+--                 Maybe (ParsecT s u m a)
+--              -> TreeHTML a
+--              -> ParsecT s u m [TreeHTML a]    
+--     findMore matchh treeH = do
+--       treeH' <- --( fmap (:[]) (skipManyTill anyChar (try $ findSameTreeH matchh treeH) )  )
+--                 (do
+--                     -- note: using skipManyTill VIOLATES expectations of this functions use
+--                     -- this is gonna return something like 19 <a></a> tags since it is not
+--                     -- in any way required for the congruent elements to be neighbours 
+                    
+--                   x <- skipManyTill anyChar (try $ findSameTreeH matchh treeH)
+--                   return (x:[])
+--                 )
+--                 <|> return []
+--       case treeH' of
+--         [] -> return []
+--         _ -> fmap ((treeH:[]) <>) $ findMore matchh treeH -- TreeHTML : ParsecT s u m [TreeHTML]

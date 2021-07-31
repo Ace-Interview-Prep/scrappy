@@ -163,25 +163,42 @@ matchesInSameElTag elem parser = do
 --   enoughMatches elem' attrs' innerH
 
 
--- Suggests using contains function to limit length of waste (all text after a self-closing tag) 
-selfClosingTagPattern :: Stream s m Char =>
-                         ParsecT s u m (Elem' String)
-                      -> ParsecT s u m (Elem' String)
-                      -> ParsecT s u m (Elem' String)
-selfClosingTagPattern = undefined 
 
--- enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ParsecT s u m (Elem' a)
--- enoughMatches required e a (asString, matches) = 
-  -- if required <= (length matches)
-  -- then return $ Elem' e a matches (reverse asString)
-  -- else parserFail "not enough matches" -- should throw real error 
+elemParser :: (ShowHTML a, Stream s m Char) =>
+                       Maybe [Elem]
+                    -> Maybe (ParsecT s u m a)
+                    -> [(String, Maybe String)]
+                    -> ParsecT s u m (Elem' a)
+elemParser elemList innerSpec attrs = do
+  let
+    selfClosing = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]
+    selfC :: [String]
+    selfC = filter (\t -> elem t selfClosing) $ fromMaybe [] elemList
+    nSelfC = filter (\t -> not $ elem t selfClosing) $ fromMaybe [] elemList
+                  
+  (case selfC of { [] -> parserZero; xs -> (try $ elSelfClosing (Just xs) innerSpec attrs) })
+    <|> elemWithBody (Just nSelfC) innerSpec attrs
+  -- for each in elemList if e is elem of selfClosingTags then construct selfClosingpattern for e.tag followed by
+  -- all non-self closing tags being checked through the regular elemParser
 
-elemParser' :: (ShowHTML a, Stream s m Char) =>
+elSelfC :: Stream s m Char => Maybe [Elem] -> [(String, Maybe String)] -> ParsecT s u m (Elem' a)
+elSelfC elemOpts attrsSubset = do
+  (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
+  return $ Elem' tag attrs mempty mempty 
+
+elSelfClosing :: Stream s m Char => Maybe [Elem] -> Maybe (ParsecT s u m a) -> [(String, Maybe String)] -> ParsecT s u m (Elem' a)
+elSelfClosing elemOpts innerSpec attrsSubset = do
+  (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
+  case innerSpec of
+    Just _ -> parserZero
+    Nothing -> return $ Elem' tag attrs mempty mempty 
+
+elemWithBody :: (ShowHTML a, Stream s m Char) =>
               Maybe [Elem]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
            -> ParsecT s u m (Elem' a)
-elemParser' elemList innerSpec attrs = do
+elemWithBody elemList innerSpec attrs = do
   e <- elemParserInternal elemList innerSpec attrs
   when (length (matches' e) < (case innerSpec of { Nothing -> 0; _ -> 1 })) (parserFail "not enough matches")
   return e
@@ -202,22 +219,22 @@ elemParserInternal elemList innerSpec attrs = do
 
 
   
-elemParser :: (ShowHTML a, Stream s m Char) =>
-              Maybe [Elem]
-           -> Maybe (ParsecT s u m a)
-           -> [(String, Maybe String)]
-           -> ParsecT s u m (Elem' a)
-elemParser elemList innerSpec attrs = do
-  -- let required = case innerSpec of { Nothing -> 0; _ -> 1 }
-  (elem', attrs') <- parseOpeningTag elemList attrs
-  innerH <- fmap (foldr foldFuncTup mempty)
-            -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
-            $ (try (string "/>") >> return [])
-            <|> (try $ innerElemParser elem' innerSpec)
-            -- need to be sure that we have exhausted looking for an end tag
-            -- then we can do the following safely
-            <|> (selfClosingTextful innerSpec)
-  enoughMatches 0 elem' attrs' innerH
+-- elemParser :: (ShowHTML a, Stream s m Char) =>
+--               Maybe [Elem]
+--            -> Maybe (ParsecT s u m a)
+--            -> [(String, Maybe String)]
+--            -> ParsecT s u m (Elem' a)
+-- elemParser elemList innerSpec attrs = do
+--   -- let required = case innerSpec of { Nothing -> 0; _ -> 1 }
+--   (elem', attrs') <- parseOpeningTag elemList attrs
+--   innerH <- fmap (foldr foldFuncTup mempty)
+--             -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
+--             $ (try (string "/>") >> return [])
+--             <|> (try $ innerElemParser elem' innerSpec)
+--             -- need to be sure that we have exhausted looking for an end tag
+--             -- then we can do the following safely
+--             <|> (selfClosingTextful innerSpec)
+--   enoughMatches 0 elem' attrs' innerH
 
 
 innerElemParser :: (ShowHTML a, Stream s m Char) =>

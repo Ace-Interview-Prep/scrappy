@@ -8,7 +8,7 @@ import Find (findNaive)
 import Links (maybeUsefulUrl)
 import Elem.ElemHeadParse (hrefParser)
 
-import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse)
+import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse, parserZero, string)
 import Data.Functor.Identity (Identity)
 import Data.Maybe (catMaybes)
 -- functions for chaining free-range html patterns based on the previous
@@ -32,7 +32,13 @@ allLinks baseUrl = do
 
 
 
-
+mustContain :: ParsecT s u m (Elem' a) -> Int -> ParsecT s u m b -> ParsecT s u m (Elem' a)
+mustContain e count pat = do
+  out <- e
+  case parse (findNaive $ string "Search") "" (innerText' out) of
+    Right (Just xs) -> if count > (length xs) then parserZero else return out
+    _ -> parserZero
+    
 
 -- I could always make this generalized to a stream by making
   -- Stream s => .. data Elem2' = Elem2' s  ...

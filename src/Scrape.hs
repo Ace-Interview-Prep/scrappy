@@ -6,13 +6,20 @@ import Elem.ElemHeadParse (hrefParser)
 import Find (findNaive)
 import Links (maybeUsefulUrl)
 
+import Data.Either (fromRight)
 import Data.Maybe (catMaybes)
 import Data.Functor.Identity (Identity)
 import Text.Parsec (ParsecT, parse)
 
 
+runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
+runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html 
+
+runScraperOnHtml1 :: ParsecT String () Identity a -> String -> Maybe a
+runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
 
 
+{-# DEPRECATED simpleScrape' "from fba project - gives confusing String output" #-}
 simpleScrape' :: ParsecT String () Identity String -> String -> String 
 simpleScrape' p html = case parse (findNaive p) "" html of
   Right (Just (x:_)) -> x

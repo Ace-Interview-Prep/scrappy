@@ -55,7 +55,14 @@ hrefParser' predicate = do
 --also could be with '' not just ""
 -- | In future should add replace of apostrophe and similar issues to corresponding html representations
 attrValue :: Stream s m Char => ParsecT s u m [Char]
-attrValue = between (char '"' <|> char '\'') (char '"' <|> char '\'') (many1 (noneOf ['"', '\'']))
+attrValue = (between (char '"') (char '"') (many (noneOf ['"'])))
+            <|> (between (char '\'') (char '\'') (many (noneOf ['\''])))
+
+--PAST
+-- attrValue :: Stream s m Char => ParsecT s u m [Char]
+-- attrValue = between (char '"' <|> char '\'') (char '"' <|> char '\'') (many (noneOf ['"', '\'']))
+
+-- 
 
 -- -- this could be extensible to scrapePDFLink
 -- attrValue' :: Stream s m Char => ParsecT s u m a -> ParsecT s u m a
@@ -191,4 +198,3 @@ buildElemsOpts :: Stream s m Char => [Elem] -> ParsecT s u m String
 -- buildElemsOpts [] = <----- i dont think i need this
 buildElemsOpts [] = parserZero
 buildElemsOpts (x:elemsAllow) = try (string x) <|> (buildElemsOpts elemsAllow)
-

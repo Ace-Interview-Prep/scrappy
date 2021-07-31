@@ -20,7 +20,7 @@ import Data.Map (Map)
 
 type PageNumber = Int
 
-type Url = Text
+type Url = String 
 
 
 
@@ -31,29 +31,29 @@ type HrefURI = String
 
 type DOI = String -- Change to URI if this works 
 
-linkToURI :: Link -> URI
-linkToURI = undefined
+-- linkToURI :: Link -> URI
+-- linkToURI = undefined
 
-evalLink :: Link -> String
-evalLink = linkToText
-  where
-    linkToText x = case x of
-      OuterPage x' -> x'
-      SearchFormURL y -> y
-      ListingPage _ _ _ _ -> undefined
-      PageHasPdf r -> r
-      Sourcery _ _ -> undefined
+-- evalLink :: Link -> String
+-- evalLink = linkToText
+--   where
+--     linkToText x = case x of
+--       OuterPage x' -> x'
+--       SearchFormURL y -> y
+--       ListingPage _ _ _ _ -> undefined
+--       PageHasPdf r -> r
+--       Sourcery _ _ -> undefined
       
 
 
 -- lets view Link as meant to contain Informationally derived meaning from internet ; that contains how to get
 -- Keeps state for generic streaming 
-data Link = OuterPage String
-          | SearchFormURL  String
-          | ListingPage [GeneratedLink] PageNumber PageKey String
-          | PageHasPdf String
-          | PdfLink String
-          | Sourcery (PdfLink) ReferenceSys
+-- data Link = OuterPage String
+--           | SearchFormURL  String
+--           | ListingPage [GeneratedLink] PageNumber PageKey String
+--           | PageHasPdf String
+--           --  PdfLink String
+--           | Sourcery (PdfLink) ReferenceSys
 
 -- pageKey=param
 type PageKey = String
@@ -63,7 +63,7 @@ data ReferenceSys = RefSys [String] [String]
 type GeneratedLink = String
 
 
-type PdfLink = String   
+-- type PdfLink = String   
 -- | Name and Namespace are really same shit; might just converge
 -- | Refer to literally "name" attribute
 type Namespace = Text
@@ -79,7 +79,7 @@ data QParams = Opt (Map Namespace [Option]) | SimpleKV (Text, Text)
 
 
 -- SiteTree can be modelled as a stream ; just depends on how we apply it -- if lazily
-type SiteTree = [(Text, Bool)]
+type SiteTree = [(Bool, Text)]
 
 
 
@@ -99,31 +99,31 @@ findAdvancedSearchLinks = undefined
 
 
 
-urlIsNew :: SiteTree -> HrefURI -> Bool
+urlIsNew :: [(a, Url)] -> HrefURI -> Bool
 urlIsNew [] uri = True
 urlIsNew (branch:tree) uri
-  | eq1 (fmap uriPath (mkURI' (pack uri))) (fmap uriPath (mkURI' (fst branch))) = False
+  | eq1 (fmap uriPath (mkURI' (uri))) (fmap uriPath (mkURI' (snd branch))) = False
   | otherwise = urlIsNew tree uri
   where
-    mkURI' :: Text -> Maybe URI
-    mkURI' url = mkURI url
+    mkURI' :: String -> Maybe URI
+    mkURI' url = mkURI (pack url)
 
 
 
-maybeNewUrl :: SiteTree -> HrefURI -> Maybe HrefURI
+maybeNewUrl :: [(a, Url)] -> HrefURI -> Maybe HrefURI
 maybeNewUrl [] uri = Just uri
 maybeNewUrl (branch:tree) uri =
-  if eq1 (fmap uriPath (mkURI' (pack uri))) (fmap uriPath (mkURI' (fst branch)))
+  if eq1 (fmap uriPath (mkURI' (uri))) (fmap uriPath (mkURI' (snd branch)))
   then Nothing
   else maybeNewUrl tree uri
   -- eq1 (fmap uriPath (mkURI' (pack uri))) (fmap uriPath (mkURI' (fst branch))) = False
   -- otherwise = urlIsNew tree uri
   where
-    mkURI' :: Text -> Maybe URI
-    mkURI' url = mkURI url
+    mkURI' :: String -> Maybe URI
+    mkURI' url = mkURI (pack url)
   
  
-maybeUsefulNewUrl :: String -> HrefURI -> SiteTree -> Maybe HrefURI
+maybeUsefulNewUrl :: String -> HrefURI -> [(a, Url)] -> Maybe HrefURI
 maybeUsefulNewUrl baseUrl url tree = maybeUsefulUrl baseUrl url >>= maybeNewUrl tree 
 
 
@@ -160,18 +160,18 @@ maybeUsefulUrl baseUrl url = do
       else Nothing
       where allowed = [".aspx", ".html", ".pdf", ".php"]
 
-    getLastPath url = unpack (unRText (NE.last (snd (fromJust (fromJust (fmap uriPath (mkURI (pack url))))))))
+    
+getLastPath :: Url -> String 
+getLastPath url = unpack (unRText (NE.last (snd (fromJust (fromJust (fmap uriPath (mkURI (pack url))))))))
 
 
-
-
-newUrlList :: [Maybe Text] -> [(Text, Bool)] -> [(Text, Bool)]
-newUrlList newUrls oldUrls = fmap (, False) (catMaybes newUrls) <> oldUrls
+newUrlList :: [Maybe Text] -> [(Bool, Text)] -> [(Bool, Text)]
+newUrlList newUrls oldUrls = fmap (False,) (catMaybes newUrls) <> oldUrls
 
 -- | Input is meant to be right from 
-usefulNewUrls :: String -> SiteTree -> [Text] -> [Maybe HrefURI]
+usefulNewUrls :: String -> [(a, Url)] -> [Url] -> [Maybe HrefURI]
 usefulNewUrls _ _ [] = []
-usefulNewUrls baseUrl tree (link:links) = (maybeUsefulNewUrl baseUrl (unpack link) tree) : usefulNewUrls baseUrl tree links
+usefulNewUrls baseUrl tree (link:links) = (maybeUsefulNewUrl baseUrl (link) tree) : usefulNewUrls baseUrl tree links
 
 numberOfQueryParamsIsZero :: String -> Maybe String
 numberOfQueryParamsIsZero uri = do

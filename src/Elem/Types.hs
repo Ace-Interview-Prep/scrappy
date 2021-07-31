@@ -12,6 +12,7 @@ module Elem.Types where
 
 import Data.Text (Text, unpack)
 import Data.Map (Map, toList)
+import qualified Data.Map as Map
 
 import Data.Graph (Tree (Node), Forest)
 import Text.Megaparsec as MParsec (some)
@@ -46,8 +47,7 @@ instance ShowHTML Text where
 -- a b c are the three main types
 -- class RecursiveTree a b c where
 --   type (Element c)
---   type (InnerForest c)
---   type (HMatcher c) -- may not need this tho
+--   type (InnerForest c)--   type (HMatcher c) -- may not need this tho
                  
 --   toHtmlGen :: Element c -> HMatcher c
 --   elToITR :: Element c -> InnerForest c
@@ -257,6 +257,17 @@ type Inner a = HTMLMatcher Elem' a
 type HTMLMatcherList a = HTMLMatcher [] a
 -- IText String | Match a | Element [] a 
 
+
+
+-- mainly for testing
+-- allows for minimal steps and ensuring that low level parsing is working
+data HTMLBare e a = HTMLBare { tag :: Elem
+                             , attrsss :: Attrs
+                             , htmlM :: [HTMLMatcher e a]
+                             }
+
+
+
 type ElemHead = (Elem, Attrs) 
 type Attrs = Map String String
 type Elem = String
@@ -305,7 +316,7 @@ type TreeIndex = [Int]
 
 
 -- data GroupHtml a = GroupHtml [a] Glength MaxLength deriving Eq -- ... | Nil
-data GroupHtml element a = GroupHtml [element a] Glength MaxLength 
+data GroupHtml element a = GroupHtml [element a] Glength MaxLength deriving Show
 
 type Glength = Int -- number of items in group
 type MaxLength = Int -- could also just be length of head 
@@ -332,6 +343,9 @@ biggestGroup (n0@(GroupHtml a x1 y1) :n1@(GroupHtml b x2 y2):ghs) = case (x1 * y
   False -> biggestGroup (n1:ghs)
   
 
+
+getHref :: ElementRep e => e a -> Maybe String
+getHref e = ((Map.lookup "href") . attrs) e
 
 
 
@@ -500,7 +514,7 @@ selfClosingTextful innerP =
 
 
 
-{-# DEPRECATED UrlPagination "use CurrentQuery" #-}
+---- # DEPRECATED UrlPagination "use CurrentQuery" #
 data UrlPagination = UrlPagination String Int String 
 
 

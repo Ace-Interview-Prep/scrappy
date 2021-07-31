@@ -38,7 +38,7 @@ scrapeUrlWith parser manager url = do
   return $ parse parser ("site" <> url) dadBod
 
 
-scrapeWithDriver = undefined
+
 
 
 

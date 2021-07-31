@@ -121,7 +121,7 @@ mkProcessor i f x = do
   tId <- forkIO (f x)
   return (tId, i)
 
-concurrentStream :: Stream s => (a -> b) -> s a -> s b
+-- concurrentStream :: Stream s => (a -> b) -> s a -> s b
 runConcurrentStreamParallel :: DataStream s => (a -> a) -> s a -> IO (s a) 
 runConcurrentStreamParallel evalStatef prevGlobState = do
   let
@@ -131,7 +131,7 @@ runConcurrentStreamParallel evalStatef prevGlobState = do
   x <- evalStatef next
   if x == mempty
     then return ()
-    else runConcurrentStreamParallel execStatef (tail globalState <> (singleton x))
+    else runConcurrentStreamParallel evalStatef (tail globalState <> (singleton x))
 
 -- | In order to run in parallel model must change
 
@@ -268,8 +268,8 @@ runConcurrentStream'' evalStatef prevGlobState = do
       
   x <- evalStatef next
   if x == mempty
-    then return ()
-    else runConcurrentStream execStatef (tail globalState <> (singleton x))
+    then return mempty
+    else runConcurrentStream'' evalStatef (tail globalState <> (singleton x))
 
 
 --------------------------------------------------------------------------------------------------------------------
