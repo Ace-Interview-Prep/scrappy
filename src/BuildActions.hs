@@ -14,14 +14,17 @@ import Elem.Types (TreeHTML, Elem, Elem', ElemHead, ElementRep, Attrs, ShowHTML,
 import Elem.ElemHeadParse (hrefParser', hrefParser)
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
-import Links (maybeUsefulUrl)
+import Links (maybeUsefulUrl, Url )
 import Find (findNaive, findSomeHTMLNaive)
 
-import Network.HTTP.Base (RequestMethod(..))
+import Network.HTTP.Client (Request, queryString, method, parseRequest)
+import Network.HTTP.Types.Method (Method, methodPost, methodGet)
+import Control.Monad.Catch (MonadThrow)
 import Text.Parsec (ParsecT, ParseError, Stream, many, parse, string, (<|>), parserZero, try)
 import Text.Parsec.Error (Message (Message))
-import Data.Text (Text, pack)
-import Data.Map as Map (Map, insert, adjust, findWithDefault, toList, fromList, lookup, union, empty)
+import Data.Text (Text, pack, unpack)
+import Data.Text.Encoding (encodeUtf8)
+import Data.Map as Map (Map, insert, adjust, findWithDefault, toList, fromList, lookup, union, empty, insertWith)
 import Data.Maybe (fromMaybe, fromJust, catMaybes)
 import qualified Text.URI as URI  
 import Data.Char (digitToInt)
@@ -40,7 +43,6 @@ import Data.List (isPrefixOf)
 -- |   -- B) Radio Elements
 
 -- | 3A & 3B result in same type eventually -> Map (Namespace/Key) [Option]
-    
     --optimal solution begins generating "stream" of urls on new instance of (2) 
 
 -- | In our business logic, it revolves around 2. ; we have maybe no way of knowing for sure which
@@ -175,14 +177,48 @@ data PageLinker' = PL URL [FormRes] [HrefsSite]
 -- | 1 File: Top part, if it exists is Search And/Or Browse Links
 -- |         ->> below is the basic pages file tree
 
+-- | finish is a simplified version of finish' that doesnt need to care about idx, just writes queryString variant
 finish :: [String] -> [String] -> String
 finish [] _ = ""
 finish (x:xs) (y:ys) = "&" <> x <> "=" <> y <> finish xs ys
 
 finish' :: ([String], [String]) -> Int -> String -> String
 finish' (paramA:paramAs, paramB:paramBs) idx term = case idx of
+  -- SO we are at the right index if 0 
   0 -> "&" <> paramA <> "=" <> term <> finish paramAs paramBs
   _ -> "&" <> paramA <> "=" <> paramB <> finish' (paramAs, paramBs) (idx-1) term 
+
+
+
+
+finish'' :: [Text] -> [Text] -> QueryString
+finish'' [] _ = []
+finish'' (x:xs) (y:ys) = (x, y) : finish'' xs ys 
+  --"&" <> x <> "=" <> y <> finish xs ys
+
+finish''' :: ([Text], [Text]) -> Int -> Text -> QueryString
+finish''' (paramA:paramAs, paramB:paramBs) idx term = case idx of
+  0 -> (paramA, term) : finish'' paramAs paramBs 
+    -- "&" <> paramA <> "=" <> term <> finish'' paramAs paramBs
+  _ -> (paramA, paramB) : finish''' (paramAs, paramBs) (idx - 1) term
+    -- "&" <> paramA <> "=" <> paramB <> finish''' (paramAs, paramBs) (idx-1) term 
+
+
+
+-- | Basically just calls finish' with starting state 
+genTInputOpts' :: Text -> ([Text], [Text]) -> [QueryString]
+genTInputOpts' searchTerm params =
+  if (length $ snd params) /= (length $ fst params) 
+  then
+    undefined
+  else
+    reverse $ go searchTerm start params --(start, params) 
+  where
+    start = (length . fst $ params) - 1
+    go :: Text -> Int -> ([Text], [Text]) -> [QueryString]
+    go term idx params = if idx == -1 then [] else finish''' params idx term : go term (idx-1) params 
+
+
 
 -- | Basically just calls finish' with starting state 
 genSerchStrm :: String -> ([String], [String]) -> [Text]
@@ -295,64 +331,85 @@ innerFormParser = do
     Nothing -> undefined --return []
 
 -- type SearchQuery = Text
-type TInputOpt = Text
+type TInputOpt = QueryString
 type Action = Text
-data FormSummary = Form Term RequestMethod Action [TInputOpt] [SearchQuery]
-
+type BaseUrl = Url 
+data FilledForm = FilledForm { baseUrl :: Url
+                             , reqMethod :: Method
+                             , searchTerm :: Term
+                             , actnAttr :: Action
+                             , textInputOpts :: [TInputOpt]
+                             , qStringVariants :: [QueryString]
+                             } deriving Show 
 -- | If I instead just pass a baseUrl to buildFormSummary then I can return as:
 
 
+-- Searches ( PerformSearch  _    _  [FilledForm]  _ )
+-- Searches [PeformSearch _    _   FilledForm _ ] 
 
 
+data SearchSumm = SearchSumm Term Method Action [TInputOpt] [QueryString] 
 
 
-  -- | then for resPapScrap, ((\Form' term reqs -> PerformSearch term reqs stuff) . mkSearch)
-  -- | Then voila we have (with appropriate auth wrapping and fmapping to all genres
-         -- | we have the next SiteState!!
+--  -- | then for resPapScrap, ((\Form' term reqs -> PerformSearch term reqs stuff) . mkSearch)
+--  -- | Then voila we have (with appropriate auth wrapping and fmapping to all genres
+--         -- | we have the next SiteState!!
 
 -- | IMPLEMENTATION
-mkSearchEnum :: Url -> Elem' a -> Term -> SearchEnum
-mkSearchEnum baseUrl form term = do 
-  (Form method aAttr searchQueriesTextOpts searchQueriesEnumd) <- buildFormSummary form term
-  return $ mkSearch' baseUrl reqMethod aAttr (head searchQueriesTextOpts) searchQueriesEnumd
+-- | *** MAIN of forms / search
+-- mkSearchEnum :: Url -> Elem' a -> Term -> Either FormError SearchEnum
+-- mkSearchEnum baseUrl form term = do 
+  -- (FilledForm baseUrl reqMethod term aAttr searchQueriesTextOpts searchQueriesEnumd) <- buildFormSummary baseUrl term form 
+  -- mkSearch' baseUrl reqMethod term aAttr (head searchQueriesTextOpts) searchQueriesEnumd
 
+type Term = String 
 data SearchEnum = SearchEnum Term [Request]
-mkSearch' :: Url -> RequestMethod -> Term -> Action -> Text -> [Text] -> SearchEnum 
+mkSearch' :: Url -> Method -> Term -> Action -> QueryString -> [QueryString] -> Either FormError SearchEnum 
 mkSearch' baseUrl reqMethod term action textIOpt queriesEnumd = do
-  req1 <- parseRequest $ baseUrl <> action
-  let
-    req2 = req1 { reqMethod = reqMethod }
-  return $ SearchEnum  term $ fmap (\x -> req2 { queryParams = toBS $ textIOpt <> x }) queriesEnumd 
+  case parseRequest $ baseUrl <> (unpack action) of
+    Right req -> do
+      let
+        req2 = req { method = reqMethod }
+      return $ SearchEnum term
+        $ fmap (\query -> req2 { queryString = encodeUtf8 $ showQString (textIOpt <> query) }) queriesEnumd 
+    Left _ -> Left UrlError 
   
-  
+showQString :: [(Namespace, Option)] -> Text
+showQString xs = f (head xs) <> showQSInner (tail xs) 
+  where
+    f (n, v) = n <> "=" <> v
+    showQSInner [] = ""
+    showQSInner (y:ys) = "&" <> (fst y) <> "=" <> (snd y) <> (showQSInner ys)
+    
 
--- | This function's goal is to give the full callable, valid paths that get this genre some results
-mkGenredSearch :: Url -> Elem' a -> Genre -> Either FormError Search -- (Genre, [SearchQuery])
-mkGenredSearch baseUrl formE genre = do
-  (method, queries) <- buildFullSearchQuerys genre formE
-  return $ Search [Request] --  method genre (fmap (baseUrl <>) queries)
+-- -- | This function's goal is to give the full callable, valid paths that get this genre some results
+-- mkGenredSearch :: Url -> Elem' a -> Genre -> Either FormError Search -- (Genre, [SearchQuery])
+-- mkGenredSearch baseUrl formE genre = do
+--   (method, queries) <- buildFullSearchQuerys genre formE
+--   return $ Search [Request] --  method genre (fmap (baseUrl <>) queries)
 
   -- fmap (genre,) $ (fmap . fmap) (baseUrl <>) (buildFullSearchQuerys genre formE)
   -- fmap (Search _ genre) $ (fmap . fmap) (baseUrl <>) $ (method,queries) = buildFullSearchQuerys genre formE)
 
   
 type SearchQuery = Query 
-
+type Query = Text 
 
 data FormError = InvalidElement
-               | ParsecError ParseError 
+               | ParsecError ParseError
+               | UrlError
+               deriving Show
+-- -- | Note that buildFormUrlEndings gives a list of different configs of text inputs for a single search term
+-- -- | as well as the in order list of selected options -> So really this function is  just a means to a long
+-- -- | list of results for a given query/search term
 
--- | Note that buildFormUrlEndings gives a list of different configs of text inputs for a single search term
--- | as well as the in order list of selected options -> So really this function is  just a means to a long
--- | list of results for a given query/search term
-
--- | In future we will add fallback in the case of a very useless text box like say if we found the author input
--- | and erroneously used it as (title OR anywhere) text input 
-buildFullSearchQuerys :: Genre -> Elem' a -> Either FormError (RequestMethod, [SearchQuery])
-buildFullSearchQuerys genre formE = case buildFormSummary genre formE of
-  Right (Form method actionAttr (textInput:_) subsets) ->
-     Right $ (method, fmap ((unpack textInput <>) . unpack) subsets)
-  Left str -> Left $ OtherError str --undefined -- Left OtherError str
+-- -- | In future we will add fallback in the case of a very useless text box like say if we found the author input
+-- -- | and erroneously used it as (title OR anywhere) text input 
+-- buildFullSearchQuerys :: Term -> Elem' a -> Either FormError (RequestMethod, [SearchQuery])
+-- buildFullSearchQuerys genre formE = case buildFormSummary genre formE of
+--   Right (Form method actionAttr (textInput:_) subsets) ->
+--      Right $ (method, fmap ((unpack textInput <>) . unpack) subsets)
+--   Left str -> Left $ OtherError str --undefined -- Left OtherError str
 
   -- (Form method actionAttr (textInput:_) subsets) <- buildFormSummary genre formE
   -- return 
@@ -389,40 +446,74 @@ buildFullSearchQuerys genre formE = case buildFormSummary genre formE of
 
 
 
+-- type FormInput a = Elem' a  
+
+-- buildFormSummary' :: Url -> String -> [FormInput] -> FilledForm 
+-- buildFormSummary baseUrl searchTerm inputs =
+  -- let
+    -- (basic, textInput, variable, radio) = sepElems inputs
+    -- method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
+      -- "get" -> methodGet
+      -- "post" -> methodPost 
+    -- subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicParams' basic)
+    -- textInput' = ( (pack . (fromMaybe "") . (Map.lookup "name") . attrs) <$> textInput
+                 -- , fmap (pack . (findWithDefault "" "value") . attrs) textInput)
+    -- textInputOpts = (genTInputOpts' (pack searchTerm) textInput') -- :: [String]
+  -- in FilledForm baseUrl (method formElem) searchTerm (actionAttr formElem) textInputOpts subPaths
 
 
+mkFilledForm :: Url -> String -> Elem' a -> ([Elem' a], [Elem' a], [Elem' a], [Elem' a]) -> FilledForm
+mkFilledForm baseUrl searchTerm formElem (basic, textInput, variable, radio) = 
+  let
+    method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
+     "get" -> methodGet
+     "post" -> methodPost
+    
+    basic' = mkBasicParams' basic
+    radio' = radiosToMap (fmap mkNameVal radio)
+    variable' = mkOptMaps' variable
+    subPaths' = buildSearchUrlSubsets (union variable' radio')
+    textInputOpts' = fmap (basic' <>) (genTInputOpts' (pack searchTerm) textInput') 
+    
+    -- subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicParams' basic)
+    textInput' = ( fmap (pack . (fromMaybe "") . (Map.lookup "name") . attrs) textInput
+                 , fmap (pack . (findWithDefault "" "value") . attrs) textInput)
+    
+    textInputOpts = (genTInputOpts' (pack searchTerm) textInput') -- :: [String]
+ -- in return (subPaths, textInputOpts)
+ in FilledForm baseUrl (method formElem) searchTerm (actionAttr formElem) textInputOpts' subPaths'
 
+getFormInputElems :: Elem' String
+                  -> Either FormError ([Elem' String], [Elem' String], [Elem' String], [Elem' String])
+getFormInputElems formElem = case elTag formElem of
+  "form" ->
+    case fmap sepElems $ parse innerFormParser "" (innerText' formElem) of
+      Left err -> Left $ ParsecError err
+      Right a -> return a
+  _ -> Left InvalidElement
 
-                  
-            
--- | This would likely be way more efficient if we parsed as TreeHTML then "trimmed" down to
--- | what we want but it could also be less efficient 
--- | would be fed from some initial parser
-buildFormSummary :: String -> Elem' a -> Either FormError FormSummary
-buildFormSummary searchTerm formElem = case elTag formElem of
-
-
-  -- also need to get whether post or get request
-  -- attr => method
-
-  --
-  
+--  This would likely be way more efficient if we parsed as TreeHTML then "trimmed" down to
+--  what we want but it could also be less efficient 
+--  would be fed from some initial parser
+buildFormSummary :: Url -> String -> Elem' String -> Either FormError FilledForm
+buildFormSummary baseUrl searchTerm formElem = case elTag formElem of
   "form" -> do --Either a b is the Monad
-    case fmap sepElems (parse innerFormParser "" (innerText' formElem)) of
+    case fmap sepElems $ parse innerFormParser "" (innerText' formElem) of
       Left err -> Left $ ParsecError err
       Right (basic, textInput, variable, radio) ->
-        let
-          method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
-            "get" -> GET
-            "post" -> POST 
-          subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicPart (actionAttr formElem) basic)
-          textInput' = ( ((fromMaybe "") . (Map.lookup "name") . attrs) <$> textInput
-                       , fmap (findWithDefault "" "value" . attrs) textInput)
-          textInputOpts = (genSerchStrm searchTerm textInput') -- :: [String]
-        -- in return (subPaths, textInputOpts)
-        in return $ Form (method formElem) (actionAttr formElem) textInputOpts subPaths
+        return $ mkFilledForm baseUrl searchTerm formElem (basic, textInput, variable, radio) 
+        -- let
+        --   method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
+        --     "get" -> methodGet
+        --     "post" -> methodPost 
+        --   subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicParams' basic)
+        --   textInput' = ( (pack . (fromMaybe "") . (Map.lookup "name") . attrs) <$> textInput
+        --                , fmap (pack . (findWithDefault "" "value") . attrs) textInput)
+        --   textInputOpts = (genTInputOpts' (pack searchTerm) textInput') -- :: [String]
+        -- -- in return (subPaths, textInputOpts)
+        -- in return $ FilledForm baseUrl (method formElem) searchTerm (actionAttr formElem) textInputOpts subPaths
         --  at macro, can build then try Url ... case Fail -> build, try next
-  _ -> Left InvalidElement
+  _ -> Left InvalidElement      
 
 
 -- -- | This would likely be way more efficient if we parsed as TreeHTML then "trimmed" down to
@@ -482,26 +573,30 @@ buildFormSummary searchTerm formElem = case elTag formElem of
 actionAttr :: Elem' a -> Text
 actionAttr formElem = (pack . fromJust . (Map.lookup "action") . attrs) formElem
 
-mkBasicPart :: Text -> [Elem' a] -> Text
-mkBasicPart actionAttr basicEs = actionAttr <> (createBasicQKVPairs basicEs)
+-- mkBasicPart :: Text -> [Elem' a] -> Text
+-- mkBasicPart actionAttr basicEs = actionAttr <> (createBasicQKVPairs basicEs)
+
+mkBasicParams' :: [Elem' a] -> QueryString -- [(Namespace, Option)]
+mkBasicParams' = createBasicQKVPairs
 
 mkSubsetVars :: [Elem' a] -> [Elem' a] -> Map Namespace [Option]
 mkSubsetVars variable radio = union (fromList (mkOptMaps variable)) (iterRadios radio empty)
 
-searchTermSubPaths :: Map Namespace [Option] -> Text -> [Text] 
-searchTermSubPaths subsetVariables basicPath = [ basicPath <> x | x <- buildSearchUrlSubsets subsetVariables]
+searchTermSubPaths :: Map Namespace [Option] -> QueryString -> [QueryString] 
+searchTermSubPaths subsetVariables basicPath = fmap (basicPath <>) (buildSearchUrlSubsets subsetVariables)
+
+-- buildSearchUrlSubsets (mkSubsetVars variable radio) 
 
 
-
-
+type QueryString = [(Namespace, Option)] 
 -- buildSearchUrlSubsets (mkSubsetVars variable radio) 
 
 
 getAttrVal :: String -> Elem' a -> String 
 getAttrVal name formElem = (fromJust . (Map.lookup name) . attrs) formElem
 
-buildSearchUrlSubsets :: Map Namespace [Option] -> [Text]
-buildSearchUrlSubsets mappy = singlefOp "" (toList mappy) -- I believe "" is just state 
+buildSearchUrlSubsets :: Map Namespace [Option] -> [QueryString]
+buildSearchUrlSubsets mappy = singlefOp' mempty (toList mappy) -- I believe "" is just state 
 
 -- <> of base + set pairs
 -- | Note: this url may fail
@@ -571,8 +666,30 @@ sepElems elems = go elems ([], [], [], [])
                 
 --           | tag == "button" = go elHeads (elem : a, b, c, d)
 
+  
+  -- (fromJust $ Map.lookup "name" (attrs elem)
+  -- , case parse formOptionsParser "bsSourceName" (innerHtmlFull elem) of
+  --     Left _ -> Nothing -- dont care why it failed, just that it did
+  --     Right a -> Just $ fmap pack a)
+  
+-- | above should check if : el elem == "select"
 
+
+-- f :: ParsecT s u m SelectElem
+
+
+data SelectElem' = SelectElem' Namespace [Option]
+
+mkOptMaps :: [SelectElem a] -> [(Namespace, [Option])]  --- -> Map
+mkOptMaps [] = [] 
+mkOptMaps (elem:elems) = case mkOptMapSingle elem of
+                           Just a -> a : mkOptMaps elems
+                           Nothing -> mkOptMaps elems 
+ 
 -- |for variable elems, this will be a case where we need to parse inner text again for the option elements
+
+mkOptMaps' :: [SelectElem a] -> Map Namespace [Option]
+mkOptMaps' es = fromList $! catMaybes (fmap mkOptMapSingle es)
 
 -- | This likely has a far better implementation although im honestly not sure how much "overhead"
 -- | would be removed by not using parser again
@@ -588,20 +705,7 @@ mkOptMapSingle elem = --confirm is "select" then parse options ; \case (options)
       Left _ -> Nothing -- dont care why it failed, just that it did
       Right a -> Just $ (pack $ fromJust $ Map.lookup "id" (attrs elem), fmap pack a)
 
-  
-  -- (fromJust $ Map.lookup "name" (attrs elem)
-  -- , case parse formOptionsParser "bsSourceName" (innerHtmlFull elem) of
-  --     Left _ -> Nothing -- dont care why it failed, just that it did
-  --     Right a -> Just $ fmap pack a)
-  
--- | above should check if : el elem == "select"
 
-
-mkOptMaps :: [SelectElem a] -> [(Namespace, [Option])]  --- -> Map
-mkOptMaps [] = [] 
-mkOptMaps (elem:elems) = case mkOptMapSingle elem of
-                           Just a -> a : mkOptMaps elems
-                           Nothing -> mkOptMaps elems 
 
 
 --func idea:
@@ -650,11 +754,27 @@ formOptionsParser = (findNaive $ elemParser optionElemsPat (Nothing :: Maybe (Pa
 
 -- | Meaning this will work for any depth of tree
 
+-- | Should always be singleton !!! 
+toLis2' :: [(Namespace, Option)] -> Namespace -> Option -> [(Namespace, Option)] 
+toLis2' lis namesp opt = lis <> ((namesp, opt) :[]) 
+
 toStr2 :: Text -> Namespace -> Option -> Text
 toStr2 txt name value = txt <> "&" <> name <> "=" <> value 
 
 -- | singlefOp can be thought of as a state carrying function which evaluates to N number of
 -- | functions which evaluate to a list of the expression of toStr2 
+
+singlefOp' :: [(Namespace, Option)] -> [(Namespace, [Option])] -> [[(Namespace, Option)]] 
+singlefOp' lis [] = []
+singlefOp' lis (("", _):_) = undefined
+singlefOp' lis ((namespace, []):[]) = [] -- allows for => x : singlefOp
+singlefOp' lis ((namespace, []):levels) = singlefOp' lis levels --omitting potential path of namespace=""
+singlefOp' lis ((namespace, x:[]):levels) = singlefOp' (toLis2' lis namespace x) levels
+singlefOp' lis ((namespace, xs):[]) = [ toLis2' lis namespace x | x <- xs ]
+-- Main: 
+singlefOp' lis ((namespace, (x:xs)):levels) = -- Divide ->
+  singlefOp' (toLis2' lis namespace x) levels -- Branch 1 
+  <> singlefOp' lis ((namespace, xs):levels) -- Branch 2
 
 
 -- | Is essentially the core of buildFormUrlEndings; creates all url search queries
@@ -705,14 +825,15 @@ singlefOp str ((namespace, (x:xs)):levels) = -- Divide ->
 -- | SO add the results of f :: ItemOfCurrentList -> [ItemOCL] -> [String]
   
 -- | for basic
-createBasicQKVPair :: Elem' a -> Text
-createBasicQKVPair elem = (pack (fromJust (Map.lookup "name" (attrs elem))))
-                          <> "=" <> (pack (findWithDefault "" "value" (attrs elem)))
+createBasicQKVPair :: Elem' a -> (Namespace, Option) 
+createBasicQKVPair elem =
+  (  (pack (fromJust (Map.lookup "name" (attrs elem)))) , (pack (findWithDefault "" "value" (attrs elem))) )
+                          -- <> "=" <> 
                           
 
-createBasicQKVPairs :: [Elem' a] -> Text
-createBasicQKVPairs [] = ""
-createBasicQKVPairs (elem:elems) = createBasicQKVPair elem <> createBasicQKVPairs elems
+createBasicQKVPairs :: [Elem' a] -> QueryString -- [(Namespace, Option)] 
+createBasicQKVPairs [] = []
+createBasicQKVPairs (elem:elems) = createBasicQKVPair elem : createBasicQKVPairs elems
 
 -- | NOTE: this below function sucks createQKVP...Term
 -- | Instead i will do a cycle pattern that controls it 
@@ -735,6 +856,39 @@ createQKVPairWithTerm term (next:tInputElems) =
 
 -- O : [(Name, [Options]), (Name2, [Options2]) ... ]
 
+-- radiosToMap :: [Elem' a] -> Map Namespace [Option]
+-- radiosToMap (e:es) = singleton _name _value <> radiosToMap
+  -- where
+    -- _name <+> _value >>= Namespace Option
+
+
+type NamespacePair = (Namespace, Text)
+
+mkNameVal :: Elem' a -> NamespacePair
+mkNameVal = (\a -> (pack . fromJust $ Map.lookup "name" a, pack . fromJust $ Map.lookup "value" a)) . attrs
+
+radiosToMap :: [NamespacePair] -> Map Namespace [Option]
+radiosToMap ((name, value):nps) = insertWith (<>) name (value:[]) (radiosToMap nps)
+
+
+
+-- let
+--   func new old = new : old
+
+  
+  
+-- do :: Maybe a 
+--   case Map.lookup "name" a of
+--     Just name -> adjust name (value:) (radiosToMap es)
+--     Nothing -> singleton name value <> radiosToMap
+  
+
+--     . (\a -> (Map.lookup "name" a, Map.lookup "value")) . attrs
+
+--     -- goal is to add name if name is new and
+
+    
+                           -- Map Attr Value
 iterRadios :: [Elem' a] -> Map Namespace [Option] -> Map Namespace [Option]
 iterRadios [] finalOptsMap = finalOptsMap 
 iterRadios (elem:elems) startingOptsMap =

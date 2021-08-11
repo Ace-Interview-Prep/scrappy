@@ -110,10 +110,10 @@ urlIsNew (branch:tree) uri
 
 
 
-maybeNewUrl :: [(a, Url)] -> HrefURI -> Maybe HrefURI
+maybeNewUrl :: [(Url, a)] -> HrefURI -> Maybe HrefURI
 maybeNewUrl [] uri = Just uri
 maybeNewUrl (branch:tree) uri =
-  if eq1 (fmap uriPath (mkURI' (uri))) (fmap uriPath (mkURI' (snd branch)))
+  if eq1 (fmap uriPath (mkURI' (uri))) (fmap uriPath (mkURI' (fst branch)))
   then Nothing
   else maybeNewUrl tree uri
   -- eq1 (fmap uriPath (mkURI' (pack uri))) (fmap uriPath (mkURI' (fst branch))) = False
@@ -123,7 +123,7 @@ maybeNewUrl (branch:tree) uri =
     mkURI' url = mkURI (pack url)
   
  
-maybeUsefulNewUrl :: String -> HrefURI -> [(a, Url)] -> Maybe HrefURI
+maybeUsefulNewUrl :: String -> HrefURI -> [(Url, a)] -> Maybe HrefURI
 maybeUsefulNewUrl baseUrl url tree = maybeUsefulUrl baseUrl url >>= maybeNewUrl tree 
 
 
@@ -131,15 +131,15 @@ maybeUsefulNewUrl baseUrl url tree = maybeUsefulUrl baseUrl url >>= maybeNewUrl 
 -- Useful as in, diff web page on same site 
 maybeUsefulUrl :: String -> HrefURI -> Maybe HrefURI
 maybeUsefulUrl baseUrl url = do
-  url2 <- noJSorShit url
-  
-  url3 <- numberOfQueryParamsIsZero url2
-  url4 <- if isInfixOf baseUrl url3 then return url3 else Nothing
-  allowableEndings url4 
+  noJSorShit url
+  numberOfQueryParamsIsZero url
+  if isInfixOf baseUrl url then return url else Nothing
+  allowableEndings url
+
   where
     noJSorShit :: String -> Maybe String
     noJSorShit url =
-      if (elem True (urlContains url ["javascript", "about", "help", "#"]))
+      if (not $ elem True (urlContains url ["javascript", "about", "help", "#"]))
       then Just url
       else Nothing
 
@@ -169,7 +169,7 @@ newUrlList :: [Maybe Text] -> [(Bool, Text)] -> [(Bool, Text)]
 newUrlList newUrls oldUrls = fmap (False,) (catMaybes newUrls) <> oldUrls
 
 -- | Input is meant to be right from 
-usefulNewUrls :: String -> [(a, Url)] -> [Url] -> [Maybe HrefURI]
+usefulNewUrls :: String -> [(Url, a)] -> [Url] -> [Maybe HrefURI]
 usefulNewUrls _ _ [] = []
 usefulNewUrls baseUrl tree (link:links) = (maybeUsefulNewUrl baseUrl (link) tree) : usefulNewUrls baseUrl tree links
 
