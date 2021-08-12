@@ -322,6 +322,14 @@ searchForm = do
     then parserZero
     else return e
 
+data InputElem = Radio Name Value | SelectElem Name [Option] | Basic Name Value -- Could be (Maybe Value)
+
+innerFormParser' :: Stream s m Char => ParsecT s u m [InputElem]
+innerFormParser' = do
+  x <- findNaive (inputElemParser inputElems Nothing [])
+  case x of
+    Just listOfElems -> return listOfElems
+    Nothing -> undefined --return []
 
 innerFormParser :: Stream s m Char => ParsecT s u m [Elem' String]
 innerFormParser = do
@@ -868,6 +876,7 @@ mkNameVal :: Elem' a -> NamespacePair
 mkNameVal = (\a -> (pack . fromJust $ Map.lookup "name" a, pack . fromJust $ Map.lookup "value" a)) . attrs
 
 radiosToMap :: [NamespacePair] -> Map Namespace [Option]
+radiosToMap [] = mempty
 radiosToMap ((name, value):nps) = insertWith (<>) name (value:[]) (radiosToMap nps)
 
 
