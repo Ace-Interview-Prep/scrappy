@@ -10,8 +10,8 @@ import Replace.Megaparsec (findAll)
 
 import Elem.SimpleElemParser (elemParser)
 -- import Elem.ElemHeadParse 
-import Elem.Types (TreeHTML, Elem, Elem', ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches')
-import Elem.ElemHeadParse (hrefParser', hrefParser)
+import Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)
+import Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag)
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
 import Links (maybeUsefulUrl, Url )
@@ -22,6 +22,7 @@ import Network.HTTP.Types.Method (Method, methodPost, methodGet)
 import Control.Monad.Catch (MonadThrow)
 import Text.Parsec (ParsecT, ParseError, Stream, many, parse, string, (<|>), parserZero, try)
 import Text.Parsec.Error (Message (Message))
+import Data.Either (fromRight)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (encodeUtf8)
 import Data.Map as Map (Map, insert, adjust, findWithDefault, toList, fromList, lookup, union, empty, insertWith)
@@ -322,14 +323,124 @@ searchForm = do
     then parserZero
     else return e
 
-data InputElem = Radio Name Value | SelectElem Name [Option] | Basic Name Value -- Could be (Maybe Value)
 
-innerFormParser' :: Stream s m Char => ParsecT s u m [InputElem]
-innerFormParser' = do
-  x <- findNaive (inputElemParser inputElems Nothing [])
-  case x of
-    Just listOfElems -> return listOfElems
-    Nothing -> undefined --return []
+-- both Option and Value ~ Text
+data InputElem = Radio Namespace Option | SelectElem (Namespace, [Option]) | Basic Namespace (Maybe Option)
+               deriving Show
+                                                              -- Maybe distinguishes between basic
+-- | SO:
+
+  -- Radio case is also "input" elem tag
+
+-- (radio, variable, (basic, tInput))
+
+-- structure based on filtering steps based on Constructors
+
+-- - Instead of searchForm as arg, will be filtered, parsed form including sorted input elems 
+
+
+instance ShowHTML InputElem where
+  showH = show -- TEMPORARY
+
+
+data ParsedForm = ParsedForm Action Method [InputElem]
+
+
+-- f :: ParsedForm -> FilledForm
+
+
+-- basic, textInput, variable, radio
+                            -- | NOT READY               READY AS IS
+     
+-- | (Radio | Var | Basic | TInput)
+type SepdStruct = ([(Namespace, Option)], [(Namespace, [Option])], [(Namespace, Option)], [Namespace])
+
+
+
+sepElems' :: [InputElem] -> SepdStruct -> SepdStruct
+sepElems' (elem:elems) (a,b,c,d) = case elem of
+  Radio nom opt -> sepElems' elems ((nom, opt) : a, b, c, d)
+  SelectElem selEl -> sepElems' elems (a, selEl : b, c, d)
+  Basic namesp (Just opt) -> sepElems' elems (a, b, (namesp, opt) : c, d) 
+  Basic namesp (Nothing) -> sepElems' elems (a, b, c, namesp : d)
+
+
+  -- elems = ( filter fBasic elems
+  --                 , filter fTextInp elems
+  --                 , filter fVar elems
+  --                 , filter fRadio elems
+  --                 )
+  -- where
+  --   fBasic e =
+  --     (elTag e == "input")
+  --     && (let typ = fromJust $ Map.lookup "type" (attrs e) in not $ elem typ ["text", "radio"])
+
+  --   fTextInp e = ( elTag e == "textarea" )
+  --                || (elTag e == "input" && (fromJust (Map.lookup "type" (attrs e)) == "text"))
+
+  --   fVar e = elem (elTag e) ["select", "datalist"]
+
+  --   fRadio e = elTag e == "input" && (fromJust (Map.lookup "type" (attrs e)) == "radio")
+     
+
+
+
+formElem :: Stream s m Char => ParsecT s u m ParsedForm
+formElem = do
+  Elem' _ as matches _  <- elemParser (Just ["form"]) (Just inputElem) []
+  return $ ParsedForm (getAction as) (getMethod as) matches
+  where
+    getAction = pack . fromJust . (Map.lookup "action")
+    getMethod as = case fromJust ((Map.lookup "method") as) of
+                  "get" -> methodGet
+                  "post" -> methodPost
+
+inputElem :: Stream s m Char => ParsecT s u m InputElem
+inputElem = radioBasic <|> selectEl 
+
+-- checks el tag then returns either radio or 
+radioBasic :: Stream s m Char => ParsecT s u m InputElem
+radioBasic = do
+  (_, attrs) <- parseOpeningTag (Just ["input"]) [] 
+  if (fromMaybe "" $ Map.lookup "type" attrs) == "radio"
+    then return $ Radio (pack . fromJust $ Map.lookup "name" attrs) (pack . fromJust $ Map.lookup "value" attrs)
+    else return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+
+-- SelectElem Name [Option]
+
+-- | formRaw <- elemParser (Just ["form"]) (Just $ inputElem) [] 
+-- | return ParsedForm Action $ build (matches formRaw)... 
+
+selectEl :: Stream s m Char => ParsecT s u m InputElem
+selectEl = do
+  e <- elemParser (Just ["select", "datalist"]) (Just optionParser) []
+  return $ SelectElem ((pack . fromJust . (Map.lookup "name") . attrs $ e), (fmap pack $ matches' e))
+  where
+    name e = pack . fromJust . (Map.lookup "name") . attrs $ e
+    opts e = fmap pack (matches' e)
+
+-- parseOpeningTag (Just ["option"])
+
+optionParser :: Stream s m Char => ParsecT s u m String
+optionParser = do
+  (_, a) <- parseOpeningTag (Just ["option"]) []
+  return $ (fromJust . (Map.lookup "value")) a
+
+
+  -- _ <- string "<option "
+  -- x <- fmap (fromRight (parserZero :: ParsecT s u m ) (attrsParser [])
+  -- return $ (fromJust . (Map.lookup "value")) x
+               
+  
+  
+
+
+-- innerFormParser' :: Stream s m Char => ParsecT s u m [InputElem]
+-- innerFormParser' = do
+--   x <- findNaive (inputElemParser inputElems Nothing [])
+--   case x of
+--     Just listOfElems -> return listOfElems
+--     Nothing -> undefined --return []
 
 innerFormParser :: Stream s m Char => ParsecT s u m [Elem' String]
 innerFormParser = do
@@ -712,6 +823,9 @@ mkOptMapSingle elem = --confirm is "select" then parse options ; \case (options)
     case parse formOptionsParser "bsSourceName" (innerText' elem) of
       Left _ -> Nothing -- dont care why it failed, just that it did
       Right a -> Just $ (pack $ fromJust $ Map.lookup "id" (attrs elem), fmap pack a)
+
+
+
 
 
 
