@@ -16,6 +16,7 @@ import Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag
 
 import Links (maybeUsefulUrl, Url )
 import Find (findNaive, findSomeHTMLNaive)
+import Scrape
 
 import Network.HTTP.Client (Request, queryString, method, parseRequest)
 import Network.HTTP.Types.Method (Method, methodPost, methodGet)
@@ -30,7 +31,7 @@ import Data.Maybe (fromMaybe, fromJust, catMaybes)
 import qualified Text.URI as URI  
 import Data.Char (digitToInt)
 import Data.List (isPrefixOf)
-
+import Control.Monad.IO.Class
 
 
 
@@ -343,26 +344,27 @@ instance ShowHTML InputElem where
   showH = show -- TEMPORARY
 
 
-data ParsedForm = ParsedForm Action Method [InputElem]
+data ParsedForm = ParsedForm Action Method [InputElem] deriving Show 
 
 
 -- f :: ParsedForm -> FilledForm
 
 
 -- basic, textInput, variable, radio
-                            -- | NOT READY               READY AS IS
+     ------                       NOT READY               READY AS IS
      
--- | (Radio | Var | Basic | TInput)
+-- (Radio | Var | Basic | TInput)
 type SepdStruct = ([(Namespace, Option)], [(Namespace, [Option])], [(Namespace, Option)], [Namespace])
 
 
 
 sepElems' :: [InputElem] -> SepdStruct -> SepdStruct
-sepElems' (elem:elems) (a,b,c,d) = case elem of
+sepElems' [] s = s
+sepElems' (elem:elems) (a,b,c,d) =(case elem of
   Radio nom opt -> sepElems' elems ((nom, opt) : a, b, c, d)
   SelectElem selEl -> sepElems' elems (a, selEl : b, c, d)
   Basic namesp (Just opt) -> sepElems' elems (a, b, (namesp, opt) : c, d) 
-  Basic namesp (Nothing) -> sepElems' elems (a, b, c, namesp : d)
+  Basic namesp (Nothing) -> sepElems' elems (a, b, c, namesp : d))
 
 
   -- elems = ( filter fBasic elems
@@ -384,11 +386,19 @@ sepElems' (elem:elems) (a,b,c,d) = case elem of
      
 
 
+ -- length (matches' e) < 3
 
 formElem :: Stream s m Char => ParsecT s u m ParsedForm
 formElem = do
-  Elem' _ as matches _  <- elemParser (Just ["form"]) (Just inputElem) []
-  return $ ParsedForm (getAction as) (getMethod as) matches
+  Elem' _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
+  matchesSafe <- if length (filter (\x -> case x of {Left a -> True; _ -> False}) matches) == 0
+                 then return matches
+                 else parserZero
+  let
+    count = length $ fromMaybe [] $ runScraperOnHtml ((try $ string "Search") <|> string "search") innerT 
+  if count < (min count (length matches))
+    then parserZero
+    else return $ ParsedForm (getAction as) (getMethod as) matches
   where
     getAction = pack . fromJust . (Map.lookup "action")
     getMethod as = case fromJust ((Map.lookup "method") as) of
@@ -396,15 +406,52 @@ formElem = do
                   "post" -> methodPost
 
 inputElem :: Stream s m Char => ParsecT s u m InputElem
-inputElem = radioBasic <|> selectEl 
+inputElem = (try radioBasic') <|> selectEl 
 
 -- checks el tag then returns either radio or 
 radioBasic :: Stream s m Char => ParsecT s u m InputElem
 radioBasic = do
-  (_, attrs) <- parseOpeningTag (Just ["input"]) [] 
+  (e, attrs) <- parseOpeningTag (Just ["input"]) [] 
   if (fromMaybe "" $ Map.lookup "type" attrs) == "radio"
     then return $ Radio (pack . fromJust $ Map.lookup "name" attrs) (pack . fromJust $ Map.lookup "value" attrs)
     else return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+
+
+-- checks el tag then returns either radio or
+radioBasic'' ParsecT s u m (Either InnerFormErr InputElem)
+radioBasic'' = undefined
+
+radioBasic' :: (Stream s m Char) => ParsecT s u m InputElem
+radioBasic' = do
+  (e, attrs) <- parseOpeningTag (Just ["input", "textarea"]) []
+  let
+    type' = fromJust $ Map.lookup "type" attrs
+  case e of
+    "textarea" ->
+      return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+    "input" -> 
+      case type' of 
+        "radio" ->
+          return $ Radio (pack . fromJust $ Map.lookup "name" attrs) (pack . fromJust $ Map.lookup "value" attrs)
+        "text" -> 
+          return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+        "hidden" ->
+          return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+        "submit" -> parserZero -- we dont care about this
+        "checkbox" ->
+          if (elem "checked" (keys attrs))
+          then return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+          else parserZero
+          -- make as Basic if notchecked
+        "button" -> parserZero
+        "color" -> parserZero
+        "submit" -> parserZero
+       
+        -- "date", "datetime", "MONTH"+"week", "number", "range", "search", "time" -> doSomething
+        "email" -> check value, if its not set, this should throw parserZero unless definitely a search form
+        "file", "image", "password", "reset","tel", "url"  -> should fail
+             
+        any@_ ->
 
 -- SelectElem Name [Option]
 
@@ -453,10 +500,10 @@ innerFormParser = do
 type TInputOpt = QueryString
 type Action = Text
 type BaseUrl = Url 
-data FilledForm = FilledForm { baseUrl :: Url
+data FilledForm = FilledForm { actionUrl :: Url
                              , reqMethod :: Method
                              , searchTerm :: Term
-                             , actnAttr :: Action
+                             -- , actnAttr :: Action
                              , textInputOpts :: [TInputOpt]
                              , qStringVariants :: [QueryString]
                              } deriving Show 
@@ -581,58 +628,118 @@ data FormError = InvalidElement
   -- in FilledForm baseUrl (method formElem) searchTerm (actionAttr formElem) textInputOpts subPaths
 
 
-mkFilledForm :: Url -> String -> Elem' a -> ([Elem' a], [Elem' a], [Elem' a], [Elem' a]) -> FilledForm
-mkFilledForm baseUrl searchTerm formElem (basic, textInput, variable, radio) = 
-  let
-    method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
-     "get" -> methodGet
-     "post" -> methodPost
+-- {-# DEPRECATED mkFilledForm' "Use mkFilledForm" #-}
+-- mkFilledForm' :: Url -> String -> Elem' a -> ([Elem' a], [Elem' a], [Elem' a], [Elem' a]) -> FilledForm
+-- mkFilledForm' baseUrl searchTerm formElem (basic, textInput, variable, radio) = 
+--   let
+--     method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
+--      "get" -> methodGet
+--      "post" -> methodPost
     
-    basic' = mkBasicParams' basic
-    radio' = radiosToMap (fmap mkNameVal radio)
-    variable' = mkOptMaps' variable
-    subPaths' = buildSearchUrlSubsets (union variable' radio')
-    textInputOpts' = fmap (basic' <>) (genTInputOpts' (pack searchTerm) textInput') 
+--     basic' = mkBasicParams' basic
+--     radio' = radiosToMap (fmap mkNameVal radio)
+--     variable' = mkOptMaps' variable
+--     subPaths' = buildSearchUrlSubsets (union variable' radio')
+--     textInputOpts' = fmap (basic' <>) (genTInputOpts' (pack searchTerm) textInput') 
     
-    -- subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicParams' basic)
-    textInput' = ( fmap (pack . (fromMaybe "") . (Map.lookup "name") . attrs) textInput
-                 , fmap (pack . (findWithDefault "" "value") . attrs) textInput)
+--     -- subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicParams' basic)
+--     textInput' = ( fmap (pack . (fromMaybe "") . (Map.lookup "name") . attrs) textInput
+--                  , fmap (pack . (findWithDefault "" "value") . attrs) textInput)
     
-    textInputOpts = (genTInputOpts' (pack searchTerm) textInput') -- :: [String]
- -- in return (subPaths, textInputOpts)
- in FilledForm baseUrl (method formElem) searchTerm (actionAttr formElem) textInputOpts' subPaths'
+--     textInputOpts = (genTInputOpts' (pack searchTerm) textInput') -- :: [String]
+--  -- in return (subPaths, textInputOpts)
+--  in FilledForm (baseUrl <> "/" <> (unpack $actionAttr formElem)) (method formElem) searchTerm textInputOpts' subPaths'
 
-getFormInputElems :: Elem' String
-                  -> Either FormError ([Elem' String], [Elem' String], [Elem' String], [Elem' String])
-getFormInputElems formElem = case elTag formElem of
+
+-- Elem' a -> (N, Opt) --> [(N, Opt)]
+
+-- | (Radio | Var | Basic | TInput)
+mkFormInputs :: String -> SepdStruct -> ([TInputOpt], [QueryString])
+mkFormInputs searchTerm (radio, var, basic, tInput) = 
+  let
+    radio' = radiosToMap radio
+    variable' = fromList var
+    -- textInput' = ( fmap (pack . (fromMaybe "") . (Map.lookup "name") . attrs) tInput
+                 -- , fmap (pack . (findWithDefault "" "value") . attrs) tInput)
+
+    textInput' = (tInput, replicate (length tInput) "")
+    textInputOpts' = fmap (basic <>) (genTInputOpts' (pack searchTerm) textInput') 
+    subPaths' = buildSearchUrlSubsets (union variable' radio')
+ in (textInputOpts', subPaths')
+
+
+
+-- Elem' String --> ParsedForm ( [InputElems] )                    --> FilledForm
+
+--                             ^^--> ([TInputOptsWithBasic, Subsets]) ---^^^
+
+
+-- | NOTE: formElem is a specialized
+
+findForms :: String -> Maybe [ParsedForm]
+findForms html = runScraperOnHtml formElem html
+
+-- mkForm :: Elem' a -> Either FormError ParsedForm
+-- mkForm element = 
+
+fillForm :: ParsedForm -> Url -> String -> FilledForm
+fillForm (ParsedForm act meth formInputs) baseUrl searchTerm =
+  let
+    (tInputs, subsets) = mkQParams searchTerm formInputs 
+  in
+    FilledForm (baseUrl <> "/" <> (unpack act)) meth searchTerm tInputs subsets
+
+
+mkFilledForm :: Url -> String -> Elem' String -> Either FormError FilledForm
+mkFilledForm baseUrl searchTerm element = case elTag element of
   "form" ->
-    case fmap sepElems $ parse innerFormParser "" (innerText' formElem) of
+    case parse formElem "" (innerText' element) of
+      Right (ParsedForm act meth formInputs) ->
+        let
+          (tInputs, subsets) = mkQParams searchTerm formInputs 
+        in
+          return $ FilledForm (baseUrl <> "/" <> (unpack act)) meth searchTerm tInputs subsets
       Left err -> Left $ ParsecError err
-      Right a -> return a
   _ -> Left InvalidElement
+
+mkQParams :: String -> [InputElem] -> ([TInputOpt], [QueryString]) 
+mkQParams searchTerm inputs = mkFormInputs searchTerm $ sepElems' inputs mempty 
+
+
+
+-- -- The interface for starting forms processing in ResPapScrap
+-- getFormInputElems :: Elem' String
+--                   -> Either FormError 
+-- getFormInputElems formElem = case elTag formElem of
+--   "form" ->
+--     case fmap sepElems' $ parse formElem "" (innerText' formElem) of
+--       Left err -> Left $ ParsecError err
+--       Right a -> return a
+--   _ -> Left InvalidElement
 
 --  This would likely be way more efficient if we parsed as TreeHTML then "trimmed" down to
 --  what we want but it could also be less efficient 
 --  would be fed from some initial parser
-buildFormSummary :: Url -> String -> Elem' String -> Either FormError FilledForm
-buildFormSummary baseUrl searchTerm formElem = case elTag formElem of
-  "form" -> do --Either a b is the Monad
-    case fmap sepElems $ parse innerFormParser "" (innerText' formElem) of
-      Left err -> Left $ ParsecError err
-      Right (basic, textInput, variable, radio) ->
-        return $ mkFilledForm baseUrl searchTerm formElem (basic, textInput, variable, radio) 
-        -- let
-        --   method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
-        --     "get" -> methodGet
-        --     "post" -> methodPost 
-        --   subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicParams' basic)
-        --   textInput' = ( (pack . (fromMaybe "") . (Map.lookup "name") . attrs) <$> textInput
-        --                , fmap (pack . (findWithDefault "" "value") . attrs) textInput)
-        --   textInputOpts = (genTInputOpts' (pack searchTerm) textInput') -- :: [String]
-        -- -- in return (subPaths, textInputOpts)
-        -- in return $ FilledForm baseUrl (method formElem) searchTerm (actionAttr formElem) textInputOpts subPaths
-        --  at macro, can build then try Url ... case Fail -> build, try next
-  _ -> Left InvalidElement      
+-- {-# DEPRECATED buildFormSummary "replaced by mkFilledForm (new version) " #-}
+-- buildFormSummary :: Url -> String -> Elem' String -> Either FormError FilledForm
+-- buildFormSummary baseUrl searchTerm formElem = case elTag formElem of
+--   "form" -> do --Either a b is the Monad
+--     case fmap sepElems $ parse innerFormParser "" (innerText' formElem) of
+--       Left err -> Left $ ParsecError err
+--       Right (basic, textInput, variable, radio) ->
+--         return $ mkFilledForm' baseUrl searchTerm formElem (basic, textInput, variable, radio) 
+--         -- let
+--         --   method e = case (fromJust $ ((Map.lookup "method") . attrs) e) of
+--         --     "get" -> methodGet
+--         --     "post" -> methodPost 
+--         --   subPaths = searchTermSubPaths (mkSubsetVars variable radio) (mkBasicParams' basic)
+--         --   textInput' = ( (pack . (fromMaybe "") . (Map.lookup "name") . attrs) <$> textInput
+--         --                , fmap (pack . (findWithDefault "" "value") . attrs) textInput)
+--         --   textInputOpts = (genTInputOpts' (pack searchTerm) textInput') -- :: [String]
+--         -- -- in return (subPaths, textInputOpts)
+--         -- in return $ FilledForm baseUrl (method formElem) searchTerm (actionAttr formElem) textInputOpts subPaths
+--         --  at macro, can build then try Url ... case Fail -> build, try next
+--   _ -> Left InvalidElement      
 
 
 -- -- | This would likely be way more efficient if we parsed as TreeHTML then "trimmed" down to
@@ -807,8 +914,11 @@ mkOptMaps (elem:elems) = case mkOptMapSingle elem of
  
 -- |for variable elems, this will be a case where we need to parse inner text again for the option elements
 
-mkOptMaps' :: [SelectElem a] -> Map Namespace [Option]
-mkOptMaps' es = fromList $! catMaybes (fmap mkOptMapSingle es)
+mkOptMaps' :: [(Namespace, [Option])] -> Map Namespace [Option]
+mkOptMaps' = fromList 
+
+mkOptMaps'' :: [SelectElem a] -> Map Namespace [Option]
+mkOptMaps'' es = fromList $! catMaybes (fmap mkOptMapSingle es)
 
 -- | This likely has a far better implementation although im honestly not sure how much "overhead"
 -- | would be removed by not using parser again
@@ -984,7 +1094,7 @@ createQKVPairWithTerm term (next:tInputElems) =
     -- _name <+> _value >>= Namespace Option
 
 
-type NamespacePair = (Namespace, Text)
+type NamespacePair = (Namespace, Option)
 
 mkNameVal :: Elem' a -> NamespacePair
 mkNameVal = (\a -> (pack . fromJust $ Map.lookup "name" a, pack . fromJust $ Map.lookup "value" a)) . attrs
