@@ -1,15 +1,40 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Scrape where
 
 -- Basically just html patterns from testing / courtney market stuff
 import Elem.Types (Elem', innerText')
-import Elem.ElemHeadParse (hrefParser)
+import Elem.ElemHeadParse (hrefParser, parseOpeningTag)
+import Elem.SimpleElemParser (el)
+import Elem.ChainHTML ((</>>))
+
 import Find (findNaive)
 import Links (maybeUsefulUrl)
 
 import Data.Either (fromRight)
 import Data.Maybe (catMaybes)
 import Data.Functor.Identity (Identity)
-import Text.Parsec (ParsecT, parse)
+import Text.Parsec (Stream, ParsecT, parse, anyChar, manyTill, char)
+
+
+
+
+runScraperInBody :: ParsecT String () Identity a -> String -> Maybe [a]
+runScraperInBody prsr html = fromRight Nothing $ parse (skipToInBody >> findNaive prsr) "" html
+
+skipToInBody :: Stream s m Char => ParsecT s u m ()
+skipToInBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>')
+               </>> el "head" []
+               </>> parseOpeningTag (Just ["body"]) []
+               >> char '>'
+               >> return () 
+
+  
+runScraperOnBody :: ParsecT String () Identity a -> String -> Maybe [a] 
+runScraperOnBody prsr html = fromRight Nothing $ parse (skipToBody >> findNaive prsr) "" html 
+
+skipToBody :: Stream s m Char => ParsecT s u m ()
+skipToBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>') </>> el "head" [] >> return () 
 
 
 runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]

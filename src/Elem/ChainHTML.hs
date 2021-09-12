@@ -9,6 +9,9 @@ import Links (maybeUsefulUrl)
 import Elem.ElemHeadParse (hrefParser)
 
 import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse, parserZero, string)
+import Control.Applicative (some, )
+import Text.Megaparsec (manyTill_)
+
 import Data.Functor.Identity (Identity)
 import Data.Maybe (catMaybes)
 -- functions for chaining free-range html patterns based on the previous
@@ -86,4 +89,15 @@ sequenceHtml_ p1 p2 = do
 
 (</>>=) :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m (a, b)
 (</>>=) = sequenceHtml
-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+manyHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [a]
+manyHtml prsrHtml = (many (char ' ' <|> char '\n')) >> many (fmap snd $ manyTill_ (char ' ' <|> char '\n') prsrHtml)
+
+someHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [a]
+someHtml prsrHtml = many (char ' ' <|> char '\n') >> some prsrHtml
+
+
+

@@ -26,7 +26,7 @@ import Text.Parsec.Error (Message (Message))
 import Data.Either (fromRight)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (encodeUtf8)
-import Data.Map as Map (Map, insert, adjust, findWithDefault, toList, fromList, lookup, union, empty, insertWith)
+import Data.Map as Map (Map, insert, adjust, findWithDefault, toList, fromList, lookup, union, empty, insertWith, keys)
 import Data.Maybe (fromMaybe, fromJust, catMaybes)
 import qualified Text.URI as URI  
 import Data.Char (digitToInt)
@@ -258,17 +258,27 @@ genSerchStrm searchTerm params =
 allElems :: [String]
 allElems = ["this is a placeholder for describing all html tags as a type system"]
 
+-- case 1
+  
+-- 84 : input
+-- 7 : Select
+-- 8 : button
+-- else 0 
+
+-- case 2
+  
+-- 83 : select + input 
+
+
 -- | input has attr: type="" which determines value type for form url
 -- | Attrs that I care about really are refs@( name || id ) , (Maybe) value, type,
 inputElems :: Maybe [String] 
 inputElems = Just [ "input"
-                  , "select"
                   , "textarea"
                   , "button"
-                  , "datalist"
                   , "meter"
                   , "progress"
-                  , "radio" ]
+                  ]
 
 -- Another idea is a type family for Elem tags that allows for certain functions to specify
 -- if they only work with a subset of tags ; if it works with all : it specifies the type family
@@ -327,9 +337,13 @@ searchForm = do
 
 -- both Option and Value ~ Text
 data InputElem = Radio Namespace Option | SelectElem (Namespace, [Option]) | Basic Namespace (Maybe Option)
-               deriving Show
+               deriving (Show, Eq)
                                                               -- Maybe distinguishes between basic
 -- | SO:
+
+
+
+
 
   -- Radio case is also "input" elem tag
 
@@ -385,28 +399,50 @@ sepElems' (elem:elems) (a,b,c,d) =(case elem of
   --   fRadio e = elTag e == "input" && (fromJust (Map.lookup "type" (attrs e)) == "radio")
      
 
+-- ...
+-- any ->
+-- fmap (any,) (getValue any)
+--  case getValue any of
+--    Just a -> (any, a)
+--    Nothing -> Nothing
+--     OR
+--     case type' of
+--       -- so back to the starting calc, just not handled specially or dynamically ; we do the bare minimum
+--       -- We throw out if we can 
+
+
+instance ShowHTML a => ShowHTML (Maybe a) where
+  showH (Just a) = showH a
+  showH Nothing = "" 
+
+invalidSearchElems :: [Maybe InputElem] -> ParsecT s u m [InputElem]  
+invalidSearchElems matches = 
+  if (length $ filter (==Nothing) matches) == 0
+  then return $ catMaybes matches
+  else parserZero
 
  -- length (matches' e) < 3
 
 formElem :: Stream s m Char => ParsecT s u m ParsedForm
 formElem = do
   Elem' _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
-  matchesSafe <- if length (filter (\x -> case x of {Left a -> True; _ -> False}) matches) == 0
-                 then return matches
-                 else parserZero
+  -- matchesSafe <- if (length $filter (==Nothing) matches) == 0
+                 -- then return matches
+                 -- else parserZero
+  matchesSafe <- invalidSearchElems matches
   let
     count = length $ fromMaybe [] $ runScraperOnHtml ((try $ string "Search") <|> string "search") innerT 
   if count < (min count (length matches))
     then parserZero
-    else return $ ParsedForm (getAction as) (getMethod as) matches
+    else return $ ParsedForm (getAction as) (getMethod as) matchesSafe
   where
     getAction = pack . fromJust . (Map.lookup "action")
     getMethod as = case fromJust ((Map.lookup "method") as) of
                   "get" -> methodGet
                   "post" -> methodPost
 
-inputElem :: Stream s m Char => ParsecT s u m InputElem
-inputElem = (try radioBasic') <|> selectEl 
+inputElem :: Stream s m Char => ParsecT s u m (Maybe InputElem)
+inputElem = (try radioBasic') <|> (fmap Just selectEl)
 
 -- checks el tag then returns either radio or 
 radioBasic :: Stream s m Char => ParsecT s u m InputElem
@@ -417,41 +453,95 @@ radioBasic = do
     else return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
 
 
--- checks el tag then returns either radio or
-radioBasic'' ParsecT s u m (Either InnerFormErr InputElem)
-radioBasic'' = undefined
 
-radioBasic' :: (Stream s m Char) => ParsecT s u m InputElem
+-- checks el tag then returns either radio or
+-- | parserZero means we dont care, Nothing means this form is invalid
+radioBasic' :: (Stream s m Char) => ParsecT s u m (Maybe InputElem)
 radioBasic' = do
   (e, attrs) <- parseOpeningTag (Just ["input", "textarea"]) []
   let
     type' = fromJust $ Map.lookup "type" attrs
   case e of
     "textarea" ->
-      return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
-    "input" -> 
-      case type' of 
-        "radio" ->
-          return $ Radio (pack . fromJust $ Map.lookup "name" attrs) (pack . fromJust $ Map.lookup "value" attrs)
-        "text" -> 
-          return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
-        "hidden" ->
-          return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
-        "submit" -> parserZero -- we dont care about this
-        "checkbox" ->
-          if (elem "checked" (keys attrs))
-          then return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
-          else parserZero
-          -- make as Basic if notchecked
-        "button" -> parserZero
-        "color" -> parserZero
-        "submit" -> parserZero
-       
-        -- "date", "datetime", "MONTH"+"week", "number", "range", "search", "time" -> doSomething
-        "email" -> check value, if its not set, this should throw parserZero unless definitely a search form
-        "file", "image", "password", "reset","tel", "url"  -> should fail
+      return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+    "input" -> processInputEl attrs 
+    _ -> undefined 
+            
+                -- case type' of
+                -- "date", "datetime", "MONTH"+"week", "number", "range",, "time" -> doSomething
+                -- "date" -> parserZero
+                -- "range" -> parserZero -- | speciallyHandleRange
+                -- "time" -> parserZero
+                -- (SomethingImportant ) -> ""
+                -- _ -> parserZero 
+        
+        --WEIIRDD
+        -- Date | Number ( Range ) | Search | Time
              
-        any@_ ->
+
+processInputEl :: Attrs -> ParsecT s u m (Maybe InputElem)
+processInputEl attrs =
+  let
+    type' = fromJust $ Map.lookup "type" attrs
+  in
+    case type' of 
+      "radio" ->
+        return . Just $ Radio (pack . fromJust $ Map.lookup "name" attrs) (pack . fromJust $ Map.lookup "value" attrs)
+      "text" -> 
+        return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+      "hidden" ->
+        return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+      "submit" -> parserZero
+      "checkbox" ->
+        if (elem "checked" (keys attrs))
+        then return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+        else parserZero
+        -- DONT CURRRR
+      "button" -> parserZero
+      "color" -> parserZero
+      "submit" -> parserZero
+      "search" -> parserZero
+
+        -- WEIRDDDD -> 99% chance not a search form
+      "email" -> case (Map.lookup "value" attrs) of
+        -- check value, if its not set, this should throw parserZero unless definitely a search form
+        Just a -> return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)   -- (type', a)
+        Nothing -> return Nothing
+          
+      "file" -> return Nothing  ---SHOULD FAIL WHOLE FORM
+      "image" -> return Nothing
+      "password" -> return Nothing
+      "reset" -> return Nothing
+      "tel" -> return Nothing
+      "url"  -> return Nothing
+      "range" -> handleNumber attrs
+      "number" -> handleNumber attrs 
+      _ ->
+        case (Map.lookup "value" attrs) of
+          Just a -> return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (Just $ pack a)
+          Nothing -> return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (Just "")
+
+handleNumber :: Attrs -> ParsecT s u m (Maybe InputElem)
+handleNumber attrs = do
+  let
+    name = (pack . fromJust . (Map.lookup "name")) attrs
+    value = Map.lookup "value" attrs
+    minn = Map.lookup "min" attrs
+    maxx = Map.lookup "max" attrs
+    
+  case value of
+    Just val -> return . Just $ Basic name (Just $ pack val)
+    Nothing ->
+      case minn of
+        Just valMin -> return . Just $ Basic name (Just $ pack valMin)
+        Nothing ->
+          case maxx of
+            Just valMax -> return . Just $ Basic name (Just $ pack valMax)
+            Nothing -> parserZero
+          
+-- speciallyHandleNumber = speciallyHandleRange
+
+-- speciallyHandleRange attrs = (name, min, max)  --> then iterate some interval between the min and max 
 
 -- SelectElem Name [Option]
 
@@ -506,7 +596,12 @@ data FilledForm = FilledForm { actionUrl :: Url
                              -- , actnAttr :: Action
                              , textInputOpts :: [TInputOpt]
                              , qStringVariants :: [QueryString]
-                             } deriving Show 
+                             }
+
+instance Show FilledForm where
+  show (FilledForm a b c d _) = "FilledForm " <> a <> " " <> show b <> " " <> c <> " " <> show d <> " SomeQStrs"
+
+                  
 -- | If I instead just pass a baseUrl to buildFormSummary then I can return as:
 
 
@@ -665,7 +760,10 @@ mkFormInputs searchTerm (radio, var, basic, tInput) =
     textInput' = (tInput, replicate (length tInput) "")
     textInputOpts' = fmap (basic <>) (genTInputOpts' (pack searchTerm) textInput') 
     subPaths' = buildSearchUrlSubsets (union variable' radio')
- in (textInputOpts', subPaths')
+    subPaths'' = case length (take 1 subPaths') == 1 of
+      True -> subPaths'
+      False -> mempty : mempty 
+ in (textInputOpts', subPaths'')
 
 
 
@@ -683,11 +781,16 @@ findForms html = runScraperOnHtml formElem html
 -- mkForm element = 
 
 fillForm :: ParsedForm -> Url -> String -> FilledForm
-fillForm (ParsedForm act meth formInputs) baseUrl searchTerm =
+fillForm (ParsedForm act'' meth formInputs) baseUrl searchTerm =
   let
+    act = unpack act''
+    act' = if isPrefixOf baseUrl act then act
+           else
+             if isPrefixOf "/" act then baseUrl <> act
+             else baseUrl <> "/" <> act
     (tInputs, subsets) = mkQParams searchTerm formInputs 
   in
-    FilledForm (baseUrl <> "/" <> (unpack act)) meth searchTerm tInputs subsets
+    FilledForm act' meth searchTerm tInputs subsets
 
 
 mkFilledForm :: Url -> String -> Elem' String -> Either FormError FilledForm
@@ -821,8 +924,9 @@ type QueryString = [(Namespace, Option)]
 getAttrVal :: String -> Elem' a -> String 
 getAttrVal name formElem = (fromJust . (Map.lookup name) . attrs) formElem
 
+-- | The mempty : mempty means that we will try with no select elements 
 buildSearchUrlSubsets :: Map Namespace [Option] -> [QueryString]
-buildSearchUrlSubsets mappy = singlefOp' mempty (toList mappy) -- I believe "" is just state 
+buildSearchUrlSubsets mappy = singlefOp' (mempty :mempty) (toList mappy) -- I believe "" is just state 
 
 -- <> of base + set pairs
 -- | Note: this url may fail
@@ -1370,3 +1474,8 @@ catEithers [] = []
 catEithers (x:xs) = case x of
                       Left err -> catEithers xs
                       Right a -> a : catEithers xs
+
+
+
+
+-- [Basic "t:formdata" (Just "uDJ/uU5iG21GWkfqbAMV1Zn5fBg=:H4sIAAAAAAAAALWPMUpEMRRFnwM2Tie4g7FNGqfRahphYBDhq2D5kjz/RPKT8PK+ZjbjCsRNTGHnHlyArZWFgb8CC7vLvVzOva9fcPh8D3cDCWZObrRSdEw8YNBovDA60uvoqJ6XNLIl2WUqhZDtVlHN2CJnsHg7eSZVNSkhHqAwLBP3CjPaLanGoCK8WyqbmII3qlVJrUwz0cqlp+AWHcmYT2/388+T958ZHGxgblMUTuEK20w43jziE+qAsdedsI/9Rc0CRxP2pmH/99Dqr4euOdmG6EYz+FJ8ivs3d/bw/fIxA6j5F93V05aCAQAA"),Basic "searchTerm" Nothing,Basic "hidden_2" (Just ""),Basic "hidden_1" (Just ""),Basic "hidden_0" (Just ""),Basic "hidden" (Just ""),Basic "t:formdata" (Just "xPUyg4nRPmz/Nz4dRXsk2UiZPu4=:H4sIAAAAAAAAANVUTWgTQRR+Bi2F2vqHXrzkEA9FsmlKIxIpWsRoIVRpWosFldndl2Tr7M52Zja7VfSqh969FQRv/lz1bA/SixeLd8GrUBQ8KTizm6RgRCwkKTnNzvd23ve9me+9l1/hULgI8y5K4nNmB5YUOY9xl9AcMR3JiY25Wc/GqChYwC2Uaz4KgYRbdQMjn6iQbRLhWAlmssioO7aNHggOlxivGcQnVh0NlR+F5GsFw2IcqWOq1fWZh54UxrX4SOYGZ5bKXglM1xHCYd7y4/SJ6PTboRQcKMOIxTzJGZ0jSi0cL6+QBslR4tVyFckdr3Yh8iUMJezhEix0v6a7EyBW4RGAhOEW0iOmfAdTvkdMkx1Mk+FtWO4mUwtOEO2MafX4hkq/GihTKIv44m+2iI0gO22xsX324PpYYycFqTIMW9RRf8/augptE6ToKkDbJIa0LcZaEiqxBI0fDu9BvZtVJl/UUZKRC6MaUCoxkjGgay78sxtUMjRmTAUSS5YcpHamgjLwzyxujnw++f5nRwu0axvVTAuKqayZ+l3VzF6r6njNzdf2VPXHxocUQOSHLqz0UL6PyDk2HAybBehbHJVwRAfm40Byi/2VoVUcC9XaQ06MLBrY2N5Txnw90DgY/zumy+pIppC9vvVpHB5sJe81GKLzt768+l598/HZ/oqe25PoeRVXoYokEkucuRW9sy/H4+4moQFmn77bfgLpX83ZsBtoz4bslUTLksOxhGoCF7PFJpTWWLoFVgkVGD6E+328lz/2u83YDJSbgX2WNUjNOfXNr45fPfXi4iA157mJozvn7zxfn45F/wZR7xe+kwoAAA=="),Basic "site" (Just "abicomplete")]]

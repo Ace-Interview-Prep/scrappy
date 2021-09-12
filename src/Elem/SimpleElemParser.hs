@@ -162,24 +162,29 @@ matchesInSameElTag elem parser = do
 --             <|> (selfClosingTextful innerSpec)
 --   enoughMatches elem' attrs' innerH
 
-
+selfClosing :: [String]
+selfClosing = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]
 
 elemParser :: (ShowHTML a, Stream s m Char) =>
-                       Maybe [Elem]
-                    -> Maybe (ParsecT s u m a)
-                    -> [(String, Maybe String)]
-                    -> ParsecT s u m (Elem' a)
+              Maybe [Elem]
+           -> Maybe (ParsecT s u m a)
+           -> [(String, Maybe String)]
+           -> ParsecT s u m (Elem' a)
 elemParser elemList innerSpec attrs = do
-  let
-    selfClosing = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]
-    selfC :: [String]
-    selfC = filter (\t -> elem t selfClosing) $ fromMaybe [] elemList
-    nSelfC = filter (\t -> not $ elem t selfClosing) $ fromMaybe [] elemList
-                  
-  (case selfC of { [] -> parserZero; xs -> (try $ elSelfClosing (Just xs) innerSpec attrs) })
-    <|> elemWithBody (Just nSelfC) innerSpec attrs
-  -- for each in elemList if e is elem of selfClosingTags then construct selfClosingpattern for e.tag followed by
-  -- all non-self closing tags being checked through the regular elemParser
+  (elem', attrs') <- parseOpeningTag elemList attrs
+  -- we should now read the elem' to see if in list of self-closing tags
+  case elem elem' selfClosing of
+    True -> do
+      (try (string ">") <|> string "/>")
+      case innerSpec of
+        Nothing -> return $ Elem' elem' attrs' mempty mempty 
+        Just _ -> parserZero 
+    False -> do
+      (asString, matches) <- fmap (foldr foldFuncTup mempty)  -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
+        $ (try (string "/>") >> return [])
+        <|> (try $ innerElemParser elem' innerSpec) -- need to be sure that we have exhausted looking for an end tag, then we can do the following safely
+        <|> (selfClosingTextful innerSpec)
+      return $ Elem' elem' attrs' matches (reverse asString)
 
 elSelfC :: Stream s m Char => Maybe [Elem] -> [(String, Maybe String)] -> ParsecT s u m (Elem' a)
 elSelfC elemOpts attrsSubset = do
@@ -210,12 +215,32 @@ elemParserInternal :: (ShowHTML a, Stream s m Char) =>
            -> ParsecT s u m (Elem' a)
 elemParserInternal elemList innerSpec attrs = do
   (elem', attrs') <- parseOpeningTag elemList attrs
+  -- we should now read the elem' to see if in list of self-closing tags
+  -- case elem elem' selfClosing of
+    -- True -> return Elem' elem' attrs' 
   (asString, matches) <- fmap (foldr foldFuncTup mempty)  -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
     $ (try (string "/>") >> return [])
     <|> (try $ innerElemParser elem' innerSpec) -- need to be sure that we have exhausted looking for an end tag, then we can do the following safely
     <|> (selfClosingTextful innerSpec)
   return $ Elem' elem' attrs' matches (reverse asString)
 
+
+-- elemParserInternalV2 :: (ShowHTML a, Stream s m Char) =>
+--               Maybe [Elem]
+--            -> Maybe (ParsecT s u m a)
+--            -> [(String, Maybe String)]
+--            -> ParsecT s u m (Elem' a)
+-- elemParserInternalV2 elemList innerSpec attrs = do
+--   (elem', attrs') <- parseOpeningTag elemList attrs
+--   -- we should now read the elem' to see if in list of self-closing tags
+--   case elem elem' selfClosing of
+--     True -> (try string ">" <|> string "/>") >> return Elem' elem' attrs' mempty mempty 
+--     False -> do
+--       (asString, matches) <- fmap (foldr foldFuncTup mempty)  -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
+--         $ (try (string "/>") >> return [])
+--         <|> (try $ innerElemParser elem' innerSpec) -- need to be sure that we have exhausted looking for an end tag, then we can do the following safely
+--         <|> (selfClosingTextful innerSpec)
+--       return $ Elem' elem' attrs' matches (reverse asString)
 
 
   

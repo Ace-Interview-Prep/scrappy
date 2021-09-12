@@ -316,7 +316,11 @@ type TreeIndex = [Int]
 
 
 -- data GroupHtml a = GroupHtml [a] Glength MaxLength deriving Eq -- ... | Nil
-data GroupHtml element a = GroupHtml [element a] Glength MaxLength deriving Show
+data GroupHtml element a = GroupHtml [element a] Glength MaxLength
+
+instance (ElementRep e, Show (e a), Show a, ShowHTML a) => Show (GroupHtml (e :: * -> *) a) where
+  show (GroupHtml (e:_) count maxELen) =
+    "GroupHtml { count =" <> (show count) <> ", longestElem= " <> show maxELen <> ", elemStructure=" <> (show e)
 
 type Glength = Int -- number of items in group
 type MaxLength = Int -- could also just be length of head 
@@ -502,8 +506,8 @@ selfClosingTextful innerP =
   -- Fix: all is prefixed with 
   
   char '>'
-  >> manyTill ((try (Match <$> innerP')) <|> (try ((IText . (:[])) <$> anyChar))) ((try endTagg) <|> (char '<' >> some alphaNum))
-  where endTagg = (try (char '<'
+  >> manyTill ((try (Match <$> innerP')) <|> (try ((IText . (:[])) <$> anyChar))) ((try anyEndTag) <|> (char '<' >> some alphaNum))
+  where anyEndTag = (try (char '<'
                        >> (optional (char '/'))
                        >> MParsec.some anyChar
                        >> (string " " <|> string ">")))
