@@ -7,7 +7,7 @@ module Elem.TreeElemParser where
 
 import Control.Monad.IO.Class
 
-import Elem.ElemHeadParse (parseOpeningTag, hrefParser')
+import Elem.ElemHeadParse (parseOpeningTag, hrefParser', parseOpeningTagDesc, mkAttrsDesc)
 import Elem.Types (Elem, Attrs, ElemHead, TreeHTML(TreeHTML), HTMLMatcher (IText, Element, Match)
                   , InnerTextHTMLTree(InnerTextHTMLTree), innerTree, innerText, matches, GroupHtml
                   , Elem', TreeIndex, attrs, elTag, ShowHTML, showH, _innerTree', matches'
@@ -20,8 +20,9 @@ import Find (findNaive)
 
 import Control.Monad (when)
 import Text.Megaparsec as MParsec (many, manyTill_, skipManyTill, manyTill, some)
-import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse, char, noneOf)
-import qualified Data.Map as Map (Map, toList) 
+import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse, char, noneOf
+                   , option, space)
+import qualified Data.Map as Map (Map, toList, fromList, adjust) 
 import Data.Graph (Tree (Node), Forest)
 import Text.URI as URI
 import Data.Char (digitToInt)
@@ -87,7 +88,32 @@ treeElemParser'  elemOpts matchh attrsSubset = do
 -- | piece to be a new discovery to match on or if we are in that process of matching what we just found
 
 
+-- digitEq "ere3" "ere4"
+
+
+-- then i apply this to all leaves of the Map
+
+-- !!!!!!!!!!!!!!!!!!!
+-- | NOTE: In future: create function that simplifies all numbers that will be compared to their number of digits
+-- 1426674 -> 1234567
+-- 1834324 -> 1234567 (==) -> True 
+
+
+
+
 -- htmlGroup --calls--> treeElemParser >>= (many treeSpecific --calls--> specificRepForest) 
+
+-- | Ideal case is that we can do (Many a) struturing even if interspersed with text which would solve issues like
+-- | many search terms highlighted, we then wouldnt need to know what the search term is
+-- | AND!! we have already seen that it could for exmaple be: <a><b class="hiddenText">Hockey</b></a> 
+
+
+treeElemParserSpecific' :: -> HTMLMatcher TreeHTML String
+treeElemParserSpecific' = do
+  x <- treeElemParserSpecific
+  case innerText' x == searchTerm of
+    True -> IText (innerText' x)
+    False -> Element x
 
 type SubTree a = [Tree a]
 treeElemParserSpecific :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a)
@@ -96,17 +122,34 @@ treeElemParserSpecific :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m 
                        -> SubTree ElemHead
                        -> ParsecT s u m (TreeHTML a)
 treeElemParserSpecific matchh elem' attrs' subTree = do
-  (tag, attrsOut) <- parseOpeningTag (Just [elem']) ((fmap . fmap) Just attrs')
+  -- clean attrVals of nums
+  -- specialParseOpeningTag
+  -- let
+    -- fa = Map.toList
+         -- $ Map.adjust (const (not . null)) "title"
+         -- $ Map.adjust (const (not . null)) "alt"
+         -- $ Map.adjust (const (not . null)) "href"
+         -- $ Map.fromList (mkAttrsDesc attrs') 
+  (tag, attrsOut) <- parseOpeningTagDesc (Just [elem']) attrs' 
   case elem tag selfClosing of
     True -> if not $ null subTree then undefined else do
       (try (string ">") <|> string "/>")
-      case matchh of
-        Nothing ->  return $ TreeHTML tag attrsOut mempty mempty mempty
-        Just _ -> parserZero 
+      return $ TreeHTML tag attrsOut mempty mempty mempty
+      -- case matchh of
+        -- Nothing ->  return $ TreeHTML tag attrsOut mempty mempty mempty
+        -- Just _ -> parserFail "omnomnom"
     False -> do 
       char '>'
       txt <- many (noneOf ['<'])
       x <- specificRepetitiveForest (reverse $ groupify subTree []) (fromMaybe parserZero matchh)
+      ---
+      -- Everything here is to avoid false positives from being too
+      -- general while developing 
+      option "" (string "Hockey")
+      many space
+      option "" (string "tour case suing ")
+
+      ---
       endTag tag
       --can be followed by whatever: 
       -- (y, _) <- manyTill_ (htmlGenParserFlex matchh) (endTag tag) 
@@ -190,9 +233,25 @@ htmlGenParserRepeat :: (Stream s m Char, ShowHTML a) =>
                     -> ParsecT s u m [TreeHTML a]
                     -> ParsecT s u m [HTMLMatcher TreeHTML a]
 htmlGenParserRepeat match parsesTreeHs =
-  (do { x <- try match;  return $ (Match x):[] }) 
+  (do { x <- try match;  return $ (Match x):[] })
+  <|> (do { txt <- try stylingElem; return $ (IText txt):[] }) 
+  -- <|> fmap (:[]) (try (IText <$> stylingElem)) -- this line is new/unstable
   <|> ((fmap . fmap) Element parsesTreeHs) -- list of elements, could be single element or multiple 
   <|> (do { x <- anyChar; return (IText (x:[]):[]) }) -- just allows for singleton creation (x:[])
+
+
+
+-- Doesnt change the structure of the page at all just how text is styled like MS word stuff
+stylingTags = ["abbr", "b", "big", "acronym", "dfn", "em", "font", "i", "mark", "q", "small"] -- , "strong"]
+
+-- | Just gives the inners 
+stylingElem :: Stream s m Char => ParsecT s u m String 
+stylingElem = do
+  (e,_) <- parseOpeningTag (Just stylingTags) []
+  char '>'
+  fmap (reverse. fst) $ manyTill_ anyChar (endTag e) 
+  -- matches : Reversed >-> RW
+  
 
 
 -- | This is all I actually need , no need for recursion here, since thats already done in top level func
@@ -202,7 +261,7 @@ multiTreeElemHeadParser :: (Stream s m Char, ShowHTML a) =>
                        -> ParsecT s u m [TreeHTML a]
 multiTreeElemHeadParser match mTree = case mTree of
   Many (Node (elem, attrs) subTree) ->
-    manyHtml (treeElemParserSpecific (Just match) elem (Map.toList attrs) subTree)
+    many (try $ treeElemParserSpecific (Just match) elem (Map.toList attrs) subTree)
   One (Node (elem, attrs) subTree) ->
     treeElemParserSpecific (Just match) elem (Map.toList attrs) subTree >>= return . flip (:) []
                                                                         -- like return . (\x -> x :[])
@@ -291,6 +350,7 @@ innerElemParser2 :: (ShowHTML a, Stream s m Char) =>
 innerElemParser2 eTag innerSpec = char '>'
                                   -- >> manyTill (try (Element <$> treeElemParser Nothing innerSpec [])) (try (endTag eTag))
                                   >> manyTill (try (Match <$> (fromMaybe parserZero innerSpec))
+                                               <|> (try (IText <$> stylingElem))
                                                <|> try (Element <$> treeElemParser' Nothing innerSpec [])
                                                <|> ((IText . (:[])) <$> anyChar)) (try $ endTag eTag)
 

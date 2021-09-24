@@ -268,9 +268,20 @@ innerElemParser :: (ShowHTML a, Stream s m Char) =>
                 -> ParsecT s u m [HTMLMatcher Elem' a]
 innerElemParser eTag innerSpec = char '>'
                                  >> manyTill (try (Match <$> (fromMaybe parserZero innerSpec))
+                                              <|> (try (IText <$> stylingElem)) -- this line is new/unstable
                                               <|> try (Element <$> sameElTag eTag innerSpec)
                                               <|> ((IText . (:[])) <$> anyChar)) (endTag eTag)
+                                              
 
+-- Doesnt change the structure of the page at all just how text is styled like MS word stuff
+stylingTags = ["abbr", "b", "big", "acronym", "dfn", "em", "font", "i", "mark", "q", "small", "strong"]
+
+-- | Just gives the inners 
+stylingElem :: Stream s m Char => ParsecT s u m String 
+stylingElem = do
+  (e,_) <- parseOpeningTag (Just stylingTags) []
+  char '>'
+  fmap (reverse. fst) $ manyTill_ anyChar (endTag e) 
   -- matches : Reversed >-> RW
   
 -- f :: ([a], [b], [c]) -> Elem' a

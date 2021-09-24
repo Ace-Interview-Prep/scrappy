@@ -7,9 +7,9 @@ import Elem.Types (Elem, Elem', Attrs, AttrsError(IncorrectAttrs)) -- Attr)
 
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
-                   alphaNum, many1, between, many, letter)
+                   alphaNum, many1, between, many, letter, parserFail)
 import Data.Map as Map (Map, fromList, lookup) 
-
+import Data.Maybe (fromMaybe)
 
 -- | needs to use many for multiple links
 
@@ -148,6 +148,157 @@ isAttrsMatch mapAttr ((name, maybeVal): desired) = case maybeVal of
     case Map.lookup name mapAttr of
       Just irrValFromKey {- we only care about the name -} -> isAttrsMatch mapAttr desired
       Nothing -> False
+
+attrsFit :: Map String String -> [(String, (String -> Bool))] -> Bool
+attrsFit _ [] = True
+attrsFit mapppy ((name, test): rest) =
+  (fromMaybe False $ fmap test $ Map.lookup name mapppy) && attrsFit mapppy rest
+
+                                  -- [AttrsPNew]
+
+
+
+
+
+
+
+attrsMatch :: [(String, String)] -> Map String String -> Bool
+attrsMatch [] _ = True 
+attrsMatch ((k,v):kvs) mappy = case Map.lookup k mappy of
+  Just val ->
+    if elem k ["title", "alt", "href"] then True && attrsMatch kvs mappy
+    else digitEqFree v val && attrsMatch kvs mappy
+  Nothing -> False 
+
+                               
+attrsParserDesc :: Stream s m Char =>
+               [(String, String)] -- Maybe (ParsecT s u m String)
+            -> ParsecT s u m (Map String String)
+            --change to Either AttrsError (Map String String) 
+attrsParserDesc attrs = do
+  attrPairs <- many attrParser -- (char '>' <|> char '/')
+  let
+    attrPairsMap = fromList attrPairs 
+  if attrsMatch attrs attrPairsMap  
+    then return attrPairsMap
+    else parserFail $ "incorrect attrs:" <> (show $ unfit attrs attrPairsMap)
+
+
+
+
+
+
+
+    
+  -- let
+    -- attrPairsMap = fromList attrPairs
+  -- case isAttrsMatch attrPairsMap attrs of
+    -- True -> return $ Right attrPairsMap
+    -- False -> return $ Left IncorrectAttrs
+
+
+
+parseOpeningTagDesc :: Stream s m Char => Maybe [Elem] -> [(String, String)] -> ParsecT s u m (Elem, Attrs)
+parseOpeningTagDesc elemOpts attrs = do
+  _ <- char '<'
+  elem <- mkElemtagParser elemOpts
+  -- let
+    -- fa = Map.toList
+         -- $ Map.adjust (const (not . null)) "title"
+         -- $ Map.adjust (const (not . null)) "alt"
+         -- $ Map.adjust (const (not . null)) "href"
+         -- $ Map.fromList (mkAttrsDesc attrs) 
+  attrs <- attrsParserDesc attrs
+  return (elem, attrs) 
+
+
+-- | Allows for certain degrees of freedom such as 1 spot off eg 123 vs 1230 (or even (109|22))
+-- | as well as any numerical digit must also be a numerical digit from 0 to 9 
+digitEq :: String -> String -> Bool
+digitEq [] [] = True -- Only time the func gives True 
+digitEq [] (y:ys) = False
+digitEq (x:xs) [] = False
+digitEq (charA:xs) (charB:ys) =
+  if charA == charB
+  then True && digitEq xs ys 
+  else
+    if elem charA ['0'..'9'] && elem charB ['0'..'9']
+    then digitEq xs ys 
+    else
+      -- allow for one more digit 
+      saveDigitEq (charA:xs) (charB:ys)  
+
+-- A; 12340red
+-- B; 1234red
+
+saveDigitEq :: String -> String -> Bool
+saveDigitEq as bs =
+  if elem ((length as) - (length bs)) [1,-1]
+  then -- allows for one more digit 
+    if (elem (head as) ['0'..'9']) || (elem (head bs) ['0'..'9']) 
+    then svDigEq as bs 
+    else False
+  else False
+
+svDigEq :: String -> String -> Bool     
+svDigEq (charA:as) (charB:bs) =   -- True
+  if head as == charB
+  then digitEq (tail as) bs 
+  else
+    if head bs == charA
+    then digitEq as (tail bs)
+    else False || saveDigitEq (charA:as) bs || saveDigitEq as (charB:bs)
+
+
+
+-- OR!!!
+digitEqFree :: [Char] -> [Char] -> Bool
+digitEqFree [] [] = True
+digitEqFree as [] = if elem (head as) ['0'..'9'] then digitEqFree (tail as) [] else False
+digitEqFree [] bs = if elem (head bs) ['0'..'9'] then digitEqFree [] (tail bs) else False 
+digitEqFree as bs =
+  if elem (head as) ['0'..'9'] then digitEqFree (tail as) bs
+  else
+    if elem (head bs) ['0'..'9'] then digitEqFree as (tail bs)
+    else
+      if head as == (head bs) then digitEqFree (tail as) (tail bs)
+      else False 
+      
+
+
+unfit :: [(String, String)] -> Map String String -> [(String, String)]
+unfit [] _ = [] 
+unfit ((n,v):ns) map = case Map.lookup n map of
+  Nothing -> (n, "no attr") : unfit ns map
+  Just val -> if elem n ["href", "alt", "title"] then  unfit ns map
+              else if digitEq v val
+                   then unfit ns map
+                   else (n<>":"<>"("<>val<>"|"<>v<>")", "failed test") : unfit ns map 
+
+
+mkAttrsDesc :: [(String, String)] -> [(String, (String -> Bool))]
+mkAttrsDesc atrs = (fmap . fmap) digitEqFree atrs
+
+-- htmlGroup = do
+--   (e,a) <- treeElemParser
+--   treeElSpec e a
+--     where 
+--       treeElSpec e a = do
+--         parseOpeningTagDesc e (mkAttrsDesc a)
+--         ...innerElem + endTag 
+
+-- attrsFit mapAttr ((name, maybeVal): desired) = case maybeVal of
+--   Just val ->
+--     case Map.lookup name mapAttr of
+--       Just valFromKey -> if val /= valFromKey then False else isAttrsMatch mapAttr desired
+--       Nothing -> False
+        
+--   Nothing ->
+--     case Map.lookup name mapAttr of
+--       Just irrValFromKey {- we only care about the name -} -> isAttrsMatch mapAttr desired
+--       Nothing -> False
+
+
   
 -- | NOTES
 -- if href="#" on form -> just means scroll to top
@@ -198,3 +349,36 @@ buildElemsOpts :: Stream s m Char => [Elem] -> ParsecT s u m String
 -- buildElemsOpts [] = <----- i dont think i need this
 buildElemsOpts [] = parserZero
 buildElemsOpts (x:elemsAllow) = try (string x) <|> (buildElemsOpts elemsAllow)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- [("alt:(Link to external site, this site will open in a new window|Abstract/Details from ABI/INFORM Global and other databases)","failed test"),("class:( /abicomplete/ExternalImage/G@o662VDDpZRdYIFMpLL4twEDUtNbkgCEUrRr@NuLI2KJgLR3sPk50yOcu09+kEL|addFlashPageParameterformat_abstract  )","failed test"),("href:(https://www-proquest-com.proxy1.lib.uwo.ca/results.displayresultsitem.contentitemlinks:outboundevent/https:$2f$2focul-uwo.primo.exlibrisgroup.com$2fopenurl$2f01OCUL_UWO$2f01OCUL_UWO:UWO_DEFAULT$3f$3furl_ver$3dZ39.88-2004$26rft_val_fmt$3dinfo:ofi$2ffmt:kev:mtx:journal$26genre$3darticle$26sid$3dProQ:ProQ$253Aabiglobal$26atitle$3dSALARY$2bINEQUALITY$252C$2bTEAM$2bSUCCESS$252C$2bLEAGUE$2bPOLICIES$252C$2bAND$2bTHE$2bSUPERSTAR$2bEFFECT$26title$3dContemporary$2bEconomic$2bPolicy$26issn$3d10743529$26date$3d2018-01-01$26volume$3d36$26issue$3d1$26spage$3d200$26au$3dCyrenne$252C$2bPhilippe$26isbn$3d$26jtitle$3dContemporary$2bEconomic$2bPolicy$26btitle$3d$26rft_id$3dinfo:eric$2f$26rft_id$3dinfo:doi$2f10.1111$252Fcoep.12217/1967324598/318806?site=abicomplete&amp;t:ac=85FEBC108EAA4132PQ/1|https://www-proquest-com.proxy1.lib.uwo.ca/abicomplete/docview/2213130775/abstract/85FEBC108EAA4132PQ/1?accountid=15115)","failed test"),("id:(linkResolverLink|addFlashPageParameterformat_abstract)","failed test"),("linktitle","no attr"),("onclick","no attr"),("title:(Link to external site, this site will open in a new window|Abstract/Details from ABI/INFORM Global and other databases)","failed test")]
+
+
+
+
+
+
