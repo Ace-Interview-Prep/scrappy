@@ -1324,30 +1324,18 @@ getValidHref baseUrl = hrefParser' (isPrefixOf baseUrl)
   
 derivePagination :: Stream s m Char => String -> ParsecT s u m UrlPagination
 derivePagination baseUrl = do
-  --should also check attrs for if link exists in the paginationElements head href attr
-  -- in the case of x,y,z having above case, it should be consed to be first try
+  (el1, el2, el3) <- paginationElements
   let
+    el1' = getPgtnLks el1 baseUrl
+    el2' = getPgtnLks el2 baseUrl
+    el3' = getPgtnLks el3 baseUrl
     f' x = (Map.lookup "href" . attrs) x  
     g x y z = if f' x /= Nothing && f' y /= Nothing && f' z /= Nothing
               then (fromJust $ f' x, fromJust $ f' y, fromJust $ f' z)
               else ("", "", "")
-  
-  (x,y,z) <- paginationElements
-  -- note: this is a case of applicative parsing being more optimal
-
-  let
-    x' = getPgtnLks x baseUrl
-    y' = getPgtnLks y baseUrl
-    z' = getPgtnLks z baseUrl
-
-
-  -- x' <- getPgtnLks x baseUrl
-  -- y' <- getPgtnLks y baseUrl
-  -- z' <- getPgtnLks z baseUrl
-  let
     f :: (String, String, String) -> Maybe UrlPagination
     f (x,y,z) = funcyAf "" x y z  
-  case tillWeGetItRight f ((g x y z) : (triZip x' y' z')) of
+  case tillWeGetItRight f ((g el1 el2 el3) : (triZip el1' el2' el3')) of
     Nothing -> parserZero
     Just a -> return a
 

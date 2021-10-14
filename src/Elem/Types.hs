@@ -337,12 +337,36 @@ mkGH :: ElementRep e => [e a] -> GroupHtml e a
 mkGH result = GroupHtml result (length result) ((length (innerText' (head result))))
 
 
+-- so then id go from
 
+  -- Just GroupHtml { count =20, longestElem= 6047, elemStructure=TreeHTML .. 
+
+-- to:
+
+  -- (e,a) ; in this case -> ("li", [("class", "resultItem ltr")])
+
+              ---- > put to state
+              ---- > In order to be safe: findNaive (elemParser "li"..) 
+              ---- > with innerText's ; do findNaive linkScraper
+                 ---- > 
+  
+
+
+
+biggestHtmlGroup :: [GroupHtml e a] -> GroupHtml e a 
+biggestHtmlGroup ghs = foldr maxE (GroupHtml [] 0 0) ghs
+  where
+    maxE :: GroupHtml e a -> GroupHtml e a -> GroupHtml e a -- like max elem
+    maxE (GroupHtml xs cnt lng) (GroupHtml ys cnt' lng') =
+      if (cnt * lng) > (cnt' * lng')
+      then (GroupHtml xs cnt lng)
+      else (GroupHtml ys cnt' lng')
+           
 
 -- Note: findAllMutExGroups 
 biggestGroup :: ElementRep e => [GroupHtml e a] -> GroupHtml e a
 biggestGroup (gh:[]) = gh 
-biggestGroup (n0@(GroupHtml a x1 y1) :n1@(GroupHtml b x2 y2):ghs) = case (x1 * y2) > (x2 * y2) of
+biggestGroup (n0@(GroupHtml a x1 y1) :n1@(GroupHtml b x2 y2):ghs) = case (x1 * y1) > (x2 * y2) of
   True -> biggestGroup (n0:ghs)
   False -> biggestGroup (n1:ghs)
   

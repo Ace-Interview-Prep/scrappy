@@ -2,12 +2,13 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Elem.TreeElemParser where
 
 import Control.Monad.IO.Class
 
-import Elem.ElemHeadParse (parseOpeningTag, hrefParser', parseOpeningTagDesc, mkAttrsDesc)
+import Elem.ElemHeadParse (parseOpeningTag, hrefParser', parseOpeningTagDesc, mkAttrsDesc, attrParser)
 import Elem.Types (Elem, Attrs, ElemHead, TreeHTML(TreeHTML), HTMLMatcher (IText, Element, Match)
                   , InnerTextHTMLTree(InnerTextHTMLTree), innerTree, innerText, matches, GroupHtml
                   , Elem', TreeIndex, attrs, elTag, ShowHTML, showH, _innerTree', matches'
@@ -19,16 +20,19 @@ import Elem.SimpleElemParser (elemParser)
 import Find (findNaive)
 
 import Control.Monad (when)
+import Control.Applicative (liftA2)
 import Text.Megaparsec as MParsec (many, manyTill_, skipManyTill, manyTill, some)
 import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse, char, noneOf
-                   , option, space)
+                   , option, space, alphaNum, notFollowedBy, (<?>))
 import qualified Data.Map as Map (Map, toList, fromList, adjust) 
 import Data.Graph (Tree (Node), Forest)
+import Data.Tree (rootLabel)
 import Text.URI as URI
 import Data.Char (digitToInt)
 import Data.Maybe (fromMaybe, fromJust)
 import Data.List
 import Data.Text (Text, splitOn)
+
 
 
 data Many a = Many a | One a deriving Show
@@ -42,7 +46,7 @@ treeLookupIdx = undefined
 
 
 
-
+  
 
 treeElemParser :: (Stream s m Char, ShowHTML a) =>
                    Maybe [Elem]
@@ -75,7 +79,8 @@ treeElemParser'  elemOpts matchh attrsSubset = do
         Just _ -> parserZero 
 
      -- ((try string ">") <|> string "/>") >> return TreeHTML elem' attrs' mempty mempty mempty
-   False -> do 
+   False -> do
+     -- (inText, matchBook, treees) <- inerTreeElemParser 
      (inText, matchBook, treees) <- fmap (foldr foldFuncTrup mempty)
                                     $ (try (string "/>") >> return [])  
                                     <|> (try $ innerElemParser2 elem' matchh)
@@ -89,8 +94,15 @@ treeElemParser'  elemOpts matchh attrsSubset = do
 
 
 -- digitEq "ere3" "ere4"
-
-
+innerTreeElemParser :: (ShowHTML a, Stream s m Char) =>
+                       Elem
+                    -> Maybe (ParsecT s u m a)
+                    -> ParsecT s u m (String, [a], [Tree ElemHead]) 
+innerTreeElemParser elem' matchh = do
+  fmap (foldr foldFuncTrup mempty)
+    $ (try (string "/>") >> return [])  
+    <|> (try $ innerElemParser2 elem' matchh)
+    <|> (selfClosingTextful matchh)
 -- then i apply this to all leaves of the Map
 
 -- !!!!!!!!!!!!!!!!!!!
@@ -116,35 +128,362 @@ treeElemParser'  elemOpts matchh attrsSubset = do
 --     False -> Element x
 
 type SubTree a = [Tree a]
-treeElemParserSpecific :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a)
+-- | Note: unlike other Element parsers, it does not call itself but innerParserSpecific instead loops with
+-- | 
+treeElemParserSpecific :: (Stream s m Char, ShowHTML a) =>
+                          Maybe (ParsecT s u m a)
                        -> Elem
                        -> [(String, String)]
                        -> SubTree ElemHead
                        -> ParsecT s u m (TreeHTML a)
-treeElemParserSpecific matchh elem' attrs' subTree = do
+treeElemParserSpecific match elem' attrs' subTree = do
   (tag, attrsOut) <- parseOpeningTagDesc (Just [elem']) attrs'
   char '>'
-  (matchbook, inText, treees) <- innerParserSpecific tag match subTree
+  (matchBook, inText, treees) <- innerParserSpecific match tag subTree
   return $ TreeHTML tag attrsOut matchBook inText treees
-  
 
-innerParserSpecific :: (Stream s m Char, ShowHTML a) =>
+validateGPR :: [Many (Tree ElemHead)] -> ParsecT s u m [HTMLMatcher TreeHTML a]
+validateGPR manyElHeads =
+  if length (filter (\case {One a -> True; _ -> False}) manyElHeads) == 0 then return []
+  else parserFail "promised elements not found"
+
+-- We allow attrs to be any then check, but also avoid unnceccessarily parsing attrs
+-- | following needs to be inside many
+-- innerParser will be from case elem tag selfClosing and on 
+-- | Is able to repeat / execute any pattern that returns multiple elements of same type
+-- |(see manyTreeElemHeadParser)
+htmlGenParserRepeat' :: (Stream s m Char, ShowHTML a) =>
+                       String 
+                    -> Maybe (ParsecT s u m a)
+                    -> [Many (Tree ElemHead)]
+                    -> ParsecT s u m [HTMLMatcher TreeHTML a]
+htmlGenParserRepeat' elemTag match manyElHeads = {-parsesTreeHs-}
+  ((endTag elemTag) >> validateGPR manyElHeads)
+  <|> liftA2 (:) (fmap Match $ try (fromMaybe parserZero match)) (htmlGenParserRepeat elemTag match manyElHeads)
+  <|> liftA2 (:) (fmap IText $ try stylingElem) (htmlGenParserRepeat elemTag match manyElHeads) 
+  <|> try ((treeElemParserSpecificContinuous match manyElHeads)
+       >>= (\(sM, a) -> fmap ((Element a):) (htmlGenParserRepeat elemTag match sM)))
+  <|> liftA2 (:) ((IText . (:[])) <$> anyChar) (htmlGenParserRepeat elemTag match manyElHeads) 
+
+
+
+-- Note: even tho this is done / works (below) we could allow for any element the entire time
+  -- | BUT! we need to check off our list of demanded elements so that when we parse the end tag, we can see if
+  -- | the elements (ordered and parsed only in order) were all found before the end tag
+  -- for htmlGenParserRepeat it can just change the passed state of [Many (Tree ElemHead)]
+
+
+htmlGenParserRepeat :: (Stream s m Char, ShowHTML a) =>
+                       String 
+                    -> Maybe (ParsecT s u m a)
+                    -> [Many (Tree ElemHead)]
+                    -> ParsecT s u m [HTMLMatcher TreeHTML a]
+htmlGenParserRepeat elemTag match manyElHeadss = {-parsesTreeHs-}
+  case manyElHeadss of
+    -- [] -> fmap ((flip (:) []) . IText . fst) (manyTill_ (htmlGenParserFlex match) (endTag elemTag))
+
+    [] -> do
+      (htMMers, _) <-  manyTill_ (htmlGenParserFlex match) (endTag elemTag)
+      if length (filter (\case {Element _ -> True; _ -> False}) htMMers) == 0 -- AND loose == False 
+        then
+        return htMMers
+        else
+        parserFail "extra elements"
+    -- | New idea: parse this structure up until the endTag and invalidate if number of elems exceeds 0 
+    
+      -- fmap ((flip (:) []) . IText . (:[])) specificITextParser
+      -- fmap ((flip (:) []) . IText . fst)  (manyTill_ anyChar (endTag elemTag))
+    manyElHeads -> 
+      -- ((endTag elemTag) >> validateGPR manyElHeads)
+      liftA2 (:) (fmap Match $ try (fromMaybe parserZero match)) (htmlGenParserRepeat elemTag match manyElHeads)
+      <|> liftA2 (:) (fmap IText $ try stylingElem) (htmlGenParserRepeat elemTag match manyElHeads) 
+      <|> try ((treeElemParserSpecificContinuous match manyElHeads)
+               >>= (\(sM, a) -> fmap ((Element a):) (htmlGenParserRepeat elemTag match sM)))
+
+               -- if at this point in time with all possibilities considered:
+                   -- do (if openingTag then fail else Itext)
+      <|> liftA2 (:) (fmap (IText . (:[])) specificChar) (htmlGenParserRepeat elemTag match manyElHeads) 
+      -- case parseOpeningTag 
+
+      
+      -- <|> liftA2 (:) ((IText . (:[])) <$> anyChar) (htmlGenParserRepeat elemTag match manyElHeads) 
+
+
+-- | NEW IDEA!!
+
+  -- Continue if first tree is present in second tree AND! allow for new branches
+    -- NewBranch -> Optional (ParsecT s u m a) in data sig of (Many a)
+
+
+specificChar :: Stream s m Char => ParsecT s u m Char
+specificChar = do
+  notFollowedBy (parseOpeningTag Nothing [] >> char '>') <?> "error on specificChar (tag found)"
+  anyChar 
+
+
+  --  first <- anyChar
+  -- if first == '<'
+  --   then
+  --   do 
+  --     e <- option "false" (some alphaNum)
+  --     attrs <- option "false" (some attrsParser)
+  --     close <- option "false" (char '>')
+
+  --     if e == "false" && e == attrs && attrs = close
+  --       then return (first : [])  -- no elemHead return 
+  --   -- attrs <- many attrsParser
+  --   -- char '>'
+  --   -- if length x == 0
+  --   -- then
+  --     -- return first
+      
+  --   -- do
+  --     -- notFollowedBy $ (,) <$> many alphaNum <*> many attrParser <* char '>'
+  --     -- return (first : [])
+  --   else return (first : [])
+    
+  --   manyTill anyChar (char ' ') == 
+  --   many alphaNum
+  --   many attrsParser 
+    
+  --   elemTag : many attrsParser
+  --   parserFail "
+  --   else
+    
+  -- parseOpeningTag >> parserFail ""
+  
+  -- it can be any character except < if its not followedby  
+
+
+-- (do { txt <- try stylingElem; return $ (IText txt):[] })
+
+-- | treeElemParserSpecific is an interface to this (via innerParserSpecific) 
+treeElemParserSpecificContinuous :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a)
+                                 -> [Many (Tree ElemHead)]
+                                 -> ParsecT s u m ([Many (Tree ElemHead)], TreeHTML a)
+treeElemParserSpecificContinuous match manyElHeads = do
+  let
+    -- If we take up until the 1st (One a) then we know that it should succeed in all valid cases or fail
+    elSet :: [Many (Tree ElemHead)]
+    elSet = takeTill (\case { One a -> True; _ -> False}) manyElHeads
+
+
+    
+  (e,attrs) <- parseOpeningTag (Just $ fmap (fst . rootLabel . fromMany) elSet) []
+      
+  (innerForest, outputStack) <- tryElHeads (e,attrs) elSet   
+  -- | at this point in the case where we have parsed an opening tag we have two possibilities
+    -- | manyElHeads = [] | x:xs
+    -- | [] -> then why do we have an opening tag? this should have been either an IText or the endTag
+  
+  (m, inTx, inTr) <- innerParserSpecific match e innerForest
+  let
+    manyElHeads' :: [Many (Tree ElemHead)]
+    manyElHeads' = drop ((length manyElHeads) - (length outputStack)) manyElHeads
+  return $ (,) manyElHeads' (TreeHTML e attrs m inTx inTr)
+
+--------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+
+-- | This is largely a subfunc of htmlGenParserContains 
+-- | Accepts any element and if element is in the order of our checklist-of-elems, we give the tail of elems back
+-- | if the tail reaches [] before we hit the end tag then we are successful 
+treeElemParserContains :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a)
+                                 -> [Many (Tree ElemHead)]
+                                 -> ParsecT s u m ([Many (Tree ElemHead)], TreeHTML a)
+treeElemParserContains match manyElHeads = do
+  -- (Just $ fmap (fst . rootLabel . fromMany) elSet) [] -- <|> (fmap Left $ parseOpeningTag Nothing [])
+  (e,ats) <- parseOpeningTag Nothing []
+  -- char '>'
+  let
+    elSet = takeTill (\case { One a -> True; _ -> False}) manyElHeads
+    -- forestNStack = tryElHeads' elAttrs elSet
+  case tryElHeads' (e, ats) elSet of
+    Right (innerForest, outputStack) -> do
+      let
+        manyElHeads' :: [Many (Tree ElemHead)]
+        manyElHeads' = drop ((length manyElHeads) - (length outputStack)) manyElHeads
+      if innerForest == []
+        then -- this can be selfclosing
+        do
+          case elem e selfClosing of
+            True -> do
+              (try (string ">") <|> string "/>")
+              return $ (,) manyElHeads' (TreeHTML e ats mempty mempty mempty)
+            False -> do
+              (m, inTx, inTr) <- innerParserContains match e innerForest
+              return $ (,) manyElHeads' (TreeHTML e ats m inTx inTr)
+        else -- this cannot be selfClosing
+        do 
+          (m, inTx, inTr) <- innerParserContains match e innerForest
+          return $ (,) manyElHeads' (TreeHTML e ats m inTx inTr)
+
+      -- string "/>" >> return (mempty, mempty, mempty) <|> string ">" >> innerParserContains 
+
+      
+    Left someError -> do
+      (inText, matchBook, treees) <- innerTreeElemParser e match
+      return $ (,) manyElHeads (TreeHTML e ats matchBook inText treees) 
+    
+          
+   -- ParsecT s u m ([a], String, [Tree ElemHead]) 
+
+htmlGenParserContains :: (Stream s m Char, ShowHTML a) =>
+                       String 
+                    -> Maybe (ParsecT s u m a)
+                    -> [Many (Tree ElemHead)]
+                    -> ParsecT s u m [HTMLMatcher TreeHTML a]
+htmlGenParserContains elemTag match manyElHeadss = {-parsesTreeHs-}
+  case manyElHeadss of
+    [] -> do
+      (htMMers, _) <-  manyTill_ (htmlGenParserFlex match) (endTag elemTag)
+      return htMMers
+    manyElHeads -> 
+      liftA2 (:) (fmap Match $ try (fromMaybe parserZero match)) (htmlGenParserContains elemTag match manyElHeads)
+      <|> liftA2 (:) (fmap IText $ try stylingElem) (htmlGenParserContains elemTag match manyElHeads) 
+      <|> try ((treeElemParserContains match manyElHeads)
+               >>= (\(sM, a) -> fmap ((Element a):) (htmlGenParserContains elemTag match sM)))
+      <|> liftA2 (:) (fmap (IText . (:[])) (try $ specificChar' elemTag)) (htmlGenParserContains elemTag match manyElHeads)
+      <|> (endTag elemTag
+           >> case length (filter (\case {One a -> True; _ -> False}) manyElHeadss) == 0 of
+                True -> return []
+                False -> parserFail $ "still havent yielded " <> show manyElHeadss) 
+
+specificChar' :: Stream s m Char => Elem -> ParsecT s u m Char
+specificChar' elemTag = do
+  notFollowedBy (parseOpeningTag Nothing [] >> char '>') <?> "error on specificChar' (tag found)"
+  notFollowedBy (endTag elemTag) 
+  anyChar 
+
+
+
+innerParserContains :: (Stream s m Char, ShowHTML a) =>
                        Maybe (ParsecT s u m a)
                     -> Elem
                     -> SubTree ElemHead
                     -> ParsecT s u m ([a], String, [Tree ElemHead]) 
-innerParserSpecific =
+innerParserContains match tag subTree =
   case elem tag selfClosing of
     True -> if not $ null subTree then undefined else do
       (try (string ">") <|> string "/>")
       return (mempty, mempty, mempty)
     False -> do 
       -- char '>'
-      x <- htmlGenParserRepeat tag match (groupify subTree [])
+      x <- htmlGenParserContains tag match (reverse $ groupify subTree [])
       let
         -- | need to ensure all the trees are in order 
         (inText, matchBook, treees) = foldr foldFuncTrup mempty (x)
       return (matchBook, (reverse inText), (reverse treees))--(_matches itr) (_innerText itr) (innerTree itr)
+
+
+similarTreeH :: (Stream s m Char, ShowHTML a)
+             => Maybe (ParsecT s u m a)
+             -> TreeHTML a
+             -> ParsecT s u m (TreeHTML a)
+similarTreeH matchh treeH = do
+  (e,at) <- parseOpeningTag (Just $ [elTag treeH]) (((fmap . fmap) Just) . Map.toList $ attrs treeH)
+  (inTx, m, inTr) <-
+    fmap (foldr foldFuncTrup mempty) (htmlGenParserContains e matchh (groupify (_innerTree' treeH) []))
+  return $ TreeHTML e at m inTx inTr
+  
+  -- treeElemParserContains matchh (elTag treeH) (Map.toList $ attrs treeH) (_innerTree' treeH)
+  
+-- treeElemParserContains :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a)
+                                 -- -> [Many (Tree ElemHead)]
+                                 -- -> ParsecT s u m ([Many (Tree ElemHead)], TreeHTML a)
+
+htmlGroupSimilar :: (Stream s m Char, ShowHTML a)
+                 => Maybe [Elem]
+                 ->  Maybe (ParsecT s u m a)
+                 -> [(String, Maybe String)]
+                 -> ParsecT s u m (GroupHtml TreeHTML a)
+htmlGroupSimilar elemOpts matchh attrsSubset = 
+  -- Not sure about the order yet tho
+  fmap mkGH $ try (treeElemParser elemOpts matchh attrsSubset
+                   >>= (\treeH -> fmap (treeH :) (some (try $ similarTreeH matchh treeH))))
+
+
+
+--------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------
+takeTill :: (a -> Bool) -> [a] -> [a]
+takeTill _ [] = []
+takeTill f (x:xs) = if f x then x:[] else x : takeTill f xs 
+
+-- | yields how many are still worth trying
+tryElHeads :: (Elem, Attrs)
+           -> [Many (Tree ElemHead)]
+           -> ParsecT s u m ([Tree ElemHead], [Many (Tree ElemHead)])
+tryElHeads _ [] = parserFail "none of me opening tags worked laddy" 
+tryElHeads tagAttrs ((Many (Node label forest)):outputStack) =
+  if tagAttrs == label
+  then return $ (forest, (Many (Node label forest)):outputStack) -- added back to stack 
+  else tryElHeads tagAttrs outputStack -- deleted from temp stack if not found 
+tryElHeads tagAttrs ((One (Node label forest)):outputStack) =
+  if tagAttrs == label
+  then return $ (forest, outputStack)
+  else parserFail $ "missing element" <> show label 
+
+tryElHeads' :: (Elem, Attrs)
+           -> [Many (Tree ElemHead)]
+           -> Either String ([Tree ElemHead], [Many (Tree ElemHead)])
+tryElHeads' _ [] = Left "none of me opening tags worked laddy" 
+tryElHeads' tagAttrs ((Many (Node label forest)):outputStack) =
+  if tagAttrs == label
+  then return $ (forest, (Many (Node label forest)):outputStack) -- added back to stack 
+  else tryElHeads' tagAttrs outputStack -- deleted from temp stack if not found 
+tryElHeads' tagAttrs ((One (Node label forest)):outputStack) =
+  if tagAttrs == label
+  then return $ (forest, outputStack)
+  else Left $ "missing element"   <> show label -- I believe Left "missing element"
+
+
+
+innerParserSpecific :: (Stream s m Char, ShowHTML a) =>
+                       Maybe (ParsecT s u m a)
+                    -> Elem
+                    -> SubTree ElemHead
+                    -> ParsecT s u m ([a], String, [Tree ElemHead]) 
+innerParserSpecific match tag subTree =
+  case elem tag selfClosing of
+    True -> if not $ null subTree then undefined else do
+      (try (string ">") <|> string "/>")
+      return (mempty, mempty, mempty)
+    False -> do 
+      -- char '>'
+      x <- htmlGenParserRepeat tag match (reverse $ groupify subTree [])
+      let
+        -- | need to ensure all the trees are in order 
+        (inText, matchBook, treees) = foldr foldFuncTrup mempty (x)
+      return (matchBook, (reverse inText), (reverse treees))--(_matches itr) (_innerText itr) (innerTree itr)
+
+
+
+
+
+-- currentElHead :: Stream s m Char =>
+--                  ParsecT s u m a
+--               -> [Many (Tree ElemHead)]
+--               -> ParsecT s u m [HTMLMatcher TreeHTML a]
+-- currentElHead = do
+--   (m, inTx, inTr) <- innerParserSpecific mElHead1 match elem 
+--   (:) <$> (TreeHTML e at m inTx inTr) <*> htmlGenParserRepeat match (mElHead1:mElHead2:manyElHeads)
+
+
+
+-- treeElemParserSpecificContinuous match (manyElHeads) = do
+--   (eIns, at)  <- parseOpeningTagDesc (Just [(fst mElHead1), (fst mEleHead2)]) []
+--   if attrs e == snd mElHead1 
+--     then currentElHead match manyElHeads 
+--     else nextElHead match manyElHeads <|> parserFail "did not match on either of the next two previous elements" 
+--     if attrs e == snd mElHead2     -- should also have this or similar behaviour in case (One a) 
+--     then
+--       do
+--         (matches, inText, inTree) <- innerParserSpecific mElHead2 match eIns
+--         (:[]) <$> (TreeHTML e at matches inText inTree) <*> htmlGenParserRepeat match (mElHead2:manyElHeads)
+--     else parserFail "did not match on either of the next two previous elements" 
+--          -- case e1,e2,parserFail
+
       
       -- x <- specificRepetitiveForest (reverse $ groupify subTree []) (fromMaybe parserZero matchh)
       -- ---
@@ -232,31 +571,27 @@ htmlGroup elemOpts matchh attrsSubset =
 ---Generalizations----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
--- Inner parser of treeElemParserSpecific 
-specificRepetitiveForest :: (Stream s m Char, ShowHTML a)
-                         => [Many (Tree ElemHead)]
-                         -> ParsecT s u m a
-                         -> ParsecT s u m [HTMLMatcher TreeHTML a]
-specificRepetitiveForest [] _ = return []
-specificRepetitiveForest (mElHead1:mElHead2:manyElHeads) match = do
-  -- | ysA could be == []
-  htmlGenParserRepeat match (manyElHeads) -- NEW 
-
-  
-  ysA {-maybeNext-} <- multiTreeElemHeadParser match mElHead2
-  ysB <- case ysA of
-           Just a -> specificRepetitiveForest (mElHead2:manyElHeads) match 
-           Nothing ->
-             -- WHat happens to the rest of Many ElHeads in this case? 
-             htmlGenParserRepeat match (multiTreeElemHeadParser match mElHead1)
-             htmlGenParserRepeat match (manyElHeads) -- NEW 
-  return (ysA <> ysB)
-
+-- | Inner parser of treeElemParserSpecific 
+-- specificRepetitiveForest :: (Stream s m Char, ShowHTML a)
+--                          => [Many (Tree ElemHead)]
+--                          -> ParsecT s u m a
+--                          -> ParsecT s u m [HTMLMatcher TreeHTML a]
+-- specificRepetitiveForest [] _ = return []
+-- specificRepetitiveForest (mElHead1:mElHead2:manyElHeads) match = do
+--   -- | ysA could be == []
+--   htmlGenParserRepeat match (manyElHeads) -- NEW 
+--   ysA {-maybeNext-} <- multiTreeElemHeadParser match mElHead2
+--   ysB <- case ysA of
+--            Just a -> specificRepetitiveForest (mElHead2:manyElHeads) match 
+--            Nothing ->
+--              -- WHat happens to the rest of Many ElHeads in this case? 
+--              htmlGenParserRepeat match (multiTreeElemHeadParser match mElHead1)
+--              htmlGenParserRepeat match (manyElHeads) -- NEW 
+--   return (ysA <> ysB)
   -- let
   --   -- funcP :: (ShowHTML a, Stream s m Char) => ParsecT s u m [TreeHTML a]
   --   funcP = multiTreeElemHeadParser match mElHead1 
   -- y <- htmlGenParserRepeat match funcP -- this literally just allows for matching on multiple elems too
-
   -- -- Only applies to "specific" functions, prev: any case 
   -- ys <- case y of
   --   -- Discard last parsed pattern and go to next element formula on success of `y` 
@@ -270,26 +605,27 @@ specificRepetitiveForest (mElHead1:mElHead2:manyElHeads) match = do
 
 
 -- | This is all I actually need , no need for recursion here, since thats already done in top level func
+{-# DEPRECATED multiTreeElemHeadParser "use specificContinuous style functions" #-} 
 multiTreeElemHeadParser :: (Stream s m Char, ShowHTML a) =>
                           ParsecT s u m a
                        -> Many (Tree ElemHead)
                        -> ParsecT s u m [HTMLMatcher TreeHTML a]
 multiTreeElemHeadParser match mTree = case mTree of
   Many (Node (elem, attrs) subTree) ->
-    many (try $ treeElemParserSpecific (Just match) elem (Map.toList attrs) subTree <|> IText )
+    (fmap . fmap) Element (many (try $ treeElemParserSpecific (Just match) elem (Map.toList attrs) subTree ))
   One (Node (elem, attrs) subTree) ->
-    treeElemParserSpecific (Just match) elem (Map.toList attrs) subTree >>= return . flip (:) []
+    treeElemParserSpecific (Just match) elem (Map.toList attrs) subTree >>= return . flip (:) [] . Element
                                                                         -- like return . (\x -> x :[])
 
 
 
 -- | Is able to repeat / execute any pattern that returns multiple elements of same type
 -- |(see manyTreeElemHeadParser)
-htmlGenParserRepeat :: (Stream s m Char, ShowHTML a) =>
-                       ParsecT s u m a
-                    -> [Many (Tree ElemHead)]
+-- htmlGenParserRepeat :: (Stream s m Char, ShowHTML a) =>
+                       -- ParsecT s u m a
+                    -- -> [Many (Tree ElemHead)]
                     -- -> ParsecT s u m [TreeHTML a] -- Can just apply multiTreeElemHeadParser (if i should) inside
-                    -> ParsecT s u m [HTMLMatcher TreeHTML a]
+                    -- -> ParsecT s u m [HTMLMatcher TreeHTML a]
 
 
 -- | HTMLGenParserRepeat is in this use case always going to be exact ie these 3 elems then the end tag
@@ -300,59 +636,122 @@ htmlGenParserRepeat :: (Stream s m Char, ShowHTML a) =>
   -- | or find end tag >> return [] which ends list 
   
 
--- | Is able to repeat / execute any pattern that returns multiple elements of same type
--- |(see manyTreeElemHeadParser)
-htmlGenParserRepeat :: (Stream s m Char, ShowHTML a) =>
-                       ParsecT s u m a
-                    -> [Many (Tree ElemHead)]
-                    -> ParsecT s u m [HTMLMatcher TreeHTML a]
-htmlGenParserRepeat elemTag match (mElHead1:mElHead2:manyElHeads) {-parsesTreeHs-} =
-  <|> endTag elemTag >> return [] 
-  (do { x <- try match;  return $ (Match x):[] })
-  <|> (do { txt <- try stylingElem; return $ (IText txt):[] }) 
-  -- <|> (element1 <|> element2 >>= case Right )
-  <|> (do
-          -- this gets into treeElemParserSpecific territory
-          e <- parseOpeningTagDesc (Just [(fst mElHead1), (fst mEleHead2)]) []
-          -- We allow attrs to be any then check, but also avoid unnceccessarily parsing attrs
-
-          -- | following needs to be inside many
-          -- innerParser will be from case elem tag selfClosing and on 
-          es <- if attrs e == snd mElHead1 -- (elTag e == (fst mElHead1) && (attrs a) == (snd mElHead1)
-                then
-                  do
-                    (a,b,c) <- innerParser treeElemhead match elem 
-                    (:) <$> (TreeHTML e at ipStuff)
-                      <*> htmlGenParserRepeat match (mElHead1:mElHead2:manyElHeads)
-                      
-                else
-                  if attrs e == snd mEleHead2
-                  then
-                    do
-                      (a,b,c) <- innerParser treeElemhead match elem 
-                      (:[]) <$> (TreeHTML e at ipStuff)
-                        <*> htmlGenParserRepeat match (mElHead2:manyElHeads)
 
 
-                  else parserFail "did not match on either of the next two previous elements" 
-          -- case e1,e2,parserFail
-      )
+  -- -- (eIns, at)  <- parseOpeningTagDesc (Just [(fst mElHead1), (fst mEleHead2)]) []
+  -- let
+  --   atSet :: Elem -> [Tree ElemHead] -> [Tree ElemHead]
+  --   atSet = filter (\(Node (e, a)) -> if eIns == e then True else False) elSet 
+      
+
+            
+  -- f' eIns at elHeads
+                                     
+
+  -- -- | Note that this is not a manyTill but should behave like any parser, f (however f is defined)
+  -- -- | then once thats complete, parse endTag (with maybe some text) 
+
+    -- f :: Stream s m Char =>
+         -- Maybe (ParsecT s u m a)
+      -- -> Elem
+      -- -> Attrs
+      -- -> [Many (Tree ElemHead)]
+      -- -> ParsecT s u m ([Many (Tree ElemHead)], TreeHTML a)
+    --
+    -- At this point, we 100% know that the head of the list is the correct one 
+    -- f match endT at elHeads = do
+      -- (m, inTx, inTr) <- innerParserSpecific match endT (fromMany . fst $ elHeads)
+
+      -- case fst elHeads of
+        -- Many a -> "" --doesnt have to be there at all 
+        -- One a -> "" -- has to be there 
+   
+   -- then get attrs 
+
+
+       -- OR filter for successful el tag eg "a" was apart of allowed set, it was "a" and now you
+       -- filter the allowed set for "a" to reference attrs to try
+
+                                     --eg: ref "a" ("a", fromList [("x", "y")])
+                                     
+  where
+    -- This function should also handle (Many a) control flow
+      -- case manyA
+      -- |  One a -> delete elHead from state if openTag matches
+      -- |  Many a -> delete if
+
+      -- | if (Many a) on second one then reset (call treeElePSC again with delete elHeads) 
+    -- f' match eIns at manyElHeads
+      -- | at == (snd mElHead1) && eIns == (fst mElHead1) = f eIns at manyElHeads 
+      -- | at == (snd mElHead2) && eIns == (fst mElHead2) = f eIns at (tail manyElHeads) 
+      -- | otherwise = parserFail "does not match on elements"
   
+
+fromMany :: Many a -> a
+fromMany (One a) = a
+fromMany (Many a) = a 
+
+
+
+---OLD
+  -- <|> (do
+  --         -- this gets into treeElemParserSpecific territory
+  --         (eIns, at)  <- parseOpeningTagDesc (Just [(fst mElHead1), (fst mEleHead2)]) []
+  --         if attrs e == snd mElHead1 -- (elTag e == (fst mElHead1) && (attrs a) == (snd mElHead1)
+  --           then f manyElHeads 
+  --           do
+  --             (m, inTx, inTr) <- innerParserSpecific mElHead1 match eIns  
+  --             (:) <$> (TreeHTML e at m inTx inTr) <*> htmlGenParserRepeat match (mElHead1:mElHead2:manyElHeads)
+  --           else
+  --           -- should also have this or similar behaviour in case (One a) 
+  --           if attrs e == snd mElHead2
+  --           then
+  --             do
+  --               (matches, inText, inTree) <- innerParserSpecific mElHead2 match elem 
+  --               (:[]) <$> (TreeHTML e at matches inText inTree) <*> htmlGenParserRepeat match (mElHead2:manyElHeads)
+  --           else parserFail "did not match on either of the next two previous elements" 
+  --         -- case e1,e2,parserFail
+  --     )
+
   
+-- | Note that multiTreeElemHeadParser is still not handled, all I need to do is auto delete if only one
+-- | actual function of multiTreeElemHeadParser will not be used but broken up
+
+
   -- <|> ((fmap . fmap) (Element) parsesTreeHs) -- list of elements, could be single element or multiple 
   -- <|> (do { x <- anyChar; return (IText (x:[]):[]) }) -- just allows for singleton creation (x:[])
 
 
-might still be:
 
-  htmlGenParserRepeat
-  endTag tag
+    
+     -- then f manyElHeads
+     -- else
+       -- if at == (snd mElHead2) && eIns == (fst mElHead2)
+       -- then f (tail manyElHeads)
+       -- else parserFail "does not match on elements"
 
-as opposed to:
+  
+--     -- should also have this or similar behaviour in case (One a) 
+--     i
+--     then
+--       do
+--         (matches, inText, inTree) <- innerParserSpecific mElHead2 match elem 
+--         (:[]) <$> (TreeHTML e at matches inText inTree) <*> htmlGenParserRepeat match (mElHead2:manyElHeads)
+--     else parserFail "did not match on either of the next two previous elements" 
+--   -- case e1,e2,parserFail
+-- )
 
-  manyTill_ htmlGenParserRepeat (endTag tag)
 
-but it could still need to be the second in order to work 
+-- might still be:
+
+--   htmlGenParserRepeat
+--   endTag tag
+
+-- as opposed to:
+
+--   manyTill_ htmlGenParserRepeat (endTag tag)
+
+-- but it could still need to be the second in order to work 
 
 ---------- where htmlGenParserRepeat =
 --     <|> 
@@ -381,7 +780,7 @@ stylingElem :: Stream s m Char => ParsecT s u m String
 stylingElem = do
   (e,_) <- parseOpeningTag (Just stylingTags) []
   char '>'
-  fmap (reverse. fst) $ manyTill_ anyChar (endTag e) 
+  fmap (reverse . fst) $ manyTill_ anyChar (endTag e) 
   -- matches : Reversed >-> RW
   
 
@@ -401,7 +800,9 @@ sameTreeH matchh treeH = treeElemParserSpecific matchh (elTag treeH) (Map.toList
 
 -- this implementation would cause issues for when we want to check equality of trees
 -- we would need to set the inside tree element parser + we would also need to think about how to     handle matches -->> maybe check after for matches > 0?
-htmlGenParserFlex :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a) -> ParsecT s u m (HTMLMatcher TreeHTML a)
+htmlGenParserFlex :: (Stream s m Char, ShowHTML a) =>
+                     Maybe (ParsecT s u m a)
+                  -> ParsecT s u m (HTMLMatcher TreeHTML a)
 htmlGenParserFlex a = (try (Match <$> (fromMaybe parserZero a)))
                       <|> try (Element <$> treeElemParser Nothing a [])   --(treeElemParserAnyInside a))
                       <|> ((IText . (:[])) <$> anyChar)
