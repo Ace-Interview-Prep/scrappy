@@ -8,7 +8,7 @@ import Elem.Types (Elem, Elem', Attrs, AttrsError(IncorrectAttrs)) -- Attr)
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
                    alphaNum, many1, between, many, letter, parserFail)
-import Data.Map as Map (Map, fromList, lookup) 
+import Data.Map as Map (Map, fromList, lookup, toList) 
 import Data.Maybe (fromMaybe)
 
 -- | needs to use many for multiple links
@@ -158,7 +158,8 @@ attrsFit mapppy ((name, test): rest) =
 
 
 
-
+attrsMatch' :: Map String String -> Map String String -> Bool
+attrsMatch' a b = attrsMatch (toList a) b
 
 
 
@@ -202,12 +203,6 @@ parseOpeningTagDesc :: Stream s m Char => Maybe [Elem] -> [(String, String)] -> 
 parseOpeningTagDesc elemOpts attrs = do
   _ <- char '<'
   elem <- mkElemtagParser elemOpts
-  -- let
-    -- fa = Map.toList
-         -- $ Map.adjust (const (not . null)) "title"
-         -- $ Map.adjust (const (not . null)) "alt"
-         -- $ Map.adjust (const (not . null)) "href"
-         -- $ Map.fromList (mkAttrsDesc attrs) 
   attrs <- attrsParserDesc attrs
   return (elem, attrs) 
 

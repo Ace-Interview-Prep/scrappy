@@ -12,7 +12,7 @@ import Find (findNaive)
 import Links (maybeUsefulUrl)
 
 import Data.Either (fromRight)
-import Data.Maybe (catMaybes)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Functor.Identity (Identity)
 import Text.Parsec (Stream, ParsecT, parse, anyChar, manyTill, char)
 
@@ -82,4 +82,18 @@ tableItem = undefined
 --   Left err -> show err
 
 
+
+
+scrapeFirst :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (Maybe a)
+scrapeFirst p = do
+  x <- findNaive p
+  case x of
+    Just (x:_) -> return $ Just x
+    Nothing -> return $ Nothing
+
+ 
+findCount :: Stream s m Char => ParsecT s u m a -> ParsecT s u m Int
+findCount p = do
+  x <- findNaive p
+  return $ length (fromMaybe [] x)
 

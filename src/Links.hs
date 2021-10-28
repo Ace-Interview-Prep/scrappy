@@ -56,7 +56,7 @@ type DOI = String -- Change to URI if this works
 --           | Sourcery (PdfLink) ReferenceSys
 
 -- pageKey=param
-type PageKey = String
+
 
 data ReferenceSys = RefSys [String] [String]
 

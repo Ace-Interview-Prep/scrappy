@@ -351,6 +351,19 @@ mkGH result = GroupHtml result (length result) ((length (innerText' (head result
                  ---- > 
   
 
+longestElem :: [Elem' a] -> Maybe (Elem' a)
+longestElem [] = Nothing
+longestElem (a:[]) = Just a
+longestElem (x:xs) = if length (innerText' x) > length (innerText' $ head xs)
+                     then longestElem (x: (tail xs))
+                     else longestElem xs
+
+
+
+maxLength :: [[a]] -> [a]
+maxLength (a:[]) = a
+maxLength (x:xs) = if length x > length (head xs) then maxLength (x: (tail xs)) else maxLength xs
+
 
 
 biggestHtmlGroup :: [GroupHtml e a] -> GroupHtml e a 
@@ -543,7 +556,7 @@ selfClosingTextful innerP =
 
 
 ---- # DEPRECATED UrlPagination "use CurrentQuery" #
-data UrlPagination = UrlPagination String Int String 
+data UrlPagination = UrlPagination String Int String deriving Show
 
 
 

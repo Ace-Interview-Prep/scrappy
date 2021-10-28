@@ -1,3 +1,4 @@
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
@@ -11,7 +12,7 @@ import Replace.Megaparsec (findAll)
 import Elem.SimpleElemParser (elemParser)
 -- import Elem.ElemHeadParse 
 import Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)
-import Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag)
+import Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag, attrsMatch')
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
 import Links (maybeUsefulUrl, Url )
@@ -551,7 +552,7 @@ handleNumber attrs = do
 selectEl :: Stream s m Char => ParsecT s u m InputElem
 selectEl = do
   e <- elemParser (Just ["select", "datalist"]) (Just optionParser) []
-  return $ SelectElem ((pack . fromJust . (Map.lookup "name") . attrs $ e), (fmap pack $ matches' e))
+  return $ SelectElem ((pack . fromJust . (Map.lookup "name") . attrs $ e), (reverse $ fmap pack $ matches' e))
   where
     name e = pack . fromJust . (Map.lookup "name") . attrs $ e
     opts e = fmap pack (matches' e)
@@ -599,8 +600,9 @@ data FilledForm = FilledForm { actionUrl :: Url
                              }
 
 instance Show FilledForm where
-  show (FilledForm a b c d _) = "FilledForm " <> a <> " " <> show b <> " " <> c <> " " <> show d <> " SomeQStrs"
-
+  show (FilledForm a b c d _) = "FilledForm " <> a <> " " <> show b <> " " <> c <> " " <> (f d) <> " SomeQStrs"
+    where f d = if length d > 20 then show (take 20 d) <> "...textInputOpts..."
+              else show d 
                   
 -- | If I instead just pass a baseUrl to buildFormSummary then I can return as:
 
@@ -1303,8 +1305,8 @@ structuredBrowsingLinksExist = undefined
 -- 1) Look through a parsed tree for href =
 -- 2) scan text for URI.parser ; p  
 
-getValidHrefs :: Stream s m Char => String -> ParsecT s u m (Maybe [String])
-getValidHrefs baseUrl = findNaive (getValidHref baseUrl)
+validHrefs :: Stream s m Char => String -> ParsecT s u m (Maybe [String])
+validHrefs baseUrl = findNaive (getValidHref baseUrl)
 
 getValidHref :: Stream s m Char => String ->  ParsecT s u m String
 getValidHref baseUrl = hrefParser' (isPrefixOf baseUrl)
@@ -1322,28 +1324,72 @@ getValidHref baseUrl = hrefParser' (isPrefixOf baseUrl)
 
   -- get all mutually exclusive <a> with href == actualUriParser | validURI 
   
-derivePagination :: Stream s m Char => String -> ParsecT s u m UrlPagination
-derivePagination baseUrl = do
-  (el1, el2, el3) <- paginationElements
-  let
-    el1' = getPgtnLks el1 baseUrl
-    el2' = getPgtnLks el2 baseUrl
-    el3' = getPgtnLks el3 baseUrl
-    f' x = (Map.lookup "href" . attrs) x  
-    g x y z = if f' x /= Nothing && f' y /= Nothing && f' z /= Nothing
-              then (fromJust $ f' x, fromJust $ f' y, fromJust $ f' z)
-              else ("", "", "")
-    f :: (String, String, String) -> Maybe UrlPagination
-    f (x,y,z) = funcyAf "" x y z  
-  case tillWeGetItRight f ((g el1 el2 el3) : (triZip el1' el2' el3')) of
-    Nothing -> parserZero
-    Just a -> return a
+parseDrvPagination :: Stream s m Char => String -> ParsecT s u m UrlPagination
+parseDrvPagination baseUrl = do
+  es <- paginationElements
+  -- could instead, in order to make this reliable on all sites, return a list of trups of Elem'
+  -- then \case derivePagination -> Nothing ; try derive next 
+  case derivePagination baseUrl es of
+   Nothing -> parserZero
+   Just (UrlPagination pre x post) ->
+     if isPrefixOf baseUrl pre
+     then return (UrlPagination pre x post)
+     else parserZero
 
-triZip :: [a] -> [b] -> [c] -> [(a,b,c)]
-triZip [] _ _ = []
-triZip _ [] _ = []
-triZip _ _ [] = []
-triZip (a:as) (b:bs) (c:cs) = (a,b,c) : triZip as bs cs
+type PaginationElems = (Elem' String, Elem' String, Elem' String)
+
+derivePagination :: Url -> PaginationElems -> Maybe UrlPagination
+derivePagination baseU (el1, el2, el3) =
+  let
+    href :: Elem' String -> Maybe String
+    href x = ((Map.lookup "href") . attrs) x
+
+    f x = case fmap (isPrefixOf baseU) x of { (Just True) -> x; _ -> Nothing }
+    -- mHrefs :: [(Url, Url, Url)]
+    xs {-a:b:c:xs-} = fromMaybe [] $ sequenceA [href el1, href el2, href el3]
+   
+    funcyAf' :: (String, String, String) -> Maybe UrlPagination
+    funcyAf' (x,y,z) = funcyAf "" x y z  
+  in
+    case xs of
+      a:b:c:xs -> 
+        tillWeGetItRight funcyAf' ((a,b,c) : commonUrlTrups (el1, el2, el3))
+      _ ->
+        tillWeGetItRight funcyAf' (commonUrlTrups (el1, el2, el3))
+
+commonUrlTrups :: PaginationElems -> [(Url, Url, Url)]
+commonUrlTrups (e1, e2, e3) = commonElHUrls (hrefElHs e1) (hrefElHs e2) (hrefElHs e3) 
+
+
+hrefElHs :: Elem' String -> [ElemHead] 
+hrefElHs e = fromMaybe [] $ runScraperOnHtml validHrefElHs (innerText' e)
+
+validHrefElHs :: Stream s m Char => ParsecT s u m ElemHead
+validHrefElHs = parseOpeningTag Nothing [("href", Nothing)]
+
+commonElHUrls :: [ElemHead] -> [ElemHead] -> [ElemHead] -> [(Url, Url, Url)]
+commonElHUrls [] _ _ = [] 
+commonElHUrls (x:xs) ys zs = 
+  let 
+    aas = findSep pred ys -- (a, as)
+    bbs = findSep pred zs -- (b, bs)
+    href = fromJust . (Map.lookup "href") . snd
+    pred = (\y -> attrsMatch' (snd x) (snd y) && ((fst x) == (fst y)))
+  in
+    case (,) <$> fst aas <*> fst bbs of
+      Just (a, b) -> (href x, href a, href b) : (commonElHUrls xs (snd aas) (snd bbs))
+      Nothing -> commonElHUrls xs ys zs 
+
+-- | Note that in use, what builds the predicate will be given in the return just not through this function 
+findSep :: (ElemHead -> Bool) -> [ElemHead] -> (Maybe ElemHead, [ElemHead])
+findSep _ [] = (Nothing, []) 
+findSep pred (x:xs) = if pred x then (Just x, xs) else consSnd x (findSep pred xs) 
+  where 
+    consSnd :: Eq a => a -> (Maybe a, [a]) -> (Maybe a, [a])
+    consSnd a (x, as) = (x, a : as) 
+
+firstJust :: (a -> Maybe b) -> [a] -> Maybe b
+firstJust = tillWeGetItRight 
 
 tillWeGetItRight :: (a -> Maybe b) -> [a] -> Maybe b
 tillWeGetItRight _ [] = Nothing -- but we got it wrooong 
@@ -1371,35 +1417,122 @@ funcyAf pre (x:xs) (y:ys) (z:zs) =
       if y == z
       then Nothing
       else
-        if (digitToInt y - digitToInt x) - (digitToInt z - digitToInt y) == 0
+        -- make sure of elem Num first
+        if all (flip elem  ['0'..'9']) [x,y,z]
         then
+          if (digitToInt y - digitToInt x) - (digitToInt z - digitToInt y) == 0
+          then
 
-          case xs == ys && xs == zs of
-            True -> Just $ UrlPagination pre 2 xs
-            False -> Nothing 
+            case xs == ys && xs == zs of
+              True -> Just $ UrlPagination pre 2 xs
+              False -> Nothing 
              -- we know the index at which the page, paginates
              -- we have 3 pieces
              -- pre <> pgNum <> post == url
-        else Nothing 
+          else Nothing 
       
+        else
+          Nothing 
+          
 
 -- Need to stretch to handling finding many 
-getPgtnLks :: ElementRep e => e b -> String -> [String]
-getPgtnLks elem baseUrl =
-  case (parse (getValidHrefs baseUrl) "" (innerText' elem)) of
-    Left _ ->
-      case headHref of
-        Just a -> a : [] 
-        Nothing -> []
+-- getPgtnLks :: ElementRep e => e b -> String -> [Url]
+-- getPgtnLks elem baseUrl =
+  -- case (parse (validHrefs baseUrl) "" (innerText' elem)) of
+    -- Left _ ->
+      -- case headHref of
+        -- Just a -> a : [] 
+        -- Nothing -> []
       -- return [] 
 
-    Right (Just urlList) ->
-      case headHref of
-        Just a -> a : urlList
-        Nothing ->  urlList 
-  where
-    headHref :: Maybe String
-    headHref = (Map.lookup "href" (attrs elem)) >>= maybeUsefulUrl baseUrl 
+  --   Right (Just urlList) ->
+  --     case headHref of
+  --       Just a -> a : urlList
+  --       Nothing ->  urlList 
+  -- where
+  --   headHref :: Maybe String
+  --   headHref = (Map.lookup "href" (attrs elem)) >>= maybeUsefulUrl baseUrl 
+
+
+
+-- __NEXT TO DO!!!!!!!!!!!!!____:
+
+
+-- f :: [ElemHead] -> [ElemHead] -> [ElemHead] -> Maybe [(Url, Url, Url)]
+-- f (x:xs) = f' x ys
+
+-- f (x:xs) = f x y' : f xs [y]'
+
+-- f' x (y:ys) = if x == y then Just (href x, href y) else Nothing 
+
+
+-- fTot xs ys zs = f' xs $ f' ys zs
+
+-- -- OR
+-- f' :: [a] -> [a] -> [a]
+-- f' 
+      
+    
+--   (x, a, b) : f xs as bs 
+  
+  
+--   (x,,) <$> findSep x ys <*> findSep x zs
+--   do {- inside :: [Maybe -}
+--   (a,b,c) <- (x,,) <$> find (attrsMatch' x) y <*> find (attrsMatch' x) z
+--   return (a,b,c) : f xs (del b y) (del c z) 
+
+  
+--   -- :: Maybe (Url, Url, Url) 
+
+--   if any (attrsMatch' x) y && any 
+
+--                then        href x : f xs y
+                  
+
+--                else f xs y
+--   where href = (fromJust $ Map.lookup "href") . snd 
+
+-- commonElHUrls :: [ElemHead] -> [ElemHead] -> [ElemHead] -> [(Url, Url, Url)]
+-- commonElHUrls (a:as) = if matchFor a _in (bs && cs)
+--                        then (href a, href b, href c) : commonElHUrls as bs cs 
+--                        else continue
+
+
+-- overall :: (Elem' String, Elem' String, Elem' String)
+        -- -> matches@[(Url, Url, Url)] -- if there is more than one, take head 
+
+
+
+-- -- But for all options and return first success 
+-- if ElemHeadParse.attrsMatch (ats1 ats2) && (ats1 ats3) then (href a, href b, href c) : commonElHUrls as bs cs 
+
+-- if del variantAts attrs1 == del variantAts attrs2
+
+-- if del "href" attrs1 == del "href" attrs2
+
+-- commonElHUrls (a:as) bs cs = if elem a bs && elem a cs
+--                       then a : triMap as bs cs
+--                       else triMap as bs cs
+
+
+
+
+-- | Should be replaced by a function that ensures they are the same element
+-- | If there is a union of elemHeads inside the given element then use order, we could even give a fake attribute
+-- | named position = __n__
+-- triZip :: [a] -> [b] -> [c] -> [(a,b,c)]
+-- triZip [] _ _ = []
+-- triZip _ [] _ = []
+-- triZip _ _ [] = []
+-- triZip (a:as) (b:bs) (c:cs) = (a,b,c) : triZip as bs cs
+
+-- | Note! because we must have the same ElemHead in all 3, we only need to iterate through the options
+-- | afforded by the first element 
+
+-- i would need to stop earlier and not parse down to the href but instead keep the ElemHead
+
+-- 1: look for all elems with an href
+
 
 
     --   -- return urlList 
@@ -1441,7 +1574,7 @@ paginationElements = do
   
   x <- elemParser Nothing (Just $ string "1") [] 
   -- This could be different from option 1 but still contain 2, validly 
-  y <- Right <$> elemParser (el' x) (Just $ string "2") (attrs' x)
+  y <- Right <$> (try $ elemParser (el' x) (Just $ string "2") (attrs' x))
        <|> Left <$> elemParser Nothing (Just $ string "2") []
        
   z <- case y of
