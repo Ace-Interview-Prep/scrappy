@@ -87,7 +87,7 @@ data QParams = Opt (Map Namespace [Option]) | SimpleKV (Text, Text)
 
 
 -- pageKey=param
-type PageKey = Text
+
 
 
 
