@@ -556,7 +556,7 @@ selfClosingTextful innerP =
 
 
 ---- # DEPRECATED UrlPagination "use CurrentQuery" #
-data UrlPagination = UrlPagination String Int String deriving Show
+data UrlPagination = UrlPagination String String deriving (Eq, Show)
 
 
 

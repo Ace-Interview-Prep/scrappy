@@ -1331,9 +1331,9 @@ parseDrvPagination baseUrl = do
   -- then \case derivePagination -> Nothing ; try derive next 
   case derivePagination baseUrl es of
    Nothing -> parserZero
-   Just (UrlPagination pre x post) ->
+   Just (UrlPagination pre post) ->
      if isPrefixOf baseUrl pre
-     then return (UrlPagination pre x post)
+     then return (UrlPagination pre post)
      else parserZero
 
 type PaginationElems = (Elem' String, Elem' String, Elem' String)
@@ -1424,7 +1424,7 @@ funcyAf pre (x:xs) (y:ys) (z:zs) =
           then
 
             case xs == ys && xs == zs of
-              True -> Just $ UrlPagination pre 2 xs
+              True -> Just $ UrlPagination pre xs
               False -> Nothing 
              -- we know the index at which the page, paginates
              -- we have 3 pieces
