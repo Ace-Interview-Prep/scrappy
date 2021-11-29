@@ -3,7 +3,7 @@
 
 module Elem.ElemHeadParse where
 
-import Elem.Types (Elem, Elem', Attrs, AttrsError(IncorrectAttrs)) -- Attr)
+import Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs)) -- Attr)
 
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
@@ -32,12 +32,21 @@ hrefParser = do
     Just a -> return a
 -- snd OR fmap snd for multiple then analyze URI
 
-attrParser' :: Stream s m Char => String -> (String -> Bool) -> ParsecT s u m String --Link
-attrParser' attrib predicate = do
-  tag <- parseOpeningTag Nothing [(attrib, Nothing)] -- i could in theory pass an expression as value
-  case (Map.lookup "href" . snd) tag of
+parseOpeningTagF :: Stream s m Char => String -> (String -> Bool) -> ParsecT s u m ElemHead --Link
+parseOpeningTagF attrib predicate = do
+  (e, as) <- parseOpeningTag Nothing [(attrib, Nothing)] -- i could in theory pass an expression as value
+  case Map.lookup attrib as of
     Nothing -> parserZero
-    Just a -> if predicate a then return a else parserZero 
+    Just a -> if predicate a then return (e,as) else parserFail "couldnt find match parseOpeningTagF"
+
+
+-- parseOpeningTagFs :: Stream s m Char => [(String, (String -> Bool)] -> ParsecT s u m ElemHead --Link
+-- parseOpeningTagFs (attrib, predicate):xs = do
+  -- (e, as) <- parseOpeningTag Nothing [(attrib, Nothing)] -- i could in theory pass an expression as value
+  -- case Map.lookup attrib a of
+    -- Nothing -> parserZero
+    -- Just a -> if predicate a then return (e,as) else parserZero 
+
 
 -- | Allows parsing with high level predicate 
 hrefParser' :: Stream s m Char => (String -> Bool) -> ParsecT s u m String --Link

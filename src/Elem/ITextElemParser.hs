@@ -8,6 +8,7 @@ import Elem.Types (HTMLMatcher(..), endTag, selfClosingTextful)
 import Text.Megaparsec as MParsec (some)
 import Text.Parsec (parse, ParsecT, Stream, string, (<|>), anyChar, char, optional, try, manyTill, many, runParserT, ParseError)
 import Control.Monad
+import Data.Either (fromRight)
 -- justPlaintext :: Int -> ParsecT s u m [String]
 -- justPlaintext atLeast = 
 --   fmap (filter (\x -> length x > atLeast)) {--} (find $ many (letter <|> number <|> char ' ' <|> char '.'))
@@ -20,16 +21,25 @@ import Control.Monad
 
 
 type Html = String
-getPlainText :: Html -> Either ParseError [String]
-getPlainText html = do
-  let
-    expr = (fmap show $ parseOpeningTag (Just styleTags) [])
-            <|> (string "</" >> buildElemsOpts styleTags >> string ">")
-    styleTags = ["b", "strong", "i", "em", "mark", "small", "ins", "sub", "sup"]   --"del" omitted
+-- getPlainText :: Html -> Either ParseError [String]
+-- getPlainText html = do
+  -- let
+    -- expr = (fmap show $ parseOpeningTag (Just styleTags) [])
+            -- <|> (string "</" >> buildElemsOpts styleTags >> string ">")
+    -- styleTags = ["b", "strong", "i", "em", "mark", "small", "ins", "sub", "sup"]   --"del" omitted
      
-  divied <- parse (divideUp expr) "" html    
-  parse onlyPlainText "" $ (mconcat . catEithers) divied
+  -- divied <- parse (divideUp expr) "" html    
+  -- parse onlyPlainText "" $ (mconcat . catEithers) divied
 
+removeStyleTags :: Html -> Html
+removeStyleTags html = (mconcat . catEithers) $ fromRight undefined $ parse (divideUp expr) "" html
+  where expr = (fmap show $ parseOpeningTag (Just styleTags) [])
+               <|> (string "</" >> buildElemsOpts styleTags >> string ">")
+        styleTags =  ["b", "strong", "i", "em", "mark", "small", "ins", "sub", "sup"] 
+  
+-- getPlainText' :: ParsecT s u m [String]
+-- getPlainText' = do
+  
 
   -- join $ fmap (  (parse onlyPlainText "")  . mconcat . catEithers) $ 
   -- where
@@ -51,8 +61,8 @@ catEithers (x:xs) = case x of
 divideUp :: Stream s m Char => ParsecT s u m String -> ParsecT s u m [Either String String]
 divideUp parser = many ((Right <$> parser) <|> ( (Left . (:[]) ) <$> anyChar)) 
 
-onlyPlainText :: Stream s m Char => ParsecT s u m [String]
-onlyPlainText = fmap (\(ACT strings) -> strings) specialElemParser 
+onlyPlainText :: Stream s m Char => ParsecT s u m String
+onlyPlainText = fmap (\(ACT strings) -> mconcat strings) specialElemParser 
   where
     specialElemParser :: Stream s m Char => ParsecT s u m (AccumITextElem String)
     specialElemParser = do

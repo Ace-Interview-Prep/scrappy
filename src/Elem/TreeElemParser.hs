@@ -47,7 +47,9 @@ treeLookupIdx = undefined
 
 
   
-
+-- | Like elemParser, this matches on an html element but also represents the innerHTML
+-- | as a Tree ElemHead so that we can match this structure in elements further down in the DOM
+-- | see groupHtml and treeElemParserSpecific 
 treeElemParser :: (Stream s m Char, ShowHTML a) =>
                    Maybe [Elem]
                 -> Maybe (ParsecT s u m a)
@@ -148,10 +150,13 @@ validateGPR manyElHeads =
   else parserFail "promised elements not found"
 
 -- We allow attrs to be any then check, but also avoid unnceccessarily parsing attrs
--- | following needs to be inside many
+--  following needs to be inside many
 -- innerParser will be from case elem tag selfClosing and on 
--- | Is able to repeat / execute any pattern that returns multiple elements of same type
--- |(see manyTreeElemHeadParser)
+--  Is able to repeat / execute any pattern that returns multiple elements of same type
+-- (see manyTreeElemHeadParser)
+
+
+-- | Uses HTMLMatcher to collect cases of html while parsing inside of a certain element
 htmlGenParserRepeat' :: (Stream s m Char, ShowHTML a) =>
                        String 
                     -> Maybe (ParsecT s u m a)
@@ -257,9 +262,13 @@ specificChar = do
 
 -- (do { txt <- try stylingElem; return $ (IText txt):[] })
 
--- | treeElemParserSpecific is an interface to this (via innerParserSpecific) 
+-- | treeElemParserSpecific is an interface to this (via innerParserSpecific)
+-- | This inner function uses the Many datatype to differentiate between whether we should expect
+-- | to parse a single element with the given specs or allow for multiple of the given element specs in a row
+-- |
+-- | 
 treeElemParserSpecificContinuous :: (Stream s m Char, ShowHTML a) => Maybe (ParsecT s u m a)
-                                 -> [Many (Tree ElemHead)]
+                                 -> [Many (Tree ElemHead)] -- The total innerHtml structure the current element must have in order to match
                                  -> ParsecT s u m ([Many (Tree ElemHead)], TreeHTML a)
 treeElemParserSpecificContinuous match manyElHeads = do
   let
@@ -375,7 +384,9 @@ innerParserContains match tag subTree =
         (inText, matchBook, treees) = foldr foldFuncTrup mempty (x)
       return (matchBook, (reverse inText), (reverse treees))--(_matches itr) (_innerText itr) (innerTree itr)
 
-
+-- | Very similar to treeElemParserSpecific except that it allows for a new nodes in the HTML DOM tree
+-- | to exist at random as long as when we resume parsing we still find all of the branches we found in the
+-- | TreeHTML a that is given as an arg to this function
 similarTreeH :: (Stream s m Char, ShowHTML a)
              => Maybe (ParsecT s u m a)
              -> TreeHTML a
@@ -392,6 +403,10 @@ similarTreeH matchh treeH = do
                                  -- -> [Many (Tree ElemHead)]
                                  -- -> ParsecT s u m ([Many (Tree ElemHead)], TreeHTML a)
 
+-- | Returns an entire group of highly similar elements based on their specifications such
+-- | as their innerTrees, the element tag, and attributes.
+-- |
+-- | This can be used to autonomously determine the structure of and find search result items after you've submitted a form
 htmlGroupSimilar :: (Stream s m Char, ShowHTML a)
                  => Maybe [Elem]
                  ->  Maybe (ParsecT s u m a)

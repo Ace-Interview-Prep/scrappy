@@ -67,7 +67,7 @@ library
                     , Requests
                     -- Needs a lot of work, is more like an idea rn
                     -- , Concurrencies
-                    , Proxies
+                    -- , Proxies
                     , Types
 
 

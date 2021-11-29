@@ -80,7 +80,7 @@ type Namespace = Text
 type Option = Text 
 
 
--- | More for show / reasoning rn .. non-optimal
+
 data QParams = Opt (Map Namespace [Option]) | SimpleKV (Text, Text)
 
 
@@ -175,12 +175,7 @@ data PageLinker' = PL URL [FormRes] [HrefsSite]
 
 
 
--- | ON URL-File Management:
--- |
--- | 1 File: Top part, if it exists is Search And/Or Browse Links
--- |         ->> below is the basic pages file tree
 
--- | finish is a simplified version of finish' that doesnt need to care about idx, just writes queryString variant
 finish :: [String] -> [String] -> String
 finish [] _ = ""
 finish (x:xs) (y:ys) = "&" <> x <> "=" <> y <> finish xs ys
@@ -326,16 +321,6 @@ inputTypes = ["button", "checkbox", "color", "date", "datetime-local", "email", 
   -- any relevance of the (maybe innerText)
 -- | && shouldnt this specify certain attrs? 145
 
-searchForm :: Stream s m Char => ParsecT s u m (Elem' String)
-searchForm = do
-  let 
-    f = (try $ string "search") <|> (try $ string "Search")
-  e <- elemParser (Just ["form"]) (Just $ f) []
-  if length (matches' e) < 3
-    then parserZero
-    else return e
-
-
 -- both Option and Value ~ Text
 data InputElem = Radio Namespace Option | SelectElem (Namespace, [Option]) | Basic Namespace (Maybe Option)
                deriving (Show, Eq)
@@ -368,7 +353,7 @@ data ParsedForm = ParsedForm Action Method [InputElem] deriving Show
 -- basic, textInput, variable, radio
      ------                       NOT READY               READY AS IS
      
--- (Radio | Var | Basic | TInput)
+-- | (Radio | Var | Basic | TInput)
 type SepdStruct = ([(Namespace, Option)], [(Namespace, [Option])], [(Namespace, Option)], [Namespace])
 
 
@@ -424,6 +409,17 @@ invalidSearchElems matches =
 
  -- length (matches' e) < 3
 
+-- | Scape pattern that matches on search forms 
+searchForm :: Stream s m Char => ParsecT s u m (Elem' String)
+searchForm = do
+  let 
+    f = (try $ string "search") <|> (try $ string "Search")
+  e <- elemParser (Just ["form"]) (Just $ f) []
+  if length (matches' e) < 3
+    then parserZero
+    else return e
+
+-- | Scape pattern that matches on search forms as well as extracting the action and method attributes  
 formElem :: Stream s m Char => ParsecT s u m ParsedForm
 formElem = do
   Elem' _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
@@ -442,6 +438,7 @@ formElem = do
                   "get" -> methodGet
                   "post" -> methodPost
 
+-- | Scrape pattern for <input> element
 inputElem :: Stream s m Char => ParsecT s u m (Maybe InputElem)
 inputElem = (try radioBasic') <|> (fmap Just selectEl)
 
@@ -479,7 +476,8 @@ radioBasic' = do
         --WEIIRDD
         -- Date | Number ( Range ) | Search | Time
              
-
+-- | Handles differences in implications from all input types
+-- | When an input given its type, would not impact the query url, it's discarded 
 processInputEl :: Attrs -> ParsecT s u m (Maybe InputElem)
 processInputEl attrs =
   let
@@ -549,6 +547,7 @@ handleNumber attrs = do
 -- | formRaw <- elemParser (Just ["form"]) (Just $ inputElem) [] 
 -- | return ParsedForm Action $ build (matches formRaw)... 
 
+-- | Matches on 
 selectEl :: Stream s m Char => ParsecT s u m InputElem
 selectEl = do
   e <- elemParser (Just ["select", "datalist"]) (Just optionParser) []
@@ -591,12 +590,12 @@ innerFormParser = do
 type TInputOpt = QueryString
 type Action = Text
 type BaseUrl = Url 
-data FilledForm = FilledForm { actionUrl :: Url
+data FilledForm = FilledForm { actionUrl :: Url -- | from action attribute
                              , reqMethod :: Method
-                             , searchTerm :: Term
+                             , searchTerm :: Term 
                              -- , actnAttr :: Action
                              , textInputOpts :: [TInputOpt]
-                             , qStringVariants :: [QueryString]
+                             , qStringVariants :: [QueryString] --  List of all possible queries given the parsed form. 
                              }
 
 instance Show FilledForm where
@@ -782,6 +781,7 @@ findForms html = runScraperOnHtml formElem html
 -- mkForm :: Elem' a -> Either FormError ParsedForm
 -- mkForm element = 
 
+
 fillForm :: ParsedForm -> Url -> String -> FilledForm
 fillForm (ParsedForm act'' meth formInputs) baseUrl searchTerm =
   let
@@ -794,7 +794,7 @@ fillForm (ParsedForm act'' meth formInputs) baseUrl searchTerm =
   in
     FilledForm act' meth searchTerm tInputs subsets
 
-
+-- | Lazily build FilledForm so that the full list of possible querystrings is not evaluated
 mkFilledForm :: Url -> String -> Elem' String -> Either FormError FilledForm
 mkFilledForm baseUrl searchTerm element = case elTag element of
   "form" ->
@@ -926,7 +926,8 @@ type QueryString = [(Namespace, Option)]
 getAttrVal :: String -> Elem' a -> String 
 getAttrVal name formElem = (fromJust . (Map.lookup name) . attrs) formElem
 
--- | The mempty : mempty means that we will try with no select elements 
+-- | With a Map of an html Namespace and all its possible defined options, lazily create all possible search queries
+-- | for a given Search term 
 buildSearchUrlSubsets :: Map Namespace [Option] -> [QueryString]
 buildSearchUrlSubsets mappy = singlefOp' (mempty :mempty) (toList mappy) -- I believe "" is just state 
 

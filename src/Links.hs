@@ -79,6 +79,7 @@ data QParams = Opt (Map Namespace [Option]) | SimpleKV (Text, Text)
 
 
 -- SiteTree can be modelled as a stream ; just depends on how we apply it -- if lazily
+-- | Inter site urls and whether they have been checked for some pattern
 type SiteTree = [(Bool, Text)]
 
 
@@ -95,6 +96,11 @@ findAdvancedSearchLinks :: ParsecT s u m [String]
 findAdvancedSearchLinks = undefined
 
 
+-- | Core function of module, filters for any links which point to other pages on the current site
+-- | and have not been found over the course of scraping the site yet 
+-- | filters out urls like https://othersite.com and "#"
+maybeUsefulNewUrl :: String -> [(Url, a)] -> HrefURI -> Maybe HrefURI
+maybeUsefulNewUrl baseUrl tree url = maybeUsefulUrl baseUrl url >>= maybeNewUrl tree 
 
 
 
@@ -122,13 +128,11 @@ maybeNewUrl (branch:tree) uri =
     mkURI' :: String -> Maybe URI
     mkURI' url = mkURI (pack url)
   
- 
-maybeUsefulNewUrl :: String -> HrefURI -> [(Url, a)] -> Maybe HrefURI
-maybeUsefulNewUrl baseUrl url tree = maybeUsefulUrl baseUrl url >>= maybeNewUrl tree 
 
 
 
--- Useful as in, diff web page on same site 
+-- | Filters javascript refs, inner page DOM refs, urls with query strings and those that
+-- | do not contain the base url of the host site
 maybeUsefulUrl :: String -> HrefURI -> Maybe HrefURI
 maybeUsefulUrl baseUrl url = do
   noJSorShit url
@@ -171,7 +175,10 @@ newUrlList newUrls oldUrls = fmap (False,) (catMaybes newUrls) <> oldUrls
 -- | Input is meant to be right from 
 usefulNewUrls :: String -> [(Url, a)] -> [Url] -> [Maybe HrefURI]
 usefulNewUrls _ _ [] = []
-usefulNewUrls baseUrl tree (link:links) = (maybeUsefulNewUrl baseUrl (link) tree) : usefulNewUrls baseUrl tree links
+usefulNewUrls baseUrl tree (link:links) = (maybeUsefulNewUrl baseUrl tree link) : usefulNewUrls baseUrl tree links
+
+usefulUrls :: String -> [Url] -> [Maybe HrefURI]
+usefulUrls baseUrl (link:links) = maybeUsefulUrl baseUrl link : usefulUrls baseUrl links 
 
 numberOfQueryParamsIsZero :: String -> Maybe String
 numberOfQueryParamsIsZero uri = do

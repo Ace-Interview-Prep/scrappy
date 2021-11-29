@@ -17,6 +17,10 @@ import Data.Functor.Identity (Identity)
 import Text.Parsec (Stream, ParsecT, parse, anyChar, manyTill, char)
 
 
+-- | Find all occurences of a given parsing/scraping pattern
+-- | e.g. getHtml' "https://google.ca" >>= return . runScraperOnHtml (el "a" []) , would give all 'a' tag html elements on google.ca  
+runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
+runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html 
 
 
 runScraperInBody :: ParsecT String () Identity a -> String -> Maybe [a]
@@ -37,28 +41,25 @@ skipToBody :: Stream s m Char => ParsecT s u m ()
 skipToBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>') </>> el "head" [] >> return () 
 
 
-runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
-runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html 
-
 runScraperOnHtml1 :: ParsecT String () Identity a -> String -> Maybe a
 runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
 
 
-{-# DEPRECATED simpleScrape' "from fba project - gives confusing String output" #-}
-simpleScrape' :: ParsecT String () Identity String -> String -> String 
-simpleScrape' p html = case parse (findNaive p) "" html of
-  Right (Just (x:_)) -> x
-  Right (Just []) -> "NothingA"
-  Right (Nothing) -> "NothingB"
-  Left err -> "Nothing" <> show err
+-- {-# DEPRECATED simpleScrape' "from fba project - gives confusing String output" #-}
+-- simpleScrape' :: ParsecT String () Identity String -> String -> String 
+-- simpleScrape' p html = case parse (findNaive p) "" html of
+--   Right (Just (x:_)) -> x
+--   Right (Just []) -> "NothingA"
+--   Right (Nothing) -> "NothingB"
+--   Left err -> "Nothing" <> show err
 
 
 
-clean :: String -> String
-clean = undefined -- drop if == ( \n | \" | '\\' )
+-- clean :: String -> String
+-- clean = undefined -- drop if == ( \n | \" | '\\' )
 
 
--- same site is guranteed
+-- | uses maybeUsefulUrl to get all links on page pointing only to same site links
 allLinks :: String -> ParsecT String () Identity [String] 
 allLinks baseUrl = do
   x <- findNaive hrefParser 
