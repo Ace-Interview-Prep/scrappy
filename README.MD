@@ -9,5 +9,11 @@ getHtml :: Manager -> Url -> IO (Manager, Html)
 
 elemParser :: Elem -> [(String, Maybe String)] -> Maybe (ParsecT s u m a) -> ParsecT s u m (Elem' a)
 
+el :: Elem -> [(String, String)] -> 
+
 runScraperOnHtml :: ParsecT s u Identity a -> Html -> Maybe [a]
+
+
+:t fmap snd getHtml' "https://google.com" >>= return . (runScraperOnHtml (el "a" [])   
+>>> IO (Maybe [Elem' a]) 
 ```
