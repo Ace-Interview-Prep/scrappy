@@ -11,6 +11,7 @@ getHtml' :: Url -> IO Html
 
 runScraperOnHtml :: ParsecT s u Identity a -> Html -> Maybe [a]
 
+-- | For more advanced control over inner structure see Elem.TreeElemParser
 elemParser :: Elem -> [(String, Maybe String)] 
             -> Maybe (ParsecT s u m a) -- Optionally scraped pattern inside this el, if specified, return element must have at least 1 
             -> ParsecT s u m (Elem' a)
