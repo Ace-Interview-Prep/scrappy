@@ -5,6 +5,7 @@ provides a number of functions that allow for easily scraping certain patterns f
 Main functions:
 
 ```haskell
+-- | Manager returned may be a new manager, if the given manager failed 
 getHtml :: Manager -> Url -> IO (Manager, Html) 
 getHtml' :: Url -> IO Html
 
