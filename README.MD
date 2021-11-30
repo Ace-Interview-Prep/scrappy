@@ -7,11 +7,12 @@ Main functions:
 ```haskell
 getHtml :: Manager -> Url -> IO (Manager, Html) 
 
-elemParser :: Elem -> [(String, Maybe String)] -> Maybe (ParsecT s u m a) -> ParsecT s u m (Elem' a)
 
-el :: Elem -> [(String, String)] 
-      -> ParsecT s u m a -- Optionally scraped pattern inside this el, if specified, return element must have at least 1 
-      -> ParsecT s u m (Elem' a)
+elemParser :: Elem -> [(String, Maybe String)] 
+            -> Maybe (ParsecT s u m a) -- Optionally scraped pattern inside this el, if specified, return element must have at least 1 
+            -> ParsecT s u m (Elem' a)
+
+el :: Elem -> [(String, String)] -> ParsecT s u m (Elem' String)
 
 runScraperOnHtml :: ParsecT s u Identity a -> Html -> Maybe [a]
 
