@@ -6,6 +6,7 @@ Main functions:
 
 ```haskell
 getHtml :: Manager -> Url -> IO (Manager, Html) 
+getHtml' :: Url -> IO Html
 
 
 elemParser :: Elem -> [(String, Maybe String)] 
