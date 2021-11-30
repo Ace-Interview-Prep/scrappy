@@ -8,14 +8,13 @@ Main functions:
 getHtml :: Manager -> Url -> IO (Manager, Html) 
 getHtml' :: Url -> IO Html
 
+runScraperOnHtml :: ParsecT s u Identity a -> Html -> Maybe [a]
 
 elemParser :: Elem -> [(String, Maybe String)] 
             -> Maybe (ParsecT s u m a) -- Optionally scraped pattern inside this el, if specified, return element must have at least 1 
             -> ParsecT s u m (Elem' a)
 
 el :: Elem -> [(String, String)] -> ParsecT s u m (Elem' String)
-
-runScraperOnHtml :: ParsecT s u Identity a -> Html -> Maybe [a]
 
 -- | Find any expressive pattern as long as it is inside of some HTML context 
 contains :: ParsecT s u m (Elem' a) -> ParsecT s u m a -> ParsecT s u m a 
