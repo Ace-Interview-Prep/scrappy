@@ -17,6 +17,21 @@ import Data.Functor.Identity (Identity)
 import Text.Parsec (Stream, ParsecT, parse, anyChar, manyTill, char)
 
 
+getFirstSafe :: Maybe [a] -> Maybe a
+getFirstSafe (Just (x:_)) = Just x
+getFirstSafe _ = Nothing
+
+
+getFirstFitSafe :: (a -> Bool) -> Maybe [a] -> Maybe a
+getFirstFitSafe f (Just (x:xs)) = findFit f (x:xs) 
+getFirstFitSafe _ _ = Nothing 
+
+findFit :: (a -> Bool) -> [a] -> Maybe a
+findFit _ [] = Nothing
+findFit cond (x:xs) = if cond x then Just x else findFit cond xs 
+
+
+
 -- | Find all occurences of a given parsing/scraping pattern
 -- | e.g. getHtml' "https://google.ca" >>= return . runScraperOnHtml (el "a" []) , would give all 'a' tag html elements on google.ca  
 runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
@@ -43,6 +58,9 @@ skipToBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>') <
 
 runScraperOnHtml1 :: ParsecT String () Identity a -> String -> Maybe a
 runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
+
+
+
 
 
 -- {-# DEPRECATED simpleScrape' "from fba project - gives confusing String output" #-}

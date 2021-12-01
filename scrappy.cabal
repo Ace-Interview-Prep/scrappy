@@ -105,9 +105,10 @@ library
   build-depends:       base
                        -->=4.12 && <4.13
                      , parsec == 3.1.*
-                     , megaparsec >= 8.*
+                     , megaparsec == 9.0.*
+-- == 8.0.*
                      , replace-megaparsec == 1.4.*
-                     , extra >= 1.7.*
+                     , extra == 1.7.*
                      , modern-uri
                      , http-client
                      , HTTP
@@ -145,5 +146,5 @@ test-suite researchPaperScraper-test
 
   -- Test dependencies.
   build-depends:       base
--- >=4.12 && <4.13
+-- ==4.12 && <4.13
 

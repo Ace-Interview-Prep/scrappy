@@ -3,15 +3,17 @@
 module Requests where 
 
 import Find (findNaive)
+import Scrape (runScraperOnHtml)
 import Elem.SimpleElemParser (el)
 import Elem.Types (innerText')
 import Elem.ChainHTML (contains)
 
+import Data.Maybe (catMaybes)
 import Data.List (isInfixOf)
 import Network.HTTP.Types.Header 
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Data.Functor.Identity (Identity)
-import Text.Parsec (ParsecT, ParseError, parse, Stream, many)
+import Text.Parsec (ParsecT, Parsec, ParseError, parse, Stream, many)
 import Network.HTTP.Client (Manager, Proxy(..), HttpException, httpLbs, responseBody, parseRequest
                            , secure, requestHeaders, newManager, useProxy, managerSetSecureProxy)
 import Data.Text (Text, unpack, pack)
@@ -41,6 +43,33 @@ scrapeUrlWith parser manager url = do
 type Html = String
 
 
+
+-- aside
+
+-- Also need to generalize to MonadIO 
+
+type Url = String 
+runScraperOnUrl :: Url -> Parsec String () a -> IO (Maybe [a])
+runScraperOnUrl url p = fmap (runScraperOnHtml p) (getHtml' url)
+
+runScraperOnUrls :: [Url] -> Parsec String () a -> IO (Maybe [a])
+runScraperOnUrls urls p = fmap (foldr (<>) Nothing) $ mapM (flip runScraperOnUrl p) urls 
+
+
+-- foldr :: (a -> b -> c)
+
+foldFunc :: Maybe [a] -> Maybe [a] -> Maybe [a]
+foldFunc = undefined
+
+runScrapersOnUrls = undefined
+
+--- this is meant to be pseudo code at the moment
+type STM = IO 
+
+-- | Merge Maybe [a] when multiple urls 
+concurrentlyRunScrapersOnUrls :: [Url] -> [ParsecT s u m a] -> STM (Maybe [a])
+concurrentlyRunScrapersOnUrls = undefined 
+  -- inner will call concurrent stream functions on the given urls 
 
 
 
