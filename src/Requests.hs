@@ -3,15 +3,17 @@
 module Requests where 
 
 import Find (findNaive)
+import Scrape (runScraperOnHtml)
 import Elem.SimpleElemParser (el)
 import Elem.Types (innerText')
 import Elem.ChainHTML (contains)
 
+import Data.Maybe (catMaybes)
 import Data.List (isInfixOf)
 import Network.HTTP.Types.Header 
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Data.Functor.Identity (Identity)
-import Text.Parsec (ParsecT, ParseError, parse, Stream, many)
+import Text.Parsec (ParsecT, Parsec, ParseError, parse, Stream, many)
 import Network.HTTP.Client (Manager, Proxy(..), HttpException, httpLbs, responseBody, parseRequest
                            , secure, requestHeaders, newManager, useProxy, managerSetSecureProxy)
 import Data.Text (Text, unpack, pack)
@@ -38,14 +40,41 @@ scrapeUrlWith parser manager url = do
   return $ parse parser ("site" <> url) dadBod
 
 
+type Html = String
+
+
+
+-- aside
+
+-- Also need to generalize to MonadIO 
+
+type Url = String 
+runScraperOnUrl :: Url -> Parsec String () a -> IO (Maybe [a])
+runScraperOnUrl url p = fmap (runScraperOnHtml p) (getHtml' url)
+
+runScraperOnUrls :: [Url] -> Parsec String () a -> IO (Maybe [a])
+runScraperOnUrls urls p = fmap (foldr (<>) Nothing) $ mapM (flip runScraperOnUrl p) urls 
+
+
+-- foldr :: (a -> b -> c)
+
+foldFunc :: Maybe [a] -> Maybe [a] -> Maybe [a]
+foldFunc = undefined
+
+runScrapersOnUrls = undefined
+
+--- this is meant to be pseudo code at the moment
+type STM = IO 
+
+-- | Merge Maybe [a] when multiple urls 
+concurrentlyRunScrapersOnUrls :: [Url] -> [ParsecT s u m a] -> STM (Maybe [a])
+concurrentlyRunScrapersOnUrls = undefined 
+  -- inner will call concurrent stream functions on the given urls 
 
 
 
 
-
-
-
--- | Get html with no proxy creator
+-- | Get html with no Proxy 
 getHtml' :: String -> IO String
 getHtml' url = do
   mgrHttps <- newManager tlsManagerSettings
@@ -57,19 +86,19 @@ getHtml' url = do
   return dadBod
 
 
-
-getHtml :: Manager -> String -> IO (Manager, String)
+-- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails 
+getHtml :: Manager -> String -> IO (Manager, Html)
 getHtml manager url = do
   -- mgrHttps <- newManager tlsManagerSettings
   requ <- parseRequest url
   let
     headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
-              , (hAccept, "image/webp, */*")
+              -- , (hAccept, "image/webp, */*")
               , (hAcceptLanguage, "en-US,en;q=0.5")
               , (hAcceptEncoding, "gzip, deflate, br")
               , (hConnection, "keep-alive")
-              , (hReferer, "https://www.amazon.ca/")
-              , (hTE, "Trailers")
+              -- , (hReferer, "https://www.amazon.ca/")
+              -- , (hTE, "Trailers")
               ]
     req = requ { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
                , secure = True
@@ -86,17 +115,12 @@ getHtml manager url = do
             newManager <- mkManager
             getHtml newManager url
         )
-      -- res <- httpLbs requ newManager
-      -- return (manager, res)
   (manager', response) <- catch f g 
-  let
-    
   return (manager', response)
 
 
 
 testForValidProxy :: [Proxy] -> IO (Manager)
--- testForValidProxy [] = return Nothing 
 testForValidProxy (proxy:proxies) = do
   req <- parseRequest "https://hackage.haskell.org/package/base-4.15.0.0/docs/Control-Exception.html#v:catch"
   trialManager <- mkManagerInternal proxy
@@ -127,7 +151,7 @@ mkManager = do
 
 
 
--- https://free-proxy-list.net/
+
 scrapeProxyList :: IO [Proxy] -- becoming [[String]]
 scrapeProxyList = do
   response <- getHtml' "https://free-proxy-list.net/"

@@ -17,6 +17,18 @@ import Data.Either (fromRight)
 -- | that the user would like to return 
 
 
+
+
+-- | Converts a parsing/scraping pattern to one which either returns Nothing
+-- | or Just a list of at least 1 element. Maybe type is used so that there is a clearer
+-- | distinction between a failed search and a successful one
+findNaive :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (Maybe [a])
+findNaive p = (justify .  (fromRight mempty) . sequenceA) <$> (find p)
+  where
+    justify x = if length x == 0 then Nothing else Just x 
+
+
+
 -- givesNothing :: ParsecT e s m (Either ScrapeFail a) 
 -- givesNothing = Left NonMatch <$ anyChar
 
@@ -37,7 +49,7 @@ findSequential3 (a,b,c) = do
   c' <- findUntilMatch c
   return (a', b', c')
 
--- this is for sequencing matches amongst noise
+-- | Like find naive except that finishes parsing on the first match it finds in the document
 findUntilMatch :: Stream s m Char => ParsecT s u m a -> ParsecT s u m a
 findUntilMatch parser = do
   x <- (try (baseParser parser)) <|> givesNothing
@@ -69,13 +81,6 @@ find parser = do
     Left NonMatch -> find parser
 -- return (x:xs)
 
-
--- Helper function
--- ERROR: What about when find p == [] ?
-findNaive :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (Maybe [a])
-findNaive p = (justify .  (fromRight mempty) . sequenceA) <$> (find p)
-  where
-    justify x = if length x == 0 then Nothing else Just x 
 
 
 
@@ -111,11 +116,11 @@ findSomeHTML parser text =
   let parser' = findNaive parser  
   in parse parser' "from html at this url: <unimplemented - derp>" text
 
-findFirst :: ParsecT s u m a -> Text -> Maybe a 
-findFirst = undefined
+-- findFirst :: ParsecT s u m a -> Text -> Maybe a 
+-- findFirst = undefined
 
-findAllHtml :: ParsecT s u m a -> Text -> Maybe a 
-findAllHtml = undefined
+-- findAllHtml :: ParsecT s u m a -> Text -> Maybe a 
+-- findAllHtml = undefined
 -- | My findAll' function design / runParserOnHtml 
   --use Maybe instead of Either to toss failure
   --case [] -> Nothing

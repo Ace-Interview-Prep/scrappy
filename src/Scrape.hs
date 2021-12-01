@@ -17,6 +17,25 @@ import Data.Functor.Identity (Identity)
 import Text.Parsec (Stream, ParsecT, parse, anyChar, manyTill, char)
 
 
+getFirstSafe :: Maybe [a] -> Maybe a
+getFirstSafe (Just (x:_)) = Just x
+getFirstSafe _ = Nothing
+
+
+getFirstFitSafe :: (a -> Bool) -> Maybe [a] -> Maybe a
+getFirstFitSafe f (Just (x:xs)) = findFit f (x:xs) 
+getFirstFitSafe _ _ = Nothing 
+
+findFit :: (a -> Bool) -> [a] -> Maybe a
+findFit _ [] = Nothing
+findFit cond (x:xs) = if cond x then Just x else findFit cond xs 
+
+
+
+-- | Find all occurences of a given parsing/scraping pattern
+-- | e.g. getHtml' "https://google.ca" >>= return . runScraperOnHtml (el "a" []) , would give all 'a' tag html elements on google.ca  
+runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
+runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html 
 
 
 runScraperInBody :: ParsecT String () Identity a -> String -> Maybe [a]
@@ -37,28 +56,28 @@ skipToBody :: Stream s m Char => ParsecT s u m ()
 skipToBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>') </>> el "head" [] >> return () 
 
 
-runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
-runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html 
-
 runScraperOnHtml1 :: ParsecT String () Identity a -> String -> Maybe a
 runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
 
 
-{-# DEPRECATED simpleScrape' "from fba project - gives confusing String output" #-}
-simpleScrape' :: ParsecT String () Identity String -> String -> String 
-simpleScrape' p html = case parse (findNaive p) "" html of
-  Right (Just (x:_)) -> x
-  Right (Just []) -> "NothingA"
-  Right (Nothing) -> "NothingB"
-  Left err -> "Nothing" <> show err
 
 
 
-clean :: String -> String
-clean = undefined -- drop if == ( \n | \" | '\\' )
+-- {-# DEPRECATED simpleScrape' "from fba project - gives confusing String output" #-}
+-- simpleScrape' :: ParsecT String () Identity String -> String -> String 
+-- simpleScrape' p html = case parse (findNaive p) "" html of
+--   Right (Just (x:_)) -> x
+--   Right (Just []) -> "NothingA"
+--   Right (Nothing) -> "NothingB"
+--   Left err -> "Nothing" <> show err
 
 
--- same site is guranteed
+
+-- clean :: String -> String
+-- clean = undefined -- drop if == ( \n | \" | '\\' )
+
+
+-- | uses maybeUsefulUrl to get all links on page pointing only to same site links
 allLinks :: String -> ParsecT String () Identity [String] 
 allLinks baseUrl = do
   x <- findNaive hrefParser 
