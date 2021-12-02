@@ -232,6 +232,8 @@ data ScrapeException = --NoAdvSearchJustBasic
 instance Exception ScrapeException
 
 
+-- instance Trajectory s => Trajectory SiteT s m a where
+
 
 class Trajectory s where
   end :: s
