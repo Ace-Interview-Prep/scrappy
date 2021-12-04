@@ -555,8 +555,10 @@ htmlGroup elemOpts matchh attrsSubset =
   -- Not sure about the order yet tho
   fmap mkGH $ try (treeElemParser elemOpts matchh attrsSubset
                    >>= (\treeH -> fmap (treeH :) (some (try $ sameTreeH matchh treeH))))
-   
 
+-- | Html table group   
+table :: Stream s m Char => ParsecT s u m (GroupHtml TreeHTML String) 
+table = htmlGroup (Just ["tr"]) Nothing []
 
 
 

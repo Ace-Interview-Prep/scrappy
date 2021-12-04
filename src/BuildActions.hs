@@ -589,7 +589,6 @@ innerFormParser = do
 -- type SearchQuery = Text
 type TInputOpt = QueryString
 type Action = Text
-type BaseUrl = Url 
 data FilledForm = FilledForm { actionUrl :: Url -- | from action attribute
                              , reqMethod :: Method
                              , searchTerm :: Term 

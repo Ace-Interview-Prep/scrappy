@@ -90,7 +90,7 @@ library
                     , Requests
                     -- Needs a lot of work, is more like an idea rn
                     -- , Concurrencies
-                    -- , Proxies
+                    , Proxies
                     , Types
 
 
@@ -123,6 +123,9 @@ library
                      , http-types
                      , stm
                      , parallel
+                     , webdriver
+                     , directory
+                     
                      -- , raw-strings-qq
   -- Directories containing source files.
   hs-source-dirs:      src

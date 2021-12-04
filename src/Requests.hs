@@ -1,43 +1,67 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 module Requests where 
 
-import Find (findNaive)
-import Scrape (runScraperOnHtml)
-import Elem.SimpleElemParser (el)
-import Elem.Types (innerText')
-import Elem.ChainHTML (contains)
+-- Idea: a language extension that allows module organization like:
 
-import Data.Maybe (catMaybes)
-import Data.List (isInfixOf)
+-- import Control
+         -- .Monad
+           -- .IO.Class (liftIO)
+           -- .Trans
+             -- .StateT (f)
+             -- .ExceptT (g)
+import Proxies (mkProxdManager)
+import BuildActions (FilledForm(..), showQString, Namespace, QueryString, FormError(..))
+import Scrape (runScraperOnHtml)
+import Find (findNaive)
+import Elem.ChainHTML (contains)
+import Elem.SimpleElemParser (el)
+import Elem.Types (innerText', ElemHead)
+import Links (BaseUrl)
+
+import Test.WebDriver (WD, getSource, runWD, openPage, getCurrentURL, executeJS)
+import Test.WebDriver.Commands.Wait (waitUntil, expect, )
+import Test.WebDriver.Commands ( Selector(ById, ByXPath), findElem )
+import qualified Test.WebDriver.Commands as WD (click)
+import Test.WebDriver.Exceptions (InvalidURL(..))
+import Test.WebDriver.JSON (ignoreReturn)
+import Test.WebDriver.Session (getSession, WDSession)
+
 import Network.HTTP.Types.Header 
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Data.Functor.Identity (Identity)
-import Text.Parsec (ParsecT, Parsec, ParseError, parse, Stream, many)
 import Network.HTTP.Client (Manager, Proxy(..), HttpException, httpLbs, responseBody, parseRequest
-                           , secure, requestHeaders, newManager, useProxy, managerSetSecureProxy)
+                           , secure, requestHeaders, newManager, useProxy, managerSetSecureProxy
+                           , queryString, path, host, hrFinalRequest, responseOpenHistory, hrFinalResponse
+                           , brConsume, brRead, Request, method, Response)
+import Network.HTTP.Types.Method (methodGet)
+
+import System.Directory (removeFile, copyFile, getAccessTime, listDirectory)
+import Text.Parsec (ParsecT, Parsec, ParseError, parse, Stream, many)
+import Control.Monad.IO.Class (MonadIO, liftIO )
+import Control.Monad.Trans.State (StateT)
+import Control.Monad.Trans.Except (ExceptT, )
+import Data.Functor.Identity (Identity)
+import Control.Exception (Exception, catch)
+import Control.Monad.Except (throwError, when)
+import Data.Maybe (catMaybes)
+import Data.Map (Map, toList)
+import Data.List (isInfixOf)
+import Data.List.Extra (isSuffixOf, maximumBy)
 import Data.Text (Text, unpack, pack)
-import Data.Text.Encoding (encodeUtf8)
-import Data.Text.Lazy (toStrict)
-import Data.Text.Lazy.Encoding (decodeUtf8)
-import Control.Exception (catch)
+import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import qualified Data.Text.Lazy as LazyTX (toStrict, Text)
+import qualified Data.Text.Lazy.Encoding as Lazy (decodeUtf8With)
+import Data.ByteString.Lazy (ByteString)
+import Data.Time.Clock (UTCTime)
+import Data.Time.Clock.System (SystemTime)
+
+
+
 
 type Link = String
 type ParsecError = ParseError
-
-
--- Applied inside of execState                          ---Goal---IO (Either ParsecError (Maybe a))
-scrapeUrlWith :: ParsecT Text () Identity a -> Manager -> Link -> IO (Either ParsecError a)
-scrapeUrlWith parser manager url = do
-  --replace with successive requesting with cookies
-  -- let url' = evalLink url
-  request <- parseRequest url
-  response <- httpLbs request manager
-  let
-    dadBod = toStrict $ decodeUtf8 (responseBody response)
-  -- response <- (decodeUtf8 (responseBody response)) <$> httpLbs request manager
-
-  return $ parse parser ("site" <> url) dadBod
 
 
 type Html = String
@@ -49,10 +73,10 @@ type Html = String
 -- Also need to generalize to MonadIO 
 
 type Url = String 
-runScraperOnUrl :: Url -> Parsec String () a -> IO (Maybe [a])
+runScraperOnUrl :: Url -> Parsec Html () a -> IO (Maybe [a])
 runScraperOnUrl url p = fmap (runScraperOnHtml p) (getHtml' url)
 
-runScraperOnUrls :: [Url] -> Parsec String () a -> IO (Maybe [a])
+runScraperOnUrls :: [Url] -> Parsec Html () a -> IO (Maybe [a])
 runScraperOnUrls urls p = fmap (foldr (<>) Nothing) $ mapM (flip runScraperOnUrl p) urls 
 
 
@@ -73,127 +97,68 @@ concurrentlyRunScrapersOnUrls = undefined
 
 
 
+extractDadBod :: Response ByteString -> String 
+extractDadBod response = (unpack . LazyTX.toStrict . mySafeDecoder . responseBody) response
 
+mySafeDecoder :: ByteString -> LazyTX.Text
+mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
+
+-- doSignin :: ElemHead -> ElemHead -> Url 
+ 
 -- | Get html with no Proxy 
-getHtml' :: String -> IO String
+getHtml' :: Html -> IO Html
 getHtml' url = do
   mgrHttps <- newManager tlsManagerSettings
   requ <- parseRequest url
   response <- httpLbs requ mgrHttps
-  let
-    dadBod = (unpack . toStrict . decodeUtf8 . responseBody) response
-
-  return dadBod
+  return $ extractDadBod response
+  
 
 
 -- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails 
-getHtml :: Manager -> String -> IO (Manager, Html)
-getHtml manager url = do
-  -- mgrHttps <- newManager tlsManagerSettings
+getHtml :: Manager -> Url -> IO (Manager, Html)
+getHtml mgr url = do
   requ <- parseRequest url
   let
     headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
-              -- , (hAccept, "image/webp, */*")
               , (hAcceptLanguage, "en-US,en;q=0.5")
               , (hAcceptEncoding, "gzip, deflate, br")
               , (hConnection, "keep-alive")
-              -- , (hReferer, "https://www.amazon.ca/")
-              -- , (hTE, "Trailers")
               ]
     req = requ { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
                , secure = True
                }
-
-    dadBod response = (unpack . toStrict . decodeUtf8 . responseBody) response
-    
-    f = do
-      res <- httpLbs requ manager
-      return (manager, dadBod res)
-
-    g :: HttpException -> IO (Manager, String)
-    g = (\_ -> do
-            newManager <- mkManager
-            getHtml newManager url
-        )
-  (manager', response) <- catch f g 
-  return (manager', response)
+  (mgr', r) <- catch (fmap ((mgr,) . extractDadBod) $ httpLbs requ mgr) (recoverMgr url)
+  return (mgr', r)
 
 
+recoverMgr :: String -> HttpException -> IO (Manager, String)
+recoverMgr url _ = mkProxdManager >>= flip getHtml url
 
 
-testForValidProxy :: [Proxy] -> IO (Manager)
-testForValidProxy (proxy:proxies) = do
-  req <- parseRequest "https://hackage.haskell.org/package/base-4.15.0.0/docs/Control-Exception.html#v:catch"
-  trialManager <- mkManagerInternal proxy
-  print $ "hello"
-  let
-    f :: IO (Manager)
-    f = catch (httpLbs req trialManager >> return trialManager) g
-
-    g :: HttpException -> IO (Manager)
-    g = (\_ -> testForValidProxy proxies) 
-  x <- f
-  return x
+data Clickable = Clickable BaseUrl ElemHead Url deriving (Eq, Show)
 
 
-
-rowToProxy :: [String] -> Proxy
-rowToProxy row = Proxy ((encodeUtf8 . pack) (row !! 0)) (read (row !! 1) :: Int)
-
-mkManagerInternal :: Proxy -> IO Manager
-mkManagerInternal proxy = newManager (managerSetSecureProxy (useProxy proxy) tlsManagerSettings)
-
-  
-
-mkManager :: IO (Manager)
-mkManager = do
-  proxyRows <- scrapeProxyList
-  testForValidProxy proxyRows
-
-
-
-
-scrapeProxyList :: IO [Proxy] -- becoming [[String]]
-scrapeProxyList = do
-  response <- getHtml' "https://free-proxy-list.net/"
-  let
-    parser = el "tr" [] `contains` b
-    b :: Stream s m Char => ParsecT s u m [String]
-    b = ((fmap . fmap) innerText' $ many (el "td" []))
-
-    bePicky :: [[String]] -> [[String]]
-    bePicky rows = filter (\x -> not $ (isInfixOf "anonymous" (x !! 4)) || (isInfixOf "elite proxy" (x !! 4))) rows
-    
-    -- g :: [String] -> Proxy
-    -- g row = Proxy ((encodeUtf8 . pack) (row !! 0)) (read (row !! 1) :: Int)
-    
-  -- mapM_ print $ fromMaybe [] $ fromRight Nothing (parse (findNaive parser) "" response)
-    
-  case parse (findNaive parser) "" response of
-    Right (Just (rows)) -> --f rows   --row is a list of 9ish "td" (cell:rowCells)
-      return (fmap rowToProxy (rows))
-      --  $ (\row -> Proxy (row !! 0) (row !! 1))
-    Right (Nothing) -> ioError $ userError "proxy error: couldnt get proxy"
-    Left err -> ioError $ userError (show err)
-    
-
-
-type SiteM sv a = StateT (SiteDetails sv) (ExceptT ScrapeException' IO) a
 
 -- | Where the sv is effectively constrained to SessionState sv => sv
-type SiteM sv a = StateT sv (ExceptT ScrapeException' IO) a
+type SiteM hasSv e a = StateT hasSv (ExceptT e IO) a
 
 -- | TODO: implement default
 -- | Where the sv is effectively constrained to SessionState sv => sv
-type SiteT sv e a = StateT sv (ExceptT e IO) a
+-- type SiteT sv e a = StateT sv (ExceptT e IO) a
 
 
 
 -- | Where the sv is effectively constrained to SessionState sv => sv
-newtype SiteM sv e a = SiteM { runSite :: StateT sv (ExceptT e IO) a }
+newtype SiteT sv e a = SiteT { runSite :: StateT sv (ExceptT e IO) a }
 
 
-
+-- stepTrajectory :: StateT (deetsWSiteState) IO a
+-- stepTrajectory = do
+  -- x <- gets siteState
+  -- x' <- performSiteState x
+  -- putsSiteState 
+  
 -- mkProxy :: Proxy 
 -- mkProxy = Proxy { proxyHost = fst fromScrapeProxies
 --                 , proxyPort = snd fromSrapeProxies  
@@ -201,12 +166,19 @@ newtype SiteM sv e a = SiteM { runSite :: StateT sv (ExceptT e IO) a }
 type Host = String
 type Port = String
 
+class HasSessionState d where
+  getSesh :: SessionState s => d -> s 
+
+-- this does feel ugly tho 
+class HasSessionState ds => SessionState' ds where
+  f :: ds -> ds -- not real just to avoid syntax error
 
 class SessionState a where
   getHtmlST :: a -> Url -> IO (Html, a)
   getHtmlAndUrl :: a -> Url -> IO (Html, Url, a)
   submitForm :: a -> FilledForm -> IO ((Html, Url, a), FilledForm)
-  clickWritePdf :: a -> Clickable -> IO (Either ScrapeException a) -- | Download a pdf link
+  --  Download a pdf link
+  clickWritePdf :: a -> FilePath -> Clickable -> IO (Either ScrapeException a)
   -- clickPdf' :: a -> Clickable -> IO (Either ScrapeException (Html, a))
     -- even if it goes to the downloads folder, we just read the file as Pdf text or even Maybe Pdf text like below
   -- clickPdf'' :: a -> Clickable -> IO (Either ScrapeException (Maybe Pdf, a))
@@ -214,7 +186,27 @@ class SessionState a where
     -- Might be able to simply search for indicators of html and if none found then we assume it could
     -- only be a Pdf
     -- additionally we should return our SessionState
+  clickWriteFile :: a -> FileExtension -> Clickable -> IO (Either ScrapeException (), a)
+  clickWriteFile' :: a 
+                  -> FileExtension -- desired file extension to match
+                  -> FilePath -- where to save
+                  -> Clickable 
+                  -> IO (Either ScrapeException (), a) 
 
+
+  -- | comment is to crash nix as reminder to move somewhere sensible
+-- data OpenStruct a = OpenStruct (Parser a)
+-- type CloseStruct a = OpenStruct a -> ClosePiece a
+  -- could be even \_ -> f , when the Close struct is independent of Open and I dont think this
+  -- would affect speed
+-- data ClosePiece a = ClosePiece (Parser a)  
+
+  
+
+-- Could eventually open this up to further extensions
+-- If something is a tree like string structure then we could extend to MessyTreeMatch which is
+-- configurable to Open and Close 
+type FileExtension = FilePath
 
 data ScrapeException = --NoAdvSearchJustBasic
   NoSearchOnSite
@@ -234,18 +226,27 @@ instance Exception ScrapeException
 
 -- instance Trajectory s => Trajectory SiteT s m a where
 
-
-class Trajectory s where
+-- | A trajectory is a self contained, possibly recursive scraping plan
+-- | Each state is simply a message to the runner, where we left off
+-- |
+-- | Note too that we could use this for ResearchGate
+-- |
+-- | data ResearchGate = PdfPage _x_ | RelatedToPage _y_ | GetPdf? | other
+-- | and the site has a recursive layout / papers do so this can just infinitely recurse between the opts
+-- | we could also institute some runner Function that runs the trajectory some given N times 
+class Eq s => Trajectory s where
   end :: s
   -- could also call this stepTrajectory
-  performSiteState :: (MonadIO m, Trajectory s) => s -> m ()
+  performSiteState :: MonadIO m => s -> m s
 
 
--- | As long as we have
-end :: SiteState s => s
-...
-end :: MySiteState
-end = SiteEndState
+-- -- | As long as we have
+
+-- -- ...
+-- end :: MySiteState
+-- end = SiteEndState
+
+
 
 -- could also be called manageTrajectories
 performSiteStateMultiple :: (MonadIO m, Trajectory s) => [s] -> m ()
@@ -253,12 +254,12 @@ performSiteStateMultiple trajs = do
   let
     tr' = dropWhile (==end) trajs
   newState <- performSiteState (head tr')
-  performSiteStateMultiple $ (tail tr') <> (newState:[])
+  when (not . null $ tr') $ performSiteStateMultiple $ (tail tr') <> (newState:[])
 
   --when (s == end) $ performSiteStateMultiple ss
 
 
-performSiteStateSingle :: MonadIO m => s -> m ()
+performSiteStateSingle :: (Trajectory s, MonadIO m) => s -> m ()
 performSiteStateSingle s = do
   if (s == end)
     then return ()
@@ -273,7 +274,7 @@ saveReq :: Request
         -> HttpException
         -> IO (Html, Url, Manager)
 saveReq req func _ = do
-  newManager <- mkManager
+  newManager <- mkProxdManager
   func newManager req
 
 
@@ -282,18 +283,18 @@ saveReq' :: Url
         -> HttpException
         -> IO (Html, Url, Manager)
 saveReq' req func _ = do
-  newManager <- mkManager
+  newManager <- mkProxdManager
   func newManager req
 
-
+{-# DEPRECATED baseGetHtml "needs extractDadBod" #-}
 baseGetHtml :: Manager -> Request -> IO (Html, Url, Manager)
 baseGetHtml manager req = do
   hResponse <- responseOpenHistory req manager
   let
     finReq = hrFinalRequest hResponse
-    dadBodNew response = (unpack . TE.decodeUtf8) response
+    dadBodNew response = (unpack . decodeUtf8) response
   finResBody <- (brRead (responseBody $ hrFinalResponse hResponse))
-  return (dadBodNew finResBody, (unpack . TE.decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
+  return (dadBodNew finResBody, (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
 
     -- hrFinalRequest res
 
@@ -311,9 +312,9 @@ baseGetHtml manager req = do
     --     -- res <- (brConsume $ hrFinalResponse hRes)
     --     let
     --       finReq = hrFinalRequest hResponse
-    --       dadBodNew response = (unpack . TE.decodeUtf8) response
+    --       dadBodNew response = (unpack . decodeUtf8) response
     --     finResBody <- (brRead (responseBody $ hrFinalResponse hResponse))
-    --     return (dadBodNew finResBody, (unpack . TE.decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), mgr)
+    --     return (dadBodNew finResBody, (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), mgr)
 
 ------------------------------------------------------------------------------------------------------------------
     -- fmap (responseBody . hrFinalResponse) (responseOpenHistory req mgr) >>= brRead
@@ -379,9 +380,12 @@ instance SessionState WDSession where
   --     fmap Right getSession
   --     -- (unpack src,) <$> getSession
 
-takeNewestFile :: Genre -> Clickable -> BaseUrl -> ExceptT ScrapeException IO String
-takeNewestFile genre clickable baseU = do
-  dirNames <- liftIO $ listDirectory "home/lazylambda/scrappyDownloads"
+type DownloadsFolder = FilePath
+
+-- | Pulls newest file in downloads folder into program/IO scope 
+takeNewestFile :: DownloadsFolder -> Clickable -> BaseUrl -> ExceptT ScrapeException IO String
+takeNewestFile dwnlds clickable baseU = do
+  dirNames <- liftIO $ listDirectory dwnlds
   when (length dirNames == 0) $ throwError (PromisedPdfDownloadNF
                                         "either link was not a pdf or did not download properly or not yet")
   times <- liftIO $ mapM getAccessTime dirNames
@@ -393,19 +397,9 @@ takeNewestFile genre clickable baseU = do
   --Invalidate normal HTML responses here------
   -- AND if file did not download then this was not a PdfLink like expected
   ---------------------------------------------
-  liftIO $ copyFile (fst newFile) (resultPath genre baseU (Paper clickable))
-  pdf <- readFile (fst newFile)
-  liftIO $ removeFile $ fst newFile
-  return pdf
-
-resultFolder :: BaseUrl -> Item -> FilePath
-resultFolder b res =
-  let
-    res' = case res of
-             Pdf -> "/papers"
-             WrAbstract -> "/abstract"
-  in
-    "home/lazylambda/code/Ace/resPapScrap/Results/" <> b <> res'
+  -- liftIO $ copyFile (fst newFile) filepath 
+  liftIO $ readFile (fst newFile) <* (removeFile $ fst newFile)
+  -- return pdf
 
 
 
@@ -474,23 +468,9 @@ writeForm url qString =
   -- <> " action=\"" <> (pack baseUrl <> "/" <> actnAttr) <> "\""
   -- <> ">"
   -- <> writeFormParams (head textInputOpts <> head qStringVariants)
-  <> "</form>"
+  -- <> "</form>"
 
 
-getHtmlStateful :: (MonadIO m, SessionState sv) => String -> StateT (SiteDetails sv) m Html
-getHtmlStateful url = do
-  s <- gets seshVar
-  (html, s') <- liftIO $ getHtmlST s url
-  putsSVar s'
-  return html
-
-
-putsSVar :: (Monad m, SessionState a) => a -> StateT (SiteDetails a) m ()
-putsSVar sVar = do
-  state1 <- get
-  let
-    state2 = state1 { seshVar = sVar }
-  put state2
 
 
 
@@ -588,17 +568,17 @@ instance SessionState Manager where
       f2 = FilledForm actionUrl reqM term tInput (tail qStrVari)
     fmap (, f2) $ catch (baseGetHtml manager req2) (saveReq req2 baseGetHtml)
 
-  clickWritePdf manager searchTerm x@(Clickable baseU _ url) = do
+  clickWritePdf manager filepath x@(Clickable baseU _ url) = do
     (pdf, mgr) <- getHtmlST manager url
-    path <- liftIO $ resultPath searchTerm baseU->host (Paper x) >>= flip writeFile pdf
-    -- writeFile path html
+    -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf
+    writeFile filepath pdf
     return $ Right mgr
 
-      Invalidate normal HTML responses here------
-      AND if file did not download then this was not a PdfLink like expected
+      -- Invalidate normal HTML responses here------
+      -- AND if file did not download then this was not a PdfLink like expected
 
 
 
 -- saveReqForm req = do
-  -- manager <- mkManager
+  -- manager <- mkProxdManager
   -- baseGetHtml

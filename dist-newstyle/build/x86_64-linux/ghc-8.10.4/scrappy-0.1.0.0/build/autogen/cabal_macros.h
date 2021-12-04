@@ -55,6 +55,17 @@
   (major1) == 0 && (major2) == 6 && (minor) <= 2)
 #endif /* MIN_VERSION_containers */
 
+/* package directory-1.3.6.0 */
+#ifndef VERSION_directory
+#define VERSION_directory "1.3.6.0"
+#endif /* VERSION_directory */
+#ifndef MIN_VERSION_directory
+#define MIN_VERSION_directory(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  3 || \
+  (major1) == 1 && (major2) == 3 && (minor) <= 6)
+#endif /* MIN_VERSION_directory */
+
 /* package exceptions-0.10.4 */
 #ifndef VERSION_exceptions
 #define VERSION_exceptions "0.10.4"
@@ -219,6 +230,17 @@
   (major1) == 0 && (major2) <  5 || \
   (major1) == 0 && (major2) == 5 && (minor) <= 6)
 #endif /* MIN_VERSION_transformers */
+
+/* package webdriver-0.9.0.1 */
+#ifndef VERSION_webdriver
+#define VERSION_webdriver "0.9.0.1"
+#endif /* VERSION_webdriver */
+#ifndef MIN_VERSION_webdriver
+#define MIN_VERSION_webdriver(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  9 || \
+  (major1) == 0 && (major2) == 9 && (minor) <= 0)
+#endif /* MIN_VERSION_webdriver */
 
 /* tool gcc-10.2.0 */
 #ifndef TOOL_VERSION_gcc
