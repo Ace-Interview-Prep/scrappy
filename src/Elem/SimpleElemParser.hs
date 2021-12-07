@@ -13,7 +13,7 @@ import Elem.Types (ShowHTML, InnerHTMLRep, Elem, Attrs, Elem'(Elem'), InnerTextR
 
   
 
-import Text.Megaparsec as MParsec (manyTill_, eitherP, some, manyTill)
+import Text.Megaparsec as MParsec (eitherP, some, manyTill)
 import Text.Parsec (ParsecT, Stream, string, try, (<|>), parserZero, anyChar, char, optional, anyToken, parserFail)
 import Data.Map (Map, toList)
 import Data.Maybe (fromMaybe)

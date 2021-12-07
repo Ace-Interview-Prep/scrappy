@@ -10,13 +10,18 @@ import Elem.ElemHeadParse (hrefParser)
 
 import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse, parserZero, string)
 import Control.Applicative (some, )
-import Text.Megaparsec (manyTill_)
+-- import Text.Megaparsec (manyTill_)
 
 import Data.Functor.Identity (Identity)
 import Data.Maybe (catMaybes)
 -- functions for chaining free-range html patterns based on the previous
 -- patterns to allow for maximum flexibility 
 
+
+manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)
+manyTill_ p end = go
+  where
+    go = (([],) <$> end) <|> liftA2 (\x (xs, y) -> (x : xs, y)) p go
 
 
 
