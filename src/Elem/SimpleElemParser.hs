@@ -19,6 +19,14 @@ import Data.Map (Map, toList)
 import Data.Maybe (fromMaybe)
 import Control.Monad (when)
 
+
+
+manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)
+manyTill_ p end = go
+  where
+    go = (([],) <$> end) <|> liftA2 (\x (xs, y) -> (x : xs, y)) p go
+
+
 -- | Try to cut out Megaparsec for now - get direct export from Control.Applicative
 
 -- | Note: could make class HtmlP where { el :: a -> Elem, attrs :: a -> Attrs, innerText :: a -> Text } 
