@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE TupleSections #-}
 
 module Elem.ChainHTML where
 
@@ -9,7 +10,7 @@ import Links (maybeUsefulUrl)
 import Elem.ElemHeadParse (hrefParser)
 
 import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse, parserZero, string)
-import Control.Applicative (some, )
+import Control.Applicative (some, liftA2)
 -- import Text.Megaparsec (manyTill_)
 
 import Data.Functor.Identity (Identity)

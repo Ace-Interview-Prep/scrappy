@@ -3,6 +3,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE TupleSections #-}
 
 module Elem.TreeElemParser where
 
@@ -21,7 +22,7 @@ import Find (findNaive)
 
 import Control.Monad (when)
 import Control.Applicative (liftA2)
-import Text.Megaparsec as MParsec (many, manyTill_, skipManyTill, manyTill, some)
+import Text.Megaparsec as MParsec (many, skipManyTill, manyTill, some)
 import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse, char, noneOf
                    , option, space, alphaNum, notFollowedBy, (<?>))
 import qualified Data.Map as Map (Map, toList, fromList, adjust) 
@@ -33,6 +34,11 @@ import Data.Maybe (fromMaybe, fromJust)
 import Data.List
 import Data.Text (Text, splitOn)
 
+
+manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)
+manyTill_ p end = go
+  where
+    go = (([],) <$> end) <|> liftA2 (\x (xs, y) -> (x : xs, y)) p go
 
 
 data Many a = Many a | One a deriving Show
