@@ -1,5 +1,7 @@
 # Scrappy #
 
+
+
 provides a number of functions that allow for easily scraping certain patterns from websites as well control functions that allow you to rotate between multiple sites and rotate proxies in order to deal with common bot detection problems faced by scrapers. 
 
 Main functions:
@@ -23,5 +25,12 @@ contains :: ParsecT s u m (Elem' a) -> ParsecT s u m a -> ParsecT s u m a
 
 
 :t fmap snd getHtml' "https://google.com" >>= return . (runScraperOnHtml (el "a" [])   
->>> IO (Maybe [Elem' a]) 
+>>> IO (Maybe [Elem' a])
+
+-- Will get all <a id="link"> 's on the url that are inside
+-- divs with a class of xyz
+example = runScraperOnUrl url $ el "div" [("class", "xyz")] `contains`
+        el "a" [("id", "link")]
+
+
 ```

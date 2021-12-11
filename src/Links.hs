@@ -165,7 +165,7 @@ maybeUsefulUrl baseUrl url = do
       where allowed = [".aspx", ".html", ".pdf", ".php"]
 
     
-getLastPath :: Url -> String 
+getLastPath :: Url -> String
 getLastPath url = unpack (unRText (NE.last (snd (fromJust (fromJust (fmap uriPath (mkURI (pack url))))))))
 
 
