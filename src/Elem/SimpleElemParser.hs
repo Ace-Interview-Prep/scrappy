@@ -1,5 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TupleSections #-}
 
 module Elem.SimpleElemParser where
 
@@ -12,12 +13,20 @@ import Elem.Types (ShowHTML, InnerHTMLRep, Elem, Attrs, Elem'(Elem'), InnerTextR
                   , foldFuncTup, endTag, selfClosingTextful, enoughMatches)
 
   
-
-import Text.Megaparsec as MParsec (manyTill_, eitherP, some, manyTill)
+import Control.Applicative (liftA2)
+import Text.Megaparsec as MParsec (eitherP, some, manyTill)
 import Text.Parsec (ParsecT, Stream, string, try, (<|>), parserZero, anyChar, char, optional, anyToken, parserFail)
 import Data.Map (Map, toList)
 import Data.Maybe (fromMaybe)
 import Control.Monad (when)
+
+
+
+manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)
+manyTill_ p end = go
+  where
+    go = (([],) <$> end) <|> liftA2 (\x (xs, y) -> (x : xs, y)) p go
+
 
 -- | Try to cut out Megaparsec for now - get direct export from Control.Applicative
 
@@ -318,8 +327,8 @@ stylingElem = do
 --       foldHtmlMatcher x
       
       
-      -- (pre, patternFound) <- MParsec.manyTill_ (try sameElTag <|> p) (fromMaybe anyChar innerPat)
-      -- (post, _) <- MParsec.manyTill_  (try sameElTag <|> p) endParse
+      -- (pre, patternFound) <- manyTill_ (try sameElTag <|> p) (fromMaybe anyChar innerPat)
+      -- (post, _) <- manyTill_  (try sameElTag <|> p) endParse
 
       -- return $ InnerTextResult { match = patternFound
       --                          , fullInner = mconcat pre <> patternFound <> mconcat post }
@@ -351,8 +360,8 @@ stylingElem = do
 
 --   baseInnerParser
 --   _ <- char '>'
---   (pre, patternFound) <- MParsec.manyTill_ (try (sameElTag elem) <|> p) (fromMaybe anyChar innerPattern)
---   (post, _) <- MParsec.manyTill_  (try sameElTag <|> p) endParse
+--   (pre, patternFound) <- manyTill_ (try (sameElTag elem) <|> p) (fromMaybe anyChar innerPattern)
+--   (post, _) <- manyTill_  (try sameElTag <|> p) endParse
 
 --   return $ InnerTextResult { match = patternFound
 --                            , fullInner = mconcat pre <> patternFound <> mconcat post }
@@ -401,8 +410,8 @@ parseInnerHTMLAndEndTag elem innerPattern = do
       baseParser :: Stream s m Char => Maybe (ParsecT s u m String) -> ParsecT s u m String -> ParsecT s u m (InnerTextResult String)
       baseParser innerPat endParse = do
         _ <- char '>'
-        (pre, patternFound) <- MParsec.manyTill_ (try sameElTag <|> p) (f innerPat)
-        (post, _) <- MParsec.manyTill_  (try sameElTag <|> p) endParse
+        (pre, patternFound) <- manyTill_ (try sameElTag <|> p) (f innerPat)
+        (post, _) <- manyTill_  (try sameElTag <|> p) endParse
 
         return $ InnerTextResult { _matchesITR = [patternFound]
                                  , _fullInner = mconcat pre <> patternFound <> mconcat post }
@@ -434,8 +443,8 @@ parseInnerHTMLAndEndTag elem innerPattern = do
       -- then use case statement to deal with case (A: sub-elem | B: anychar)
         --if sub-elem -> put in list --then--> 
   
-  -- (pre, patternFound) <- MParsec.manyTill_ (try sameElTag <|> p) (f innerPattern)
-  -- (post, _) <- MParsec.manyTill_  (try sameElTag <|> p) (try (string ("</" <> elem <> ">")))
+  -- (pre, patternFound) <- manyTill_ (try sameElTag <|> p) (f innerPattern)
+  -- (post, _) <- manyTill_  (try sameElTag <|> p) (try (string ("</" <> elem <> ">")))
 
   -- return $ InnerTextResult { match = patternFound
   --                          , fullInner = mconcat pre <> patternFound <> mconcat post }

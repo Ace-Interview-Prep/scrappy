@@ -20,6 +20,7 @@ import Data.Map (Map)
 
 type PageNumber = Int
 
+type BaseUrl = Url 
 type Url = String 
 
 

@@ -13,7 +13,7 @@ name:                scrappy
 -- PVP summary:      +-+------- breaking API changes
 --                   | | +----- non-breaking API additions
 --                   | | | +--- code changes with no API change
-version:             0.1.0.0
+version:             0.1.0.4
 
 -- A short (one-line) description of the package.
 synopsis:            html pattern matching library and high-level interface concurrent requests lib for webscraping
@@ -90,7 +90,7 @@ library
                     , Requests
                     -- Needs a lot of work, is more like an idea rn
                     -- , Concurrencies
-                    -- , Proxies
+                    , Proxies
                     , Types
 
 
@@ -104,11 +104,11 @@ library
   -- Other library packages from which modules are imported.
   build-depends:       base
                        -->=4.12 && <4.13
-                     , parsec == 3.1.*
-                     , megaparsec == 9.0.*
+                     , parsec 
+                     , megaparsec
 -- == 8.0.*
-                     , replace-megaparsec == 1.4.*
-                     , extra == 1.7.*
+                     , replace-megaparsec
+                     , extra 
                      , modern-uri
                      , http-client
                      , HTTP
@@ -123,6 +123,9 @@ library
                      , http-types
                      , stm
                      , parallel
+                     , webdriver
+                     , directory
+                     
                      -- , raw-strings-qq
   -- Directories containing source files.
   hs-source-dirs:      src
