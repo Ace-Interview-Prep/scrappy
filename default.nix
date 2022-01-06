@@ -1,6 +1,6 @@
 { mkDerivation, base, bytestring, containers, extra, HTTP
 , http-client, http-client-tls, lib, megaparsec, modern-uri, parsec
-, replace-megaparsec, text, time, pkgs,  mtl, transformers, stdenv, parallel, webdriver
+, replace-megaparsec, text, time, pkgs,  mtl, transformers, stdenv, parallel, webdriver, bibtex
 }:
 with pkgs;
 mkDerivation {
@@ -9,7 +9,7 @@ mkDerivation {
   src = ./.;
   libraryHaskellDepends = [
     base bytestring containers extra HTTP http-client http-client-tls
-    megaparsec modern-uri parsec replace-megaparsec text parallel webdriver 
+    megaparsec modern-uri parsec replace-megaparsec text parallel webdriver bibtex
   ];
   librarySystemDepends = [
     pkgs.zlib

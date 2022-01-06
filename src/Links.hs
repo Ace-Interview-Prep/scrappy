@@ -59,6 +59,13 @@ type DOI = String -- Change to URI if this works
 -- pageKey=param
 
 
+
+doiParser :: ParsecT s u m DOI 
+doiParser = undefined
+  -- baseURL is doi.org
+  
+  -- isDOI :: Url -> Bool 
+
 data ReferenceSys = RefSys [String] [String]
 
 type GeneratedLink = String
