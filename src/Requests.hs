@@ -34,17 +34,18 @@ import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Client (Manager, Proxy(..), HttpException, httpLbs, responseBody, parseRequest
                            , secure, requestHeaders, newManager, useProxy, managerSetSecureProxy
                            , queryString, path, host, hrFinalRequest, responseOpenHistory, hrFinalResponse
-                           , brConsume, brRead, Request, method, Response)
-import Network.HTTP.Types.Method (methodGet)
+                           , brConsume, brRead, Request, method, Response, CookieJar, responseCookieJar, cookieJar,  HistoriedResponse, BodyReader)
+import Network.HTTP.Types.Method (methodGet, Method,)
 
 import System.Directory (removeFile, copyFile, getAccessTime, listDirectory)
 import Text.Parsec (ParsecT, Parsec, ParseError, parse, Stream, many)
 import Control.Monad.IO.Class (MonadIO, liftIO )
-import Control.Monad.Trans.State (StateT)
+import Control.Monad.Trans.State (StateT, gets, put, get)
 import Control.Monad.Trans.Except (ExceptT, )
 import Data.Functor.Identity (Identity)
 import Control.Exception (Exception, catch)
 import Control.Monad.Except (throwError, when)
+import Control.Monad.Catch (MonadThrow)
 import Data.Maybe (catMaybes)
 import Data.Map (Map, toList)
 import Data.List (isInfixOf)
@@ -53,12 +54,12 @@ import Data.Text (Text, unpack, pack)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8)
 import qualified Data.Text.Lazy as LazyTX (toStrict, Text)
 import qualified Data.Text.Lazy.Encoding as Lazy (decodeUtf8With)
-import Data.ByteString.Lazy (ByteString)
+import Data.ByteString.Lazy (ByteString, fromStrict)
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock.System (SystemTime)
 
 
-
+-- Need a section for Headers logic
 
 type Link = String
 type ParsecError = ParseError
@@ -128,12 +129,12 @@ getHtml mgr url = do
     req = requ { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
                , secure = True
                }
-  (mgr', r) <- catch (fmap ((mgr,) . extractDadBod) $ httpLbs requ mgr) (recoverMgr url)
+  (mgr', r) <- catch (fmap ((mgr,) . extractDadBod) $ httpLbs requ mgr) (recoverMgr' url)
   return (mgr', r)
 
 
-recoverMgr :: String -> HttpException -> IO (Manager, String)
-recoverMgr url _ = mkProxdManager >>= flip getHtml url
+recoverMgr' :: String -> HttpException -> IO (Manager, String)
+recoverMgr' url _ = mkProxdManager >>= flip getHtml url
 
 
 data Clickable = Clickable BaseUrl ElemHead Url deriving (Eq, Show)
@@ -166,32 +167,361 @@ newtype SiteT sv e a = SiteT { runSite :: StateT sv (ExceptT e IO) a }
 type Host = String
 type Port = String
 
-class HasSessionState d where
-  getSesh :: SessionState s => d -> s 
+-- | All moved to resPapScrap
+-- getHtmlSimple :: (HasSessionState s, MonadIO m) => Url -> StateT s m Html
+-- getHtmlSimple url = do
+--   sv <- gets takeSession
+--   (sv', html) <- liftIO $ getHtmlST sv url
+--   writeSession sv'
+--   pure html
+-- getHtmlUrlST :: (HasSessionState s, MonadIO m) => Url -> StateT s m (Html, Url)
+-- getHtmlUrlST url = do
+--   sv <- gets takeSession
+--   (html, url, sv') <- getHtmlAndUrl sv url
+--   writeSession sv'
+--   pure (html, url)
 
--- this does feel ugly tho 
-class HasSessionState ds => SessionState' ds where
-  f :: ds -> ds -- not real just to avoid syntax error
+
+-- submitFormST :: MonadIO m => FilledForm
+--              -> StateT (SiteState sv) m ((Html, Url), FilledForm)
+-- submitFormST form = do
+--   sv <- gets takeSession
+--   ((html, url, sv'), form) <- submitForm sv form
+--   writeSession sv'
+--   return $ ((html, url), form)
+
+-- clickWritePdfST :: (MonadThrow m, MonadIO m) =>
+--                    FilePath
+--                 -> Clickable
+--                 -> StateT (SiteState sv) m (Either ScrapeException ())
+-- clickWritePdfST f c = do
+--   -- state <- get
+--   -- let
+--     -- sv = takeSession state
+--   sv <- gets (\state -> takeSession state)
+--   eExcSV <- clickWritePdf sv f c
+--   -- put $ writeSession s sv
+--   case eExcSV of { Left _ -> return (); Right s -> put $ writeSession s sv }
+--   pure $ (() <$ eExcSV)
 
 class SessionState a where
-  getHtmlST :: a -> Url -> IO (Html, a)
-  getHtmlAndUrl :: a -> Url -> IO (Html, Url, a)
-  submitForm :: a -> FilledForm -> IO ((Html, Url, a), FilledForm)
+  getHtmlST :: (MonadThrow m, MonadIO m) => a -> Url -> m (Html, a)
+  getHtmlAndUrl :: (MonadThrow m, MonadIO m) => a -> Url -> m (Html, Url, a)
+  submitForm :: (MonadThrow m, MonadIO m) => a -> FilledForm -> m ((Html, Url, a), FilledForm)
   --  Download a pdf link
-  clickWritePdf :: a -> FilePath -> Clickable -> IO (Either ScrapeException a)
-  -- clickPdf' :: a -> Clickable -> IO (Either ScrapeException (Html, a))
-    -- even if it goes to the downloads folder, we just read the file as Pdf text or even Maybe Pdf text like below
-  -- clickPdf'' :: a -> Clickable -> IO (Either ScrapeException (Maybe Pdf, a))
-    -- because we should be applying some checks to ensure this is not a mistake
-    -- Might be able to simply search for indicators of html and if none found then we assume it could
-    -- only be a Pdf
-    -- additionally we should return our SessionState
-  clickWriteFile :: a -> FileExtension -> Clickable -> IO (Either ScrapeException (), a)
+  clickWritePdf :: (MonadThrow m, MonadIO m) => a -> FilePath -> Clickable -> m (Either ScrapeException a)
+  clickWriteFile :: (MonadThrow m, MonadIO m) => a -> FileExtension -> Clickable -> m (Either ScrapeException (), a)
   clickWriteFile' :: a 
                   -> FileExtension -- desired file extension to match
                   -> FilePath -- where to save
                   -> Clickable 
                   -> IO (Either ScrapeException (), a) 
+
+
+
+
+
+instance SessionState Manager where
+  getHtmlST manager url = do
+    (m, s) <- liftIO $ getHtml manager url
+    return (s, m)
+
+  getHtmlAndUrl manager url = do
+    req <- parseRequest url
+    liftIO $ catch (baseGetHtml manager req) (saveReq' url getHtmlAndUrl)
+  -- getHtmlFlex manager req = catch (baseGetHtml manager req) (saveReq getHtmlFlex req)
+
+  -- Note: qStrVari has data on basic params factored in
+  submitForm manager (FilledForm actionUrl reqM term tInput qStrVari) = do
+    req <- parseRequest actionUrl
+    let
+      req2 = req { method = reqM, queryString = (encodeUtf8 . showQString) $ head tInput <> head qStrVari }
+      f2 = FilledForm actionUrl reqM term tInput (tail qStrVari)
+    liftIO $ fmap (, f2) $ catch (baseGetHtml manager req2) (saveReq req2 baseGetHtml)
+
+  clickWritePdf manager filepath x@(Clickable baseU _ url) = do
+    (pdf, mgr) <- getHtmlST manager url
+    -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf
+    liftIO $ writeFile filepath pdf
+    return $ Right mgr
+      -- Invalidate normal HTML responses here------
+      -- AND if file did not download then this was not a PdfLink like expected
+
+
+
+-- we only actually wanna do this in the case of
+-- getHtmlST' :: (HasSessionState hasSv, MonadIO m) => Url -> StateT hasSv m Html
+-- getHtmlST' = do
+--   (c, m) <- gets cookies <*> gets manager
+--   url <- getHtmlST (c,m) url
+--   return ""
+
+-- getHtmlReq :: CookieManager -> Request -> IO (CookieManager, Html)
+-- getHtmlReq mgr req = do
+--   fmap (mgr,) $ httpLbs req mgr -- ?
+
+data CookieManager = CookieManager CookieJar Manager
+
+-- getHtmlST :: Url || Form ||
+
+--- - MonadIO m, HasSessionState s) => SiteT s m a
+ 
+-- we dont fucking need this, just take idea with seshVar (get, put set up)
+-- class HasSessionState a sv | a -> sv where
+--   takeSession :: SessionState sv => a -> sv
+--   writeSession :: SessionState sv => sv -> a -> a
+                    
+setCJ :: CookieJar -> Request -> Request
+setCJ cj req = req { cookieJar = Just cj }
+
+
+buildReq :: MonadThrow m => CookieJar -> Url -> m Request
+buildReq cj url = setCJ cj <$> parseRequest url
+
+
+
+-- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails
+getHtmlMgr :: Manager -> Url -> IO (Manager, Html)
+getHtmlMgr mgr url = do
+  requ <- parseRequest url
+  let
+    headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
+              , (hAcceptLanguage, "en-US,en;q=0.5")
+              , (hAcceptEncoding, "gzip, deflate, br")
+              , (hConnection, "keep-alive")
+              ]
+    req = requ { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
+               , secure = True
+               }
+  (mgr', r) <- catch (fmap ((mgr,) . extractDadBod) $ httpLbs requ mgr) (recoverMgr' url)
+  return (mgr', r)
+
+
+{-# DEPRECATED baseGetHtml "needs extractDadBod" #-}
+baseGetHtml :: Manager -> Request -> IO (Html, Url, Manager)
+-- baseGetHtml Request -> ReaderT Manager IO (Html, Url)
+baseGetHtml manager req = do
+  hResponse <- responseOpenHistory req manager
+  let
+    finReq = hrFinalRequest hResponse
+    dadBodNew response = (unpack . decodeUtf8) response
+  finResBody <- brRead $ responseBody $ hrFinalResponse hResponse
+  return (dadBodNew finResBody, (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
+
+-- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails
+getHtmlMgr' :: Manager -> Url -> IO (Manager, Html)
+getHtmlMgr' mgr url = do
+  let
+    headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
+              , (hAcceptLanguage, "en-US,en;q=0.5")
+              , (hAcceptEncoding, "gzip, deflate, br")
+              , (hConnection, "keep-alive")
+              ]
+  getHtmlHeaderMgr headers mgr url
+
+  -- return (mgr', r)
+
+getHtmlHeaderMgr :: [Header] -> Manager -> Url -> IO (Manager, Html)
+getHtmlHeaderMgr headers mgr url = do
+  -- (fmap.fmap) extractDadBod . $
+  (mgr, res) <- persistGet mgr =<< mkReq headers url
+  res' <- getHistoriedBody $ hrFinalResponse res
+  pure (mgr, res')
+  
+
+mkReq :: MonadThrow m => [Header] -> Url -> m Request
+mkReq headers url = fmap (setHeaders headers) $ parseRequest url
+  where setHeaders headers req = req { requestHeaders = headers }
+  -- return (mgr', r)
+
+recoverMgr :: Request
+           -> HttpException
+           -> IO (Manager, HistoriedResponse BodyReader)
+recoverMgr req _ = flip persistGet req =<< mkProxdManager
+
+persistGet :: MonadIO m => Manager
+           -> Request
+           -> m (Manager, HistoriedResponse BodyReader)
+persistGet sv req = liftIO $ catch (getHtmlHistoried sv req) (recoverMgr req)
+
+-- | Only applies sv into http functions
+getHtmlHistoried :: MonadIO m => Manager
+                -> Request
+                -> m (Manager, HistoriedResponse BodyReader)
+getHtmlHistoried m r = liftIO $ fmap (m,) $ responseOpenHistory r m
+
+  
+    --getHtmlFlex manager req = catch (baseGetHtml manager req) (saveReq getHtmlFlex req)
+
+
+  -- getHtm
+  -- getHtmlST url = do
+  --   CookieManager cj mgr <- gets sv
+  --   req <- parseRequest url
+  --   (m, s) <- getHtmlReq mgr $ setCJ cj req
+  --   return (s, m)
+
+-- | this fails if its a post request
+requestToUrl' :: Request -> Maybe Url
+requestToUrl' req = if methodGet == method req
+                    then Just . unpack . decodeUtf8 $ (host req) <> (path req) <> (queryString req)
+                    else Nothing
+
+-- works for any request
+getURL :: Request -> Url
+getURL req =  unpack . decodeUtf8 $ (host req) <> (path req) <> (queryString req)
+
+
+drop1qStrVar :: FilledForm -> FilledForm
+drop1qStrVar (FilledForm a b c d qStr) = FilledForm a b c d (drop 1 qStr)
+
+mkFormRequest :: MonadThrow m => Url -> Method -> QueryString -> m Request
+mkFormRequest url reqMethod qString = do
+  req <- parseRequest url
+  pure $ req { method = reqMethod
+             , queryString = encodeUtf8 . showQString $ qString
+             }
+
+getHistoriedBody :: Response BodyReader -> IO Html 
+getHistoriedBody res = fmap (readHtml . fromStrict) $ brRead . responseBody $ res
+
+
+-- extractDadBod :: Response ByteString -> String 
+-- extractDadBod response = (unpack . LazyTX.toStrict . mySafeDecoder . responseBody) response
+
+ 
+-- mySafeDecoder :: ByteString -> LazyTX.Text
+-- mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
+
+
+readHtml :: ByteString -> Html
+readHtml = unpack . LazyTX.toStrict . mySafeDecoder
+
+instance SessionState CookieManager where
+  getHtmlST cm@(CookieManager cj mgr) url = do
+    req <- buildReq cj url
+    (manager, response) <- persistGet mgr req
+    let
+      finalResponse = hrFinalResponse response
+      
+      newCookies = responseCookieJar finalResponse
+    html <- liftIO $ getHistoriedBody finalResponse
+    return (html, CookieManager (cj <> newCookies) manager)
+
+  getHtmlAndUrl (CookieManager cj mgr) url = do
+    req <- buildReq cj url
+    (manager, response) <- persistGet mgr req
+    let
+      finalResponse = hrFinalResponse response
+      
+      newCookies = responseCookieJar finalResponse
+      lastUrl = getURL $ hrFinalRequest response
+    html <- liftIO $ getHistoriedBody finalResponse
+    return (html, lastUrl, CookieManager (cj <> newCookies) manager)
+    
+    -- (html, ) getHtmlST cm url 
+    -- req <- parseRequest url
+    -- catch (baseGetHtml manager req) (saveReq' url getHtmlAndUrl)
+
+  submitForm (CookieManager cj mgr) form@(FilledForm actionUrl reqM term tInput qStrVari) = do
+    req <- mkFormRequest actionUrl reqM (head tInput <> head qStrVari)
+    (manager, response) <- persistGet mgr req
+    let
+      finalResponse = hrFinalResponse response
+      
+      newCookies = responseCookieJar finalResponse
+    -- undefined cuz it needs to be removed --> this is never used here
+    html <- liftIO $ getHistoriedBody finalResponse
+    pure ((html, undefined, CookieManager (cj <> newCookies) manager), drop1qStrVar form)
+
+  clickWritePdf cmanager filepath x@(Clickable baseU _ url) = do
+    (pdf, mgr) <- getHtmlST cmanager url
+    liftIO $ writeFile filepath pdf
+    return $ Right mgr
+ 
+    -- (html, cm) <- getHtmlST cmanager req 
+    -- pure ((html, cm), drop1qStrVar form)
+ 
+  -- -- Note: qStrVari has data on basic params factored in
+  -- submitForm manager (FilledForm actionUrl reqM term tInput qStrVari) = do
+  --   req <- parseRequest actionUrl
+  --   let
+  --     req2 = req { method = reqM
+  --                , queryString = (encodeUtf8 . showQString)
+  --                                $ head tInput <> head qStrVari }
+  --     formToDo = FilledForm actionUrl reqM term tInput (tail qStrVari)
+  --   fmap (, formToDo) $ catch (baseGetHtml manager req2) (saveReq req2 baseGetHtml)
+ 
+  -- clickWritePdf cmanager filepath x@(Clickable baseU _ url) = do
+  --   (pdf, mgr) <- getHtmlST cmanager url
+  --   -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf 
+  --   writeFile filepath pdf
+  --   return $ Right mgr
+      -- Invalidate HTML responses here------
+      -- AND if file did not download then this was not a PdfLink like expected
+
+
+
+
+instance SessionState WDSession where
+  getHtmlST = getHtmlWD -- use runWD to run a WD action where you do
+                                         -- 1) Get html (getSource)
+                                         -- 2) tuple with result of getSession
+
+  getHtmlAndUrl = getHtmlUWD
+
+
+
+
+                                                                             --(qStr:qStrs)
+  -- submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio []) =
+  submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio (qStr:qStrs)) = do
+    liftIO $ print "inside submit form"
+    liftIO $ print "Action URL:"
+    liftIO $ print actionUrl
+    if reqMethod' == methodGet
+      then
+      do
+        liftIO $ print "do get"
+        -- write Url then fetch it
+        truple@(html, url, wdSesh') <- liftIO $ runWD wdSesh (wdSubmitFormGET actionUrl (head tio <> qStr))
+        return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
+      else
+      do
+        liftIO $ print "do post"
+        -- write form elem with static (namespace,value) then hit submit
+        truple@(html,url,wdSesh') <- liftIO $ runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
+        return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
+
+
+  -- clickWritePdf wdSesh (Clickable baseU (e, attrs) url) =
+  --   if isSuffixOf ".pdf" url
+  --   then
+  --     do
+  --       (pdf, wdSesh') <- getHtmlST wdSesh url
+  --       liftIO $ writeFile (resultFolder baseU Pdf) pdf
+  --       return (Right wdSesh')
+
+  --   else
+  --     runWD wdSesh $ do
+  --     e <- findElem (ByXPath . pack $ xpath (e, attrs))
+  --     WD.click e
+  --     -- src <- waitUntil 10 (do
+  --                             -- | SHOULD CHANGE TO checking if .pdf format
+  --                             -- | thats a lot of work tho sooooo....
+  --                             -- src <- getSource
+  --                             -- expect (if ((length (unpack src)) < 10000) then False else True)
+  --                             -- return src
+  --                         -- )
+  --     pdf <- lift $ takeNewestFile baseU
+  --     let
+  --       host baseU = undefined
+  --     liftIO $ resultPath searchTerm baseU->host (Paper x) >>= flip writeFile pdf
+
+  --     fmap Right getSession
+  --     -- (unpack src,) <$> getSession
+
+
 
 
   -- | comment is to crash nix as reminder to move somewhere sensible
@@ -286,16 +616,6 @@ saveReq' req func _ = do
   newManager <- mkProxdManager
   func newManager req
 
-{-# DEPRECATED baseGetHtml "needs extractDadBod" #-}
-baseGetHtml :: Manager -> Request -> IO (Html, Url, Manager)
-baseGetHtml manager req = do
-  hResponse <- responseOpenHistory req manager
-  let
-    finReq = hrFinalRequest hResponse
-    dadBodNew response = (unpack . decodeUtf8) response
-  finResBody <- (brRead (responseBody $ hrFinalResponse hResponse))
-  return (dadBodNew finResBody, (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
-
     -- hrFinalRequest res
 
     -- mgr <- newManager tlsManagerSettings
@@ -321,64 +641,6 @@ baseGetHtml manager req = do
 ------------------------------------------------------------------------------------------------------------------
 
 
-
-instance SessionState WDSession where
-  getHtmlST = getHtmlWD -- use runWD to run a WD action where you do
-                                         -- 1) Get html (getSource)
-                                         -- 2) tuple with result of getSession
-
-  getHtmlAndUrl = getHtmlUWD
-
-
-
-
-                                                                             --(qStr:qStrs)
-  -- submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio []) =
-  submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio (qStr:qStrs)) = do
-    liftIO $ print "inside submit form"
-    liftIO $ print "Action URL:"
-    liftIO $ print actionUrl
-    if reqMethod' == methodGet
-      then
-      do
-        liftIO $ print "do get"
-        -- write Url then fetch it
-        truple@(html, url, wdSesh') <- runWD wdSesh (wdSubmitFormGET actionUrl (head tio <> qStr))
-        return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
-      else
-      do
-        liftIO $ print "do post"
-        -- write form elem with static (namespace,value) then hit submit
-        truple@(html,url,wdSesh') <- runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
-        return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
-
-
-  -- clickWritePdf wdSesh (Clickable baseU (e, attrs) url) =
-  --   if isSuffixOf ".pdf" url
-  --   then
-  --     do
-  --       (pdf, wdSesh') <- getHtmlST wdSesh url
-  --       liftIO $ writeFile (resultFolder baseU Pdf) pdf
-  --       return (Right wdSesh')
-
-  --   else
-  --     runWD wdSesh $ do
-  --     e <- findElem (ByXPath . pack $ xpath (e, attrs))
-  --     WD.click e
-  --     -- src <- waitUntil 10 (do
-  --                             -- | SHOULD CHANGE TO checking if .pdf format
-  --                             -- | thats a lot of work tho sooooo....
-  --                             -- src <- getSource
-  --                             -- expect (if ((length (unpack src)) < 10000) then False else True)
-  --                             -- return src
-  --                         -- )
-  --     pdf <- lift $ takeNewestFile baseU
-  --     let
-  --       host baseU = undefined
-  --     liftIO $ resultPath searchTerm baseU->host (Paper x) >>= flip writeFile pdf
-
-  --     fmap Right getSession
-  --     -- (unpack src,) <$> getSession
 
 type DownloadsFolder = FilePath
 
@@ -516,9 +778,8 @@ submitPostFormWD formString = do
 --     Right res -> ""
 --     Left _ -> ""
 
-getHtmlWD :: WDSession -> Url -> IO (Html, WDSession)
-getHtmlWD seshVar url = do
-  runWD seshVar (wd url)
+getHtmlWD :: MonadIO m => WDSession -> Url -> m (Html, WDSession)
+getHtmlWD seshVar url = liftIO $ runWD seshVar (wd url)
   where
     wd :: Url -> WD (Html, WDSession)
     wd urlI = do
@@ -535,9 +796,9 @@ getHtmlWD seshVar url = do
                                   -- expect (if ((length (unpack src)) < 2000) then False else True)
                                   -- return src
                               -- )
-getHtmlUWD :: WDSession -> Url -> IO (Html, Url, WDSession)
-getHtmlUWD sv url = do
-  runWD sv (f_ url)
+getHtmlUWD :: MonadIO m => WDSession -> Url -> m (Html, Url, WDSession)
+getHtmlUWD sv url = liftIO $ runWD sv (f_ url)
+
   -- (,,) <$> getCurrentUrl <*> getSource <*> getSession
 
 f_ :: Url -> WD (Html, Url, WDSession)
@@ -548,34 +809,6 @@ f_ url = do
          (do { src <- getSource; expect (if ((length (unpack src)) < 10000) then False else True); return src })
   (unpack src,,) <$>  getCurrentURL <*> getSession
 
-
-
-instance SessionState Manager where
-  getHtmlST manager url = do
-    (m, s) <- getHtml manager url
-    return (s, m)
-
-  getHtmlAndUrl manager url = do
-    req <- parseRequest url
-    catch (baseGetHtml manager req) (saveReq' url getHtmlAndUrl)
-  -- getHtmlFlex manager req = catch (baseGetHtml manager req) (saveReq getHtmlFlex req)
-
-  -- Note: qStrVari has data on basic params factored in
-  submitForm manager (FilledForm actionUrl reqM term tInput qStrVari) = do
-    req <- parseRequest actionUrl
-    let
-      req2 = req { method = reqM, queryString = (encodeUtf8 . showQString) $ head tInput <> head qStrVari }
-      f2 = FilledForm actionUrl reqM term tInput (tail qStrVari)
-    fmap (, f2) $ catch (baseGetHtml manager req2) (saveReq req2 baseGetHtml)
-
-  clickWritePdf manager filepath x@(Clickable baseU _ url) = do
-    (pdf, mgr) <- getHtmlST manager url
-    -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf
-    writeFile filepath pdf
-    return $ Right mgr
-
-      -- Invalidate normal HTML responses here------
-      -- AND if file did not download then this was not a PdfLink like expected
 
 
 

@@ -1,21 +1,20 @@
-{ mkDerivation, base, bytestring, containers, extra, HTTP
-, http-client, http-client-tls, lib, megaparsec, modern-uri, parsec
-, replace-megaparsec, text, time, pkgs,  mtl, transformers, stdenv, parallel, webdriver
+{ mkDerivation, base, bytestring, containers, directory, exceptions
+, extra, HTTP, http-client, http-client-tls, http-types, lib
+, megaparsec, modern-uri, mtl, parallel, parsec, replace-megaparsec
+, stm, text, time, transformers, webdriver
 }:
-with pkgs;
 mkDerivation {
   pname = "scrappy";
-  version = "0.1.0.0";
+  version = "0.1.0.4";
   src = ./.;
   libraryHaskellDepends = [
-    base bytestring containers extra HTTP http-client http-client-tls
-    megaparsec modern-uri parsec replace-megaparsec text parallel webdriver 
-  ];
-  librarySystemDepends = [
-    pkgs.zlib
+    base bytestring containers directory exceptions extra HTTP
+    http-client http-client-tls http-types megaparsec modern-uri mtl
+    parallel parsec replace-megaparsec stm text time transformers
+    webdriver
   ];
   testHaskellDepends = [ base ];
-  homepage = "tbd";
-  description = "html pattern matching library and high-level interface requests lib for webscraping";
+  homepage = "https://github.com/Ace-Interview-Prep/scrappy";
+  description = "html pattern matching library and high-level interface concurrent requests lib for webscraping";
   license = lib.licenses.bsd3;
 }
