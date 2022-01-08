@@ -125,6 +125,7 @@ library
                      , parallel
                      , webdriver
                      , directory
+                     , bibtex
                      
                      -- , raw-strings-qq
   -- Directories containing source files.

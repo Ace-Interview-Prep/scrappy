@@ -33,6 +33,17 @@
   (major1) == 4 && (major2) == 14 && (minor) <= 1)
 #endif /* MIN_VERSION_base */
 
+/* package bibtex-0.1.0.6 */
+#ifndef VERSION_bibtex
+#define VERSION_bibtex "0.1.0.6"
+#endif /* VERSION_bibtex */
+#ifndef MIN_VERSION_bibtex
+#define MIN_VERSION_bibtex(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  1 || \
+  (major1) == 0 && (major2) == 1 && (minor) <= 0)
+#endif /* MIN_VERSION_bibtex */
+
 /* package bytestring-0.10.12.0 */
 #ifndef VERSION_bytestring
 #define VERSION_bytestring "0.10.12.0"

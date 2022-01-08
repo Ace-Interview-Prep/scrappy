@@ -15,7 +15,7 @@ import Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowH
 import Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag, attrsMatch')
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
-import Links (maybeUsefulUrl, Url )
+import Links (maybeUsefulUrl, Url, BaseUrl )
 import Find (findNaive, findSomeHTMLNaive)
 import Scrape
 
@@ -24,6 +24,7 @@ import Network.HTTP.Types.Method (Method, methodPost, methodGet)
 import Control.Monad.Catch (MonadThrow)
 import Text.Parsec (ParsecT, ParseError, Stream, many, parse, string, (<|>), parserZero, try)
 import Text.Parsec.Error (Message (Message))
+import Data.Bifunctor (bimap)
 import Data.Either (fromRight)
 import Data.Text (Text, pack, unpack)
 import Data.Text.Encoding (encodeUtf8)
@@ -59,10 +60,111 @@ import Control.Monad.IO.Class
 
 --for interacting with the web page solely through HTML
 
+-- When run, the most basic case will be chosen first 
+data FilledForm = FilledForm { actionUrl :: Url -- | from action attribute
+                             , reqMethod :: Method
+                             , searchTerm :: Term 
+                             -- , actnAttr :: Action
+                             , textInputOpts :: [TInputOpt]
+                             , qStringVariants :: [QueryString] --  List of all possible queries given the parsed form. 
+                             }
+
+data EditableForm = EditableForm { actioUrl :: Url
+                                 , rMethod :: Method
+                                 , params :: Map Namespace Option
+                                 } 
+
+-- data InputElem = Radio Namespace Option | SelectElem (Namespace, [Option]) | Basic Namespace (Maybe Option)
+data ParsedForm = ParsedForm Action Method [InputElem] deriving Show 
+
+-- | Should make a record type for signins with an instance of Default
 
 
 
+type QueryString = [(Namespace, Option)] 
+-- buildSearchUrlSubsets (mkSubsetVars variable radio) 
 
+
+-- | This may introduce a small need for lenses 
+mkEditableForm :: ParsedForm -> BaseUrl -> EditableForm
+mkEditableForm (ParsedForm act meth inpEls) baseUrl =
+  EditableForm (baseUrl <> "/" <> (unpack act)) meth map 
+  where
+    map = simplify $ mkQParams "" inpEls
+    simplify :: ([QueryString], [QueryString]) -> Map Namespace Option
+    -- simplify = \(a,b) -> fromList $ zip a b
+    simplify (a,b) = fromList $ head a <> head b 
+
+-- head of each listOfQueryStrings then concat them then toMap 
+
+-- mkQParams :: String -> [InputElem] -> ([TInputOpt], [QueryString]) 
+-- mkQParams searchTerm inputs = mkFormInputs searchTerm $ sepElems' inputs mempty 
+
+    
+-- toKeyVal :: [InputElem] -> QueryString
+-- toKeyVal = \case
+--   -- we need to filter 
+--   Radio n o
+
+-- renderEditableForm :: EditableForm -> Url
+-- renderEditableForm form = 
+
+-- | Unless we want to use 
+-- submitEditableForm :: EditableForm -> Html
+
+
+-- hypothesis: fillForm with searchTerm == ""
+
+
+-- not actually sure if i use this 
+fillForm :: ParsedForm -> Url -> String -> FilledForm
+fillForm (ParsedForm act'' meth formInputs) baseUrl searchTerm =
+  let
+    act = unpack act''
+    act' = if isPrefixOf baseUrl act then act
+           else
+             if isPrefixOf "/" act then baseUrl <> act
+             else baseUrl <> "/" <> act
+    (tInputs, subsets) = mkQParams searchTerm formInputs 
+  in
+    FilledForm act' meth searchTerm tInputs subsets
+
+-- | Lazily build FilledForm so that the full list of possible querystrings is not evaluated
+mkFilledForm :: Url -> String -> Elem' String -> Either FormError FilledForm
+mkFilledForm baseUrl searchTerm element = case elTag element of
+  "form" ->
+    case parse formElem "" (innerText' element) of
+      Right (ParsedForm act meth formInputs) ->
+        let
+          (tInputs, subsets) = mkQParams searchTerm formInputs 
+        in
+          return $ FilledForm (baseUrl <> "/" <> (unpack act)) meth searchTerm tInputs subsets
+      Left err -> Left $ ParsecError err
+  _ -> Left InvalidElement
+
+
+
+mkQParams :: String -> [InputElem] -> ([TInputOpt], [QueryString]) 
+mkQParams searchTerm inputs = mkFormInputs searchTerm $ sepElems' inputs mempty 
+
+
+
+-- | (Radio | Var | Basic | TInput)
+mkFormInputs :: String -> SepdStruct -> ([TInputOpt], [QueryString])
+mkFormInputs searchTerm (radio, var, basic, tInput) = 
+  let
+    radio' = radiosToMap radio
+    variable' = fromList var
+    -- textInput' = ( fmap (pack . (fromMaybe "") . (Map.lookup "name") . attrs) tInput
+                 -- , fmap (pack . (findWithDefault "" "value") . attrs) tInput)
+
+    textInput' = (tInput, replicate (length tInput) "")
+    textInputOpts' = fmap (basic <>) (genTInputOpts' (pack searchTerm) textInput') 
+    subPaths' = buildSearchUrlSubsets (union variable' radio')
+    subPaths'' = case length (take 1 subPaths') == 1 of
+      True -> subPaths'
+      False -> mempty : mempty 
+ in (textInputOpts', subPaths'')
 
 
 --temp
@@ -344,7 +446,7 @@ instance ShowHTML InputElem where
   showH = show -- TEMPORARY
 
 
-data ParsedForm = ParsedForm Action Method [InputElem] deriving Show 
+-- data ParsedForm = ParsedForm Action Method [InputElem] deriving Show 
 
 
 -- f :: ParsedForm -> FilledForm
@@ -589,13 +691,7 @@ innerFormParser = do
 -- type SearchQuery = Text
 type TInputOpt = QueryString
 type Action = Text
-data FilledForm = FilledForm { actionUrl :: Url -- | from action attribute
-                             , reqMethod :: Method
-                             , searchTerm :: Term 
-                             -- , actnAttr :: Action
-                             , textInputOpts :: [TInputOpt]
-                             , qStringVariants :: [QueryString] --  List of all possible queries given the parsed form. 
-                             }
+ 
 
 instance Show FilledForm where
   show (FilledForm a b c d _) = "FilledForm " <> a <> " " <> show b <> " " <> c <> " " <> (f d) <> " SomeQStrs"
@@ -748,23 +844,6 @@ data FormError = InvalidElement
 
 -- Elem' a -> (N, Opt) --> [(N, Opt)]
 
--- | (Radio | Var | Basic | TInput)
-mkFormInputs :: String -> SepdStruct -> ([TInputOpt], [QueryString])
-mkFormInputs searchTerm (radio, var, basic, tInput) = 
-  let
-    radio' = radiosToMap radio
-    variable' = fromList var
-    -- textInput' = ( fmap (pack . (fromMaybe "") . (Map.lookup "name") . attrs) tInput
-                 -- , fmap (pack . (findWithDefault "" "value") . attrs) tInput)
-
-    textInput' = (tInput, replicate (length tInput) "")
-    textInputOpts' = fmap (basic <>) (genTInputOpts' (pack searchTerm) textInput') 
-    subPaths' = buildSearchUrlSubsets (union variable' radio')
-    subPaths'' = case length (take 1 subPaths') == 1 of
-      True -> subPaths'
-      False -> mempty : mempty 
- in (textInputOpts', subPaths'')
-
 
 
 -- Elem' String --> ParsedForm ( [InputElems] )                    --> FilledForm
@@ -780,34 +859,6 @@ findForms html = runScraperOnHtml formElem html
 -- mkForm :: Elem' a -> Either FormError ParsedForm
 -- mkForm element = 
 
-
-fillForm :: ParsedForm -> Url -> String -> FilledForm
-fillForm (ParsedForm act'' meth formInputs) baseUrl searchTerm =
-  let
-    act = unpack act''
-    act' = if isPrefixOf baseUrl act then act
-           else
-             if isPrefixOf "/" act then baseUrl <> act
-             else baseUrl <> "/" <> act
-    (tInputs, subsets) = mkQParams searchTerm formInputs 
-  in
-    FilledForm act' meth searchTerm tInputs subsets
-
--- | Lazily build FilledForm so that the full list of possible querystrings is not evaluated
-mkFilledForm :: Url -> String -> Elem' String -> Either FormError FilledForm
-mkFilledForm baseUrl searchTerm element = case elTag element of
-  "form" ->
-    case parse formElem "" (innerText' element) of
-      Right (ParsedForm act meth formInputs) ->
-        let
-          (tInputs, subsets) = mkQParams searchTerm formInputs 
-        in
-          return $ FilledForm (baseUrl <> "/" <> (unpack act)) meth searchTerm tInputs subsets
-      Left err -> Left $ ParsecError err
-  _ -> Left InvalidElement
-
-mkQParams :: String -> [InputElem] -> ([TInputOpt], [QueryString]) 
-mkQParams searchTerm inputs = mkFormInputs searchTerm $ sepElems' inputs mempty 
 
 
 
@@ -917,9 +968,6 @@ searchTermSubPaths subsetVariables basicPath = fmap (basicPath <>) (buildSearchU
 
 -- buildSearchUrlSubsets (mkSubsetVars variable radio) 
 
-
-type QueryString = [(Namespace, Option)] 
--- buildSearchUrlSubsets (mkSubsetVars variable radio) 
 
 
 getAttrVal :: String -> Elem' a -> String 

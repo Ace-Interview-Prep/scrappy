@@ -1,0 +1,25 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{simpleinvoice,eurosym}
+\pagenumbering{gobble}
+
+\begin{document}
+\setinvoicetitle{Invoice}
+\setinvoicenumber{0002}
+\setreceivername{Obsidian Systems, LLC.\\ Ryan Trinkle}
+\setreceiveraddress{ryan+obsidian.systems@trinkle.org\\ 215 E 24th St Apt 120\\ P.O. Box 1206\\ New York, NY 10010\\ United States}
+\setname{Alexandre Garcia de Oliveira}
+\setaddress{Street  \\ Santos, SP - Brazil}{Street \\ Santos, SP - Brazil}
+\setphonenumber{+55 (13) 9 9999 9999}
+\setemail{alexgrcol@hotmail.com}
+\setinvoicedate{\today}
+\setdeadline{14}
+\additem{IT Consulting\\ Software development and associated services (fixing bugs, implementing new features, implementing tests, and conducting performance analyses)}{1.200,00 USD}
+\setsubtotal{1.200,00 USD}
+\setvat{0,00 USD}
+\settotal{3.200,00 USD}
+\setaccountnumber{AAAAAAAAAAA555555
+}
+\makeinvoice
+\end{document}

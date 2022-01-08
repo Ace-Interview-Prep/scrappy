@@ -73,6 +73,8 @@ type Html = String
 
 -- Also need to generalize to MonadIO 
 
+-- | Should change these to name_ and then make these names do same thing except read in a
+-- | session variable 
 type Url = String 
 runScraperOnUrl :: Url -> Parsec Html () a -> IO (Maybe [a])
 runScraperOnUrl url p = fmap (runScraperOnHtml p) (getHtml' url)
@@ -140,8 +142,33 @@ recoverMgr' url _ = mkProxdManager >>= flip getHtml url
 data Clickable = Clickable BaseUrl ElemHead Url deriving (Eq, Show)
 
 
+-- -- type SiteNew sv = ReaderT (MVar [FreeSite], sv, Url) (ExceptT ScrapeException' IO) Url 
+-- -- maybe but really just want this:
 
--- | Where the sv is effectively constrained to SessionState sv => sv
+--       scrape patttern -- implicit State
+
+-- data ImplicitState = IsUrl String | IsHtml String
+-- -- If we want to scrape we check the state
+-- -- when IsUrl $ do getHtml (=<< gets seshV) >>= putImplicit
+
+
+-- f :: SiteScraperT ()
+-- f = do
+--   scrape x
+--   scrape y
+--   fetch newUrl -- lazily puts (IsUrl String)
+
+-- -- A site could also keep hold of a Map of all urls on site
+--   -- We could also use this information for patterns
+--   -- ie a Contact us section would probably be shallower a tree 
+
+
+-- class MultiSite where
+--   -- really just would be a construct for this is not constrained to a single site via getUsefulLinks
+--   -- could also do where if we do fetch another site, we have a mechanism to hold
+--   -- MVars of site data from previously viewed sites performed upon fetch 
+  
+-- -- | Where the sv is effectively constrained to SessionState sv => sv
 type SiteM hasSv e a = StateT hasSv (ExceptT e IO) a
 
 -- | TODO: implement default
@@ -221,6 +248,7 @@ class SessionState a where
 
 
 
+
 instance SessionState Manager where
   getHtmlST manager url = do
     (m, s) <- liftIO $ getHtml manager url
@@ -229,7 +257,6 @@ instance SessionState Manager where
   getHtmlAndUrl manager url = do
     req <- parseRequest url
     liftIO $ catch (baseGetHtml manager req) (saveReq' url getHtmlAndUrl)
-  -- getHtmlFlex manager req = catch (baseGetHtml manager req) (saveReq getHtmlFlex req)
 
   -- Note: qStrVari has data on basic params factored in
   submitForm manager (FilledForm actionUrl reqM term tInput qStrVari) = do
@@ -237,11 +264,13 @@ instance SessionState Manager where
     let
       req2 = req { method = reqM, queryString = (encodeUtf8 . showQString) $ head tInput <> head qStrVari }
       f2 = FilledForm actionUrl reqM term tInput (tail qStrVari)
+
     liftIO $ fmap (, f2) $ catch (baseGetHtml manager req2) (saveReq req2 baseGetHtml)
 
   clickWritePdf manager filepath x@(Clickable baseU _ url) = do
     (pdf, mgr) <- getHtmlST manager url
     -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf
+<<<<<<< HEAD
     liftIO $ writeFile filepath pdf
     return $ Right mgr
       -- Invalidate normal HTML responses here------
@@ -307,6 +336,7 @@ baseGetHtml manager req = do
     dadBodNew response = (unpack . decodeUtf8) response
   finResBody <- brRead $ responseBody $ hrFinalResponse hResponse
   return (dadBodNew finResBody, (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
+
 
 -- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails
 getHtmlMgr' :: Manager -> Url -> IO (Manager, Html)
@@ -463,6 +493,7 @@ instance SessionState CookieManager where
 
 
 
+
 instance SessionState WDSession where
   getHtmlST = getHtmlWD -- use runWD to run a WD action where you do
                                          -- 1) Get html (getSource)
@@ -484,12 +515,14 @@ instance SessionState WDSession where
       do
         liftIO $ print "do get"
         -- write Url then fetch it
+
         truple@(html, url, wdSesh') <- liftIO $ runWD wdSesh (wdSubmitFormGET actionUrl (head tio <> qStr))
         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
       else
       do
         liftIO $ print "do post"
         -- write form elem with static (namespace,value) then hit submit
+
         truple@(html,url,wdSesh') <- liftIO $ runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
 
@@ -520,8 +553,6 @@ instance SessionState WDSession where
 
   --     fmap Right getSession
   --     -- (unpack src,) <$> getSession
-
-
 
 
   -- | comment is to crash nix as reminder to move somewhere sensible
@@ -615,7 +646,7 @@ saveReq' :: Url
 saveReq' req func _ = do
   newManager <- mkProxdManager
   func newManager req
-
+ 
     -- hrFinalRequest res
 
     -- mgr <- newManager tlsManagerSettings
@@ -809,6 +840,10 @@ f_ url = do
          (do { src <- getSource; expect (if ((length (unpack src)) < 10000) then False else True); return src })
   (unpack src,,) <$>  getCurrentURL <*> getSession
 
+
+
+      -- Invalidate normal HTML responses here------
+      -- AND if file did not download then this was not a PdfLink like expected
 
 
 
