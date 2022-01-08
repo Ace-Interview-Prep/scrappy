@@ -270,7 +270,6 @@ instance SessionState Manager where
   clickWritePdf manager filepath x@(Clickable baseU _ url) = do
     (pdf, mgr) <- getHtmlST manager url
     -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf
-<<<<<<< HEAD
     liftIO $ writeFile filepath pdf
     return $ Right mgr
       -- Invalidate normal HTML responses here------
