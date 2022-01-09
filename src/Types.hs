@@ -15,7 +15,7 @@ import Data.Text (Text)
 
 
 
-
+data CookieManager = CookieManager CookieJar Manager 
     
 
 

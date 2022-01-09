@@ -4,19 +4,26 @@
 module Elem.ChainHTML where
 
 
-import Elem.Types (Elem', ShowHTML, innerText')
+
 import Find (findNaive)
 import Links (maybeUsefulUrl)
-import Elem.ElemHeadParse (hrefParser)
+import Elem.ElemHeadParse (parseOpeningTag, hrefParser)
+import Elem.Types (Elem', ShowHTML, ElemHead, innerText')
 
+import Control.Monad.Trans.Maybe (MaybeT)
 import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse, parserZero, string)
 import Control.Applicative (some, liftA2)
--- import Text.Megaparsec (manyTill_)
-
 import Data.Functor.Identity (Identity)
 import Data.Maybe (catMaybes)
 -- functions for chaining free-range html patterns based on the previous
 -- patterns to allow for maximum flexibility 
+
+
+
+htmlTag :: Stream s m Char => ParsecT s u m ElemHead
+htmlTag = parseOpeningTag (Just ["html"]) [] 
+
+
 
 
 manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)

@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Scrape where
 
@@ -9,14 +10,52 @@ import Elem.SimpleElemParser (el)
 import Elem.ChainHTML ((</>>))
 
 import Find (findNaive)
-import Links (maybeUsefulUrl)
+import Links (Html, maybeUsefulUrl)
 
+import Control.Monad.Trans.Maybe (MaybeT(..))
+import Data.Functor.Identity (Identity)
+import Witherable (Filterable, mapMaybe)
 import Data.Either (fromRight)
 import Data.Maybe (catMaybes, fromMaybe)
-import Data.Functor.Identity (Identity)
-import Text.Parsec (Stream, ParsecT, parse, anyChar, manyTill, char)
+import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char)
 
 
+type ScraperT a = ParsecT Html () Identity a 
+
+
+-- | Upgrade an error to discard parser 
+instance Filterable (ParsecT s u f) where
+  mapMaybe f ma = do
+    x <- ma
+    case f x of
+      Just a -> return a 
+      Nothing -> parserZero
+
+
+-- | Super common case analysis
+coerceMaybeParser :: Maybe a -> ScraperT a
+coerceMaybeParser = \case
+  Just a -> return a
+  Nothing -> parserZero
+
+
+hoistMaybe :: Applicative m => Maybe a -> MaybeT m a 
+hoistMaybe = MaybeT . pure
+
+
+exists :: ScraperT a -> Html -> Bool 
+exists p html = maybe False (const True) $ runScraperOnHtml p html 
+
+scrape :: ScraperT a -> Html -> Maybe [a]
+scrape = runScraperOnHtml
+
+scrapeFirst' :: ScraperT a -> Html -> Maybe a
+scrapeFirst' f h = case scrape f h of
+                    Just (x:xs) -> return x
+                    _ -> Nothing 
+
+
+-- fmap head
 getFirstSafe :: Maybe [a] -> Maybe a
 getFirstSafe (Just (x:_)) = Just x
 getFirstSafe _ = Nothing

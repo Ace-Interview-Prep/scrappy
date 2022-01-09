@@ -126,6 +126,8 @@ library
                      , webdriver
                      , directory
                      , bibtex
+                     , lens
+                     , witherable
                      
                      -- , raw-strings-qq
   -- Directories containing source files.

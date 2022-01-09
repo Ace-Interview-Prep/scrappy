@@ -3,19 +3,24 @@
 module Links where
 
 
-import Elem.Types (Elem', innerText')
+import Elem.Types (Elem'(..), ElemHead, innerText', getHref)
 import Elem.ElemHeadParse (hrefParser)
 -- import Find (findSomeHTMLNaive)
 
-import qualified Data.List.NonEmpty as NE (length, last)
-import Data.Text (Text, pack, unpack)
-import Text.URI (URI, uriQuery, mkURI, uriPath, unRText )
+
+import Text.URI (URI, uriQuery, mkURI, uriPath, unRText, emptyURI )
+import Control.Lens ((^.))
+import qualified Text.URI.Lens as UL
 import Text.Parsec (ParsecT)
-import Data.Maybe (catMaybes, fromJust)
-import Data.Char (toLower)
-import Data.List.Extra (isSuffixOf, isInfixOf)
 import Data.Functor.Classes (eq1)
 import Data.Map (Map)
+import Data.Either (fromRight)
+import Data.Maybe (catMaybes, fromJust)
+import Data.List.Extra (isSuffixOf, isInfixOf)
+import qualified Data.List.NonEmpty as NE (length, last)
+import Data.Text (Text, pack, unpack)
+import Data.Char (toLower)
+
 
 
 type PageNumber = Int
@@ -46,6 +51,7 @@ type DOI = String -- Change to URI if this works
 --       Sourcery _ _ -> undefined
       
 
+data Clickable = Clickable ElemHead Url deriving (Eq, Show)
 
 -- lets view Link as meant to contain Informationally derived meaning from internet ; that contains how to get
 -- Keeps state for generic streaming 
@@ -57,6 +63,28 @@ type DOI = String -- Change to URI if this works
 --           | Sourcery (PdfLink) ReferenceSys
 
 -- pageKey=param
+
+
+-- | In the future this definitely could be expanded upon for our JS interface
+-- | right now this only works for links but wouldn't literally click a button 
+mkClickable :: ElemHead -> Elem' a -> Maybe Clickable
+mkClickable eHead emnt = do
+  href <- getHref emnt
+  pure $ Clickable eHead href
+
+
+
+getFileName :: Url -> String
+getFileName = getLastPath
+
+
+-- | I think this is good (might also bee good lens practice tho to simplify)
+-- | Move to scrappy?
+mkBaseUrl :: URI -> String
+mkBaseUrl uri =
+  (unpack $ ((unRText . fromJust) $  uri ^. UL.uriScheme))
+  <> ("://")
+  <> (unpack (unRText $ (fromRight undefined (uri ^. UL.uriAuthority)) ^. UL.authHost))
 
 
 

@@ -14,12 +14,13 @@ module Requests where
              -- .ExceptT (g)
 import Proxies (mkProxdManager)
 import BuildActions (FilledForm(..), showQString, Namespace, QueryString, FormError(..))
-import Scrape (runScraperOnHtml)
+import Scrape (ScraperT, runScraperOnHtml, hoistMaybe)
 import Find (findNaive)
 import Elem.ChainHTML (contains)
 import Elem.SimpleElemParser (el)
 import Elem.Types (innerText', ElemHead)
-import Links (BaseUrl)
+import Links (BaseUrl, Clickable(..))
+import Types (CookieManager(..))
 
 import Test.WebDriver (WD, getSource, runWD, openPage, getCurrentURL, executeJS)
 import Test.WebDriver.Commands.Wait (waitUntil, expect, )
@@ -29,6 +30,7 @@ import Test.WebDriver.Exceptions (InvalidURL(..))
 import Test.WebDriver.JSON (ignoreReturn)
 import Test.WebDriver.Session (getSession, WDSession)
 
+import Control.Concurrent (threadDelay)
 import Network.HTTP.Types.Header 
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import Network.HTTP.Client (Manager, Proxy(..), HttpException, httpLbs, responseBody, parseRequest
@@ -41,12 +43,14 @@ import System.Directory (removeFile, copyFile, getAccessTime, listDirectory)
 import Text.Parsec (ParsecT, Parsec, ParseError, parse, Stream, many)
 import Control.Monad.IO.Class (MonadIO, liftIO )
 import Control.Monad.Trans.State (StateT, gets, put, get)
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Except (ExceptT, )
+import Control.Monad.Trans.Maybe (MaybeT, runMaybeT)
 import Data.Functor.Identity (Identity)
-import Control.Exception (Exception, catch)
+import Control.Exception (Exception)
 import Control.Monad.Except (throwError, when)
-import Control.Monad.Catch (MonadThrow)
-import Data.Maybe (catMaybes)
+import Control.Monad.Catch (MonadCatch, MonadThrow, catch)
+import Data.Maybe (catMaybes, fromMaybe)
 import Data.Map (Map, toList)
 import Data.List (isInfixOf)
 import Data.List.Extra (isSuffixOf, maximumBy)
@@ -56,8 +60,19 @@ import qualified Data.Text.Lazy as LazyTX (toStrict, Text)
 import qualified Data.Text.Lazy.Encoding as Lazy (decodeUtf8With)
 import Data.ByteString.Lazy (ByteString, fromStrict)
 import Data.Time.Clock (UTCTime)
-import Data.Time.Clock.System (SystemTime)
+import Data.Time.Clock.System (SystemTime(MkSystemTime), getSystemTime, systemSeconds)
+import Data.Int (Int64)
 
+
+data ExistT m a = ExistT { runExistT :: MaybeT m a } 
+
+type RequestJS = String -- fake just for the idea
+
+-- | Perform a request which has callbacks to both HTTP and JS
+-- | this idea should emulate what happens if a user clicks on a
+-- | link which needs JS to handle redirection of events 
+performRequestJS :: RequestJS -> IO Html
+performRequestJS = undefined
 
 -- Need a section for Headers logic
 
@@ -67,6 +82,54 @@ type ParsecError = ParseError
 
 type Html = String
 
+-- runScraperM "" $ \html -> do
+--   ...
+
+
+---- Control flow
+
+(>>|=) :: Monad m => [a] -> (a -> MaybeT m a) -> MaybeT m [a]
+(>>|=) x f = successesM f x
+
+successesM :: Monad m => (a -> MaybeT m b) -> [a] -> MaybeT m [b]
+successesM fm inputs =
+  lift . (fmap catMaybes) . sequenceA $ fmap (runMaybeT . fm) inputs
+
+successesM_ :: Monad m => (a -> MaybeT m b) -> [a] -> MaybeT m ()
+successesM_ a b = successesM a b >> return ()
+
+successes :: [a] -> (a -> Maybe b) -> Maybe [b]
+successes inputs f =
+  case catMaybes $ fmap f inputs of
+    [] -> Nothing
+    xs -> Just xs
+
+------------------
+
+runScraperM :: Url -> (Html -> MaybeT IO a) -> MaybeT IO a 
+runScraperM url scraper = (liftIO $ getHtml' url) >>= scraper 
+
+
+
+trySiteLink :: MonadIO m => Url -> (Html -> MaybeT m ()) -> MaybeT m Url 
+trySiteLink url scraperBasedEffects = do
+  html <- liftIO $ getHtml' url
+  scraperBasedEffects html
+  return url 
+
+
+-- | propogate to requests module
+runScraperOnUrl' :: (MonadIO m, MonadThrow m) => Url -> ScraperT a -> m (Maybe [a])
+runScraperOnUrl' url p = fmap (runScraperOnHtml p) (getHtml'' url)
+
+ 
+-- | Get html with no Proxy 
+getHtml'' :: (MonadThrow m, MonadIO m) => Html -> m Html
+getHtml'' url = do
+  mgrHttps <- liftIO $ newManager tlsManagerSettings
+  requ <- parseRequest url
+  response <- liftIO $ httpLbs requ mgrHttps
+  return $ extractDadBod response
 
 
 -- aside
@@ -139,7 +202,7 @@ recoverMgr' :: String -> HttpException -> IO (Manager, String)
 recoverMgr' url _ = mkProxdManager >>= flip getHtml url
 
 
-data Clickable = Clickable BaseUrl ElemHead Url deriving (Eq, Show)
+
 
 
 -- -- type SiteNew sv = ReaderT (MVar [FreeSite], sv, Url) (ExceptT ScrapeException' IO) Url 
@@ -235,6 +298,7 @@ class SessionState a where
   getHtmlST :: (MonadThrow m, MonadIO m) => a -> Url -> m (Html, a)
   getHtmlAndUrl :: (MonadThrow m, MonadIO m) => a -> Url -> m (Html, Url, a)
   submitForm :: (MonadThrow m, MonadIO m) => a -> FilledForm -> m ((Html, Url, a), FilledForm)
+  click :: (MonadThrow m, MonadIO m) => FilePath -> a -> Clickable -> m (String, a)
   --  Download a pdf link
   clickWritePdf :: (MonadThrow m, MonadIO m) => a -> FilePath -> Clickable -> m (Either ScrapeException a)
   clickWriteFile :: (MonadThrow m, MonadIO m) => a -> FileExtension -> Clickable -> m (Either ScrapeException (), a)
@@ -243,7 +307,7 @@ class SessionState a where
                   -> FilePath -- where to save
                   -> Clickable 
                   -> IO (Either ScrapeException (), a) 
-
+    
 
 
 
@@ -267,10 +331,9 @@ instance SessionState Manager where
 
     liftIO $ fmap (, f2) $ catch (baseGetHtml manager req2) (saveReq req2 baseGetHtml)
 
-  clickWritePdf manager filepath x@(Clickable baseU _ url) = do
+  clickWritePdf manager filepath x@(Clickable _ url) = do
     (pdf, mgr) <- getHtmlST manager url
     -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf
-<<<<<<< HEAD
     liftIO $ writeFile filepath pdf
     return $ Right mgr
       -- Invalidate normal HTML responses here------
@@ -289,7 +352,7 @@ instance SessionState Manager where
 -- getHtmlReq mgr req = do
 --   fmap (mgr,) $ httpLbs req mgr -- ?
 
-data CookieManager = CookieManager CookieJar Manager
+-- data CookieManager = CookieManager CookieJar Manager
 
 -- getHtmlST :: Url || Form ||
 
@@ -464,7 +527,11 @@ instance SessionState CookieManager where
     html <- liftIO $ getHistoriedBody finalResponse
     pure ((html, undefined, CookieManager (cj <> newCookies) manager), drop1qStrVar form)
 
-  clickWritePdf cmanager filepath x@(Clickable baseU _ url) = do
+  -- in future we could use applyJS or something to make perfect
+  -- in future this could return a WebDocument
+  click _ cmanager (Clickable _ url) = getHtmlST cmanager url
+  
+  clickWritePdf cmanager filepath x@(Clickable _ url) = do
     (pdf, mgr) <- getHtmlST cmanager url
     liftIO $ writeFile filepath pdf
     return $ Right mgr
@@ -507,9 +574,6 @@ instance SessionState WDSession where
                                                                              --(qStr:qStrs)
   -- submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio []) =
   submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio (qStr:qStrs)) = do
-    liftIO $ print "inside submit form"
-    liftIO $ print "Action URL:"
-    liftIO $ print actionUrl
     if reqMethod' == methodGet
       then
       do
@@ -526,33 +590,148 @@ instance SessionState WDSession where
         truple@(html,url,wdSesh') <- liftIO $ runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
 
+  -- this should be written to not be only for pdfs ideally
+  -- Currently though this is more like clickFile 
+  click downloadFolder wdSesh (Clickable (e, attrs) url) = do
+    files_i <- liftIO $ listDirectory downloadFolder -- statically written function
+    wdSesh' <- liftIO $ runWD wdSesh (do
+                                elmnt <- findElem (ByXPath . pack $ xpath (e, attrs))
+                                WD.click elmnt
+                                getSession
+                            )
+--    persist untilOneBigger contstrainedBy (< 10 seconds)
+    now <- liftIO $ getSystemTime
+    files_f <- liftIO $ persistUntilSafe (PersistentAction
+                                 (listDirectory downloadFolder)
+                                 1
+                                 (\dir -> length dir > length files_i)
+                                 Nothing
+                                 (Just (addTenSeconds now))
+                                )
+    let filePath = head $ exclusive files_i files_f
+        exclusive fis1 fis2 = filter (\fi -> not $ elem fi fis2) fis1
+    pdf <- liftIO $ readFile filePath
+    pure $ (pdf, wdSesh')
 
-  -- clickWritePdf wdSesh (Clickable baseU (e, attrs) url) =
-  --   if isSuffixOf ".pdf" url
-  --   then
-  --     do
-  --       (pdf, wdSesh') <- getHtmlST wdSesh url
-  --       liftIO $ writeFile (resultFolder baseU Pdf) pdf
-  --       return (Right wdSesh')
 
-  --   else
-  --     runWD wdSesh $ do
-  --     e <- findElem (ByXPath . pack $ xpath (e, attrs))
-  --     WD.click e
-  --     -- src <- waitUntil 10 (do
-  --                             -- | SHOULD CHANGE TO checking if .pdf format
-  --                             -- | thats a lot of work tho sooooo....
-  --                             -- src <- getSource
-  --                             -- expect (if ((length (unpack src)) < 10000) then False else True)
-  --                             -- return src
-  --                         -- )
-  --     pdf <- lift $ takeNewestFile baseU
-  --     let
-  --       host baseU = undefined
-  --     liftIO $ resultPath searchTerm baseU->host (Paper x) >>= flip writeFile pdf
+-- data PersistentAction a = PersistentAction { action :: IO a
+--                                            , retryInterval :: SystemTime
+--                                            , test :: a -> Bool
+--                                            , cutoffTries :: Maybe Int
+--                                            , cutoffTime :: Maybe SystemTime
+--                                            -- ^ absolute time
+--                                            }
+                  
+  
+--  clickWritePdf wdSesh (Clickable baseU (e, attrs) url) =
+  -- also need to check state of previous download folder
+  -- since we have to do this, might as well test old `cropFrom` new
+  -- and result should be a single file OR notReadyYet 
+  
+    -- if isSuffixOf ".pdf" url
+    -- then
+    --   do
+    --     (pdf, wdSesh') <- getHtmlST wdSesh url
+    --     liftIO $ writeFile (resultFolder baseU Pdf) pdf
+    --     return (Right wdSesh')
 
-  --     fmap Right getSession
-  --     -- (unpack src,) <$> getSession
+    -- else
+    --   runWD wdSesh $ do
+    --   e <- findElem (ByXPath . pack $ xpath (e, attrs))
+    --   WD.click e
+    --   -- src <- waitUntil 10 (do
+        -- | Should CHANGE TO checking if .pdf format
+                              -- | thats a lot of work tho sooooo....
+                              -- src <- getSource
+                              -- expect (if ((length (unpack src)) < 10000) then False else True)
+                              -- return src
+                          -- )
+      -- pdf <- lift $ takeNewestFile baseU
+      -- let
+      --   host baseU = undefined
+      -- liftIO $ resultPath searchTerm baseU->host (Paper x) >>= flip writeFile pdf
+
+      -- fmap Right getSession
+      -- (unpack src,) <$> getSession
+
+
+addTenSeconds :: SystemTime -> SystemTime
+addTenSeconds (MkSystemTime s nanoS) =
+  MkSystemTime (s + 10) nanoS
+
+
+
+-- | This is only recommended if we can be absolutely confident that
+-- | the condition will be satisfied in a reasonable timescale
+-- | Do note that such a function could be very useful for an FRP system
+-- | that relies on external events
+persistUntilUnsafe :: IO a -> (a -> Bool) -> IO a
+persistUntilUnsafe actn test = do
+  x <- actn
+  if test x
+    then pure x
+    else persistUntilUnsafe actn test 
+
+
+toMilli :: Int -> Int
+toMilli = (*) 1000000  
+
+heatDeathOfTheUniverse :: Int64
+heatDeathOfTheUniverse = 100000000000000000
+   
+  
+  
+persistUntilSafe :: PersistentAction a -> IO a
+persistUntilSafe (PersistentAction actn ri test cutR cutT) = do
+  x <- actn
+  currentT <- getSystemTime
+  if test x
+    then pure x
+    else if (fromMaybe 1 cutR == 0)
+            || (systemSeconds currentT > heatDeathOfTheUniverse)
+         then error "failed"
+         else
+           do
+             threadDelay $ toMilli ri
+             persistUntilSafe $ PersistentAction actn ri test cutR cutT  
+  
+     
+data PersistentAction a = PersistentAction { action :: IO a
+                                           , retryInterval :: Int
+                                           , test :: a -> Bool
+                                           , cutoffTries :: Maybe Int
+                                           , cutoffTime :: Maybe SystemTime
+                                           -- ^ absolute time
+                                           }
+
+
+  -- | There's actually no reason either of these couldnt be a Monad
+data PersistentActionM m a = PersistentActionM { actionM :: m a
+                                               , retryIntervalM :: SystemTime
+                                               , testM :: a -> Bool
+                                               , cutoffTriesM :: Maybe Int
+                                               , cutoffTimeM :: Maybe SystemTime
+                                               -- ^ absolute timex
+                                             }
+
+                          
+  
+coerceE2M :: Either a b -> Maybe b
+coerceE2M (Left _) = Nothing
+coerceE2M (Right a) = Just a 
+
+coerceM2E :: e -> Maybe a -> Either e a
+coerceM2E e Nothing = Left e
+coerceM2E _ (Just a) = Right a
+ 
+-- readPage >>= writeSuccesses
+--          >>/= tryNextPage (=<< ifSuccessfulFindLink) .. loop
+
+-- further complicated by the fact that we want Abstracts as well
+
+-- means for now that we need to preprocess the html
+
+-- should change to : click :: sv -> Clickable -> IO WebDocument
 
 
   -- | comment is to crash nix as reminder to move somewhere sensible
@@ -562,7 +741,56 @@ instance SessionState WDSession where
   -- would affect speed
 -- data ClosePiece a = ClosePiece (Parser a)  
 
+-- | paired with maybeUsefulNewUrls this would allow us to scrape an entire
+-- | site for a singular pattern
+-- | and just by virtue of basic haskell types, there's zero reason we cant
+-- | have some simple type:
+-- | data Scrapeable = Case1 A | Case2 B ... 
+-- fanExistential :: Url -> (Url -> Bool) -> MaybeT m a -> MaybeT m [a]
+-- fanExistential url = do
+--   html <- getHtmlST sv url 
+--   links <- flip successesM html $ hoistMaybe $ scrape (hrefParser' cond)
+--   fanExistential links
+
+  -- but actually this would fail due to circularity ; the site is a graph of links
   
+  
+
+
+  -- results <- successesM (someRecursiveFunc sv) $ fromMaybe [] $ scrape pdfLink html
+  -- return (local <> results) 
+
+
+--grabResearchResults --> Nothing then this link in the SearchItem is Invalid 
+
+-- couldn't I use TemplateHaskell to "teach" a domain in webscraping to a scraper?
+
+
+
+
+-- performResearchItem = do
+--   scrape abstract html
+--   pdf 
+
+
+-- someRecursiveFunc :: sv -> Url -> MaybeT m [ResearchResult]
+ 
+
+firstSucc :: (a -> MaybeT IO b) -> [a] -> MaybeT IO b
+firstSucc _ [] = hoistMaybe Nothing 
+firstSucc fm (a:as) = f $ fmap (runMaybeT . fm) as
+  where
+    f (actn:actns) = do
+      x <- liftIO actn
+      case x of
+        Just a -> pure a 
+        Nothing -> f actns 
+  
+  -- let
+  --   save :: 
+  -- catch (fm a) (\_ -> firstSucc fm as)
+
+
 
 -- Could eventually open this up to further extensions
 -- If something is a tree like string structure then we could extend to MessyTreeMatch which is

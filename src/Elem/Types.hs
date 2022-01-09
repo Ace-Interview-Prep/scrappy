@@ -77,6 +77,12 @@ class (ShowHTML c, ElementRep a) => InnerHTMLRep (a :: * -> *)  (b :: * -> *) c 
   matches :: b c -> [c]
 
 
+
+noPat :: Maybe (ParsecT s u m String)
+noPat = Nothing
+
+
+
 -- f :: ([a], [b], [c]) -> Elem' a
 -- f (x,y,z) = f' x y z
 

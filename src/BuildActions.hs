@@ -18,6 +18,7 @@ import Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag
 import Links (maybeUsefulUrl, Url, BaseUrl )
 import Find (findNaive, findSomeHTMLNaive)
 import Scrape
+import Types (CookieManager)
 
 import Network.HTTP.Client (Request, queryString, method, parseRequest)
 import Network.HTTP.Types.Method (Method, methodPost, methodGet)
@@ -185,6 +186,17 @@ type Option = Text
 
 data QParams = Opt (Map Namespace [Option]) | SimpleKV (Text, Text)
 
+
+data Signin = Signin { user :: String
+                     , pass :: String
+                     , signinLink :: Url
+                     }
+
+executeSignin :: CookieManager -> Signin -> IO CookieManager
+executeSignin = undefined
+
+handleMKNewManagerWithChangeCookie :: CookieManager -> Signin -> IO CookieManager
+handleMKNewManagerWithChangeCookie = undefined
 
 
 

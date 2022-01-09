@@ -33,6 +33,17 @@
   (major1) == 4 && (major2) == 12 && (minor) <= 0)
 #endif /* MIN_VERSION_base */
 
+/* package bibtex-0.1.0.6 */
+#ifndef VERSION_bibtex
+#define VERSION_bibtex "0.1.0.6"
+#endif /* VERSION_bibtex */
+#ifndef MIN_VERSION_bibtex
+#define MIN_VERSION_bibtex(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  1 || \
+  (major1) == 0 && (major2) == 1 && (minor) <= 0)
+#endif /* MIN_VERSION_bibtex */
+
 /* package bytestring-0.10.8.2 */
 #ifndef VERSION_bytestring
 #define VERSION_bytestring "0.10.8.2"
@@ -120,6 +131,17 @@
   (major1) == 0 && (major2) <  12 || \
   (major1) == 0 && (major2) == 12 && (minor) <= 3)
 #endif /* MIN_VERSION_http_types */
+
+/* package lens-5.1 */
+#ifndef VERSION_lens
+#define VERSION_lens "5.1"
+#endif /* VERSION_lens */
+#ifndef MIN_VERSION_lens
+#define MIN_VERSION_lens(major1,major2,minor) (\
+  (major1) <  5 || \
+  (major1) == 5 && (major2) <  1 || \
+  (major1) == 5 && (major2) == 1 && (minor) <= 0)
+#endif /* MIN_VERSION_lens */
 
 /* package megaparsec-9.0.1 */
 #ifndef VERSION_megaparsec
@@ -241,6 +263,17 @@
   (major1) == 0 && (major2) <  9 || \
   (major1) == 0 && (major2) == 9 && (minor) <= 0)
 #endif /* MIN_VERSION_webdriver */
+
+/* package witherable-0.4.2 */
+#ifndef VERSION_witherable
+#define VERSION_witherable "0.4.2"
+#endif /* VERSION_witherable */
+#ifndef MIN_VERSION_witherable
+#define MIN_VERSION_witherable(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  4 || \
+  (major1) == 0 && (major2) == 4 && (minor) <= 2)
+#endif /* MIN_VERSION_witherable */
 
 /* tool gcc-9.2.0 */
 #ifndef TOOL_VERSION_gcc
