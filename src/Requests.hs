@@ -640,8 +640,8 @@ instance SessionState WDSession where
     --   e <- findElem (ByXPath . pack $ xpath (e, attrs))
     --   WD.click e
     --   -- src <- waitUntil 10 (do
-        -- | Should CHANGE TO checking if .pdf format
-                              -- | thats a lot of work tho sooooo....
+        --  Should CHANGE TO checking if .pdf format
+                              -- thats a lot of work tho sooooo....
                               -- src <- getSource
                               -- expect (if ((length (unpack src)) < 10000) then False else True)
                               -- return src
@@ -705,7 +705,7 @@ data PersistentAction a = PersistentAction { action :: IO a
                                            }
 
 
-  -- | There's actually no reason either of these couldnt be a Monad
+-- | There's actually no reason either of these couldnt be a Monad
 data PersistentActionM m a = PersistentActionM { actionM :: m a
                                                , retryIntervalM :: SystemTime
                                                , testM :: a -> Bool
@@ -733,26 +733,6 @@ coerceM2E _ (Just a) = Right a
 
 -- should change to : click :: sv -> Clickable -> IO WebDocument
 
-
-  -- | comment is to crash nix as reminder to move somewhere sensible
--- data OpenStruct a = OpenStruct (Parser a)
--- type CloseStruct a = OpenStruct a -> ClosePiece a
-  -- could be even \_ -> f , when the Close struct is independent of Open and I dont think this
-  -- would affect speed
--- data ClosePiece a = ClosePiece (Parser a)  
-
--- | paired with maybeUsefulNewUrls this would allow us to scrape an entire
--- | site for a singular pattern
--- | and just by virtue of basic haskell types, there's zero reason we cant
--- | have some simple type:
--- | data Scrapeable = Case1 A | Case2 B ... 
--- fanExistential :: Url -> (Url -> Bool) -> MaybeT m a -> MaybeT m [a]
--- fanExistential url = do
---   html <- getHtmlST sv url 
---   links <- flip successesM html $ hoistMaybe $ scrape (hrefParser' cond)
---   fanExistential links
-
-  -- but actually this would fail due to circularity ; the site is a graph of links
   
   
 

@@ -38,8 +38,11 @@ class HtmlMatcher a where
 class ShowHTML a where
   showH :: a -> String
 
-instance ShowHTML String where
-  showH x = x
+instance ShowHTML Char where
+  showH = show
+
+instance Show a => ShowHTML [a] where
+  showH x = show x
 
 instance ShowHTML Text where
   showH = unpack 
@@ -81,7 +84,13 @@ class (ShowHTML c, ElementRep a) => InnerHTMLRep (a :: * -> *)  (b :: * -> *) c 
 noPat :: Maybe (ParsecT s u m String)
 noPat = Nothing
 
+-- | Parser is configured via the return type but gives the input type 
+coerceAttrs :: Attrs -> [(String, Maybe String)]
+coerceAttrs as = (fmap.fmap) f $ toList as 
 
+f :: String -> Maybe String
+f "" = Nothing
+f s = Just s 
 
 -- f :: ([a], [b], [c]) -> Elem' a
 -- f (x,y,z) = f' x y z

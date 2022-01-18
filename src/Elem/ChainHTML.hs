@@ -7,17 +7,27 @@ module Elem.ChainHTML where
 
 import Find (findNaive)
 import Links (maybeUsefulUrl)
+import Elem.SimpleElemParser (elemParser)
 import Elem.ElemHeadParse (parseOpeningTag, hrefParser)
-import Elem.Types (Elem', ShowHTML, ElemHead, innerText')
+import Elem.Types (Elem', ShowHTML, ElemHead, Elem, innerText'
+                  , matches')
 
 import Control.Monad.Trans.Maybe (MaybeT)
-import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse, parserZero, string)
+import Text.Parsec (ParsecT, Stream, char, (<|>), many, parserFail, parse, parserZero, string, optional)
 import Control.Applicative (some, liftA2)
 import Data.Functor.Identity (Identity)
 import Data.Maybe (catMaybes)
 -- functions for chaining free-range html patterns based on the previous
 -- patterns to allow for maximum flexibility 
 
+nl :: Stream s m Char => ParsecT s u m ()
+nl = optional (many $ (char '\n' <|> char ' '))
+
+manyHtml p = many $ p <* nl
+
+someHtml p = some $ p <* nl
+
+manyTillHtml_ p end = manyTill_ (p <* nl) end 
 
 
 htmlTag :: Stream s m Char => ParsecT s u m ElemHead
@@ -55,6 +65,16 @@ mustContain e count pat = do
     Right (Just xs) -> if count > (length xs) then parserZero else return out
     _ -> parserZero
     
+-- | An elem head configures the bracketing so this is all we need for
+-- | crafting
+
+type Shell =  (Elem, [(String, Maybe String)]) 
+
+-- incomplete
+contains'' :: (Stream s m Char, ShowHTML a) => Shell 
+           -> ParsecT s u m a
+           -> ParsecT s u m [a]
+contains'' (e,as) p = matches' <$> elemParser (Just [e]) (Just p) as
 
 -- I could always make this generalized to a stream by making
   -- Stream s => .. data Elem2' = Elem2' s  ...
@@ -106,11 +126,11 @@ sequenceHtml_ p1 p2 = do
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
-manyHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [a]
-manyHtml prsrHtml = (many (char ' ' <|> char '\n')) >> many (fmap snd $ manyTill_ (char ' ' <|> char '\n') prsrHtml)
+-- manyHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [a]
+-- manyHtml prsrHtml = (many (char ' ' <|> char '\n')) >> many (fmap snd $ manyTill_ (char ' ' <|> char '\n') prsrHtml)
 
-someHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [a]
-someHtml prsrHtml = many (char ' ' <|> char '\n') >> some prsrHtml
+-- someHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [a]
+-- someHtml prsrHtml = many (char ' ' <|> char '\n') >> some prsrHtml
 
 
 

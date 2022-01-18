@@ -16,15 +16,15 @@ import Elem.Types (Elem, Attrs, ElemHead, TreeHTML(TreeHTML), HTMLMatcher (IText
                   , ElementRep, mkGH, innerText', _innerText, _matches, foldFuncTrup
                   , UrlPagination(..), enoughMatchesTree, selfClosingTextful, endTag)
 
-import Elem.ChainHTML (someHtml, manyHtml)
+import Elem.ChainHTML (someHtml, manyHtml, nl)
 import Elem.SimpleElemParser (elemParser)
 import Find (findNaive)
 
 import Control.Monad (when)
 import Control.Applicative (liftA2)
 import Text.Megaparsec as MParsec (many, skipManyTill, manyTill, some)
-import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse, char, noneOf
-                   , option, space, alphaNum, notFollowedBy, (<?>))
+import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse
+                   , char, noneOf, option, space, alphaNum, notFollowedBy, (<?>), optional)
 import qualified Data.Map as Map (Map, toList, fromList, adjust) 
 import Data.Graph (Tree (Node), Forest)
 import Data.Tree (rootLabel)
@@ -33,6 +33,13 @@ import Data.Char (digitToInt)
 import Data.Maybe (fromMaybe, fromJust)
 import Data.List
 import Data.Text (Text, splitOn)
+
+
+
+-- | Note for research on Parsers/Scrapers + AI research -> if a scraper does provide only
+-- | a slow method for processing (Picture -> *) that we might be able to solve this issue with
+-- | either Quantum (same as current AI) or with attentive methodologies to "gamble" on what to first pay
+-- | attention to , which could further be based on if Video like (frame -> frame) or single picture
 
 
 manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)
@@ -93,7 +100,7 @@ treeElemParser'  elemOpts matchh attrsSubset = do
                                     $ (try (string "/>") >> return [])  
                                     <|> (try $ innerElemParser2 elem' matchh)
                                     <|> (selfClosingTextful matchh)
-     return $ TreeHTML elem' attrs' matchBook (reverse inText) (reverse treees)
+     return $ TreeHTML elem' attrs' (reverse matchBook) (reverse inText) (reverse treees)
 
 -------------------------------------------------------------------------------------------------------------------
 
@@ -413,6 +420,24 @@ similarTreeH matchh treeH = do
 -- | as their innerTrees, the element tag, and attributes.
 -- |
 -- | This can be used to autonomously determine the structure of and find search result items after you've submitted a form
+-- htmlGroupSimilar :: (Stream s m Char, ShowHTML a)
+--                  => Maybe [Elem]
+--                  ->  Maybe (ParsecT s u m a)
+--                  -> [(String, Maybe String)]
+--                  -> ParsecT s u m (GroupHtml TreeHTML a)
+-- htmlGroupSimilar elemOpts matchh attrsSubset = 
+--   -- Not sure about the order yet tho
+--   fmap mkGH $ try (treeElemParser elemOpts matchh attrsSubset
+--                    >>= (\treeH -> fmap (treeH :) (some (try $ similarTreeH matchh treeH))))
+
+-- I could rewrite groups to become more versatile by allowing optionally
+-- any number of '\n' after parsing a similar tree 
+
+
+-- some (try $ similarTreeH matchh treeH) <* optional (many $ char '\n')
+
+
+
 htmlGroupSimilar :: (Stream s m Char, ShowHTML a)
                  => Maybe [Elem]
                  ->  Maybe (ParsecT s u m a)
@@ -420,9 +445,12 @@ htmlGroupSimilar :: (Stream s m Char, ShowHTML a)
                  -> ParsecT s u m (GroupHtml TreeHTML a)
 htmlGroupSimilar elemOpts matchh attrsSubset = 
   -- Not sure about the order yet tho
-  fmap mkGH $ try (treeElemParser elemOpts matchh attrsSubset
-                   >>= (\treeH -> fmap (treeH :) (some (try $ similarTreeH matchh treeH))))
-
+  fmap mkGH $ (do
+                 
+                  treeH <- treeElemParser elemOpts matchh attrsSubset <* nl 
+                  treeHs <- some $ try $ similarTreeH matchh treeH <* nl
+                  pure $ treeH : treeHs 
+              )
 
 
 --------------------------------------------------------------------------------------------------------------------
