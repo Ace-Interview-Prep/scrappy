@@ -1,6 +1,6 @@
 {-# LANGUAGE KindSignatures #-}
 
-module Types where
+module Scrappy.Types where
 
 -- may change Types + Links -> Navigation + Something else 
 

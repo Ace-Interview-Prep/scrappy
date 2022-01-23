@@ -4,21 +4,21 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE RankNTypes #-}
 
-module BuildActions where
+module Scrappy.BuildActions where
 
 
 import Replace.Megaparsec (findAll)
 
-import Elem.SimpleElemParser (elemParser)
+import Scrappy.Elem.SimpleElemParser (elemParser)
 -- import Elem.ElemHeadParse 
-import Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)
-import Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag, attrsMatch')
+import Scrappy.Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)
+import Scrappy.Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag, attrsMatch')
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
-import Links (maybeUsefulUrl, Url, BaseUrl )
-import Find (findNaive, findSomeHTMLNaive)
-import Scrape
-import Types (CookieManager)
+import Scrappy.Links (maybeUsefulUrl, Url, BaseUrl )
+import Scrappy.Find (findNaive, findSomeHTMLNaive)
+import Scrappy.Scrape
+import Scrappy.Types (CookieManager)
 
 import Network.HTTP.Client (Request, queryString, method, parseRequest)
 import Network.HTTP.Types.Method (Method, methodPost, methodGet)

@@ -1,10 +1,10 @@
 {-# LANGUAGE TupleSections #-} 
 
-module Links where
+module Scrappy.Links where
 
 
-import Elem.Types (Elem'(..), ElemHead, innerText', getHref)
-import Elem.ElemHeadParse (hrefParser)
+import Scrappy.Elem.Types (Elem'(..), ElemHead, innerText', getHref)
+import Scrappy.Elem.ElemHeadParse (hrefParser)
 -- import Find (findSomeHTMLNaive)
 
 

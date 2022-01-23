@@ -1,11 +1,11 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Proxies where
+module Scrappy.Proxies where
 
-import Scrape (runScraperOnHtml)
-import Elem.ChainHTML (contains)
-import Elem.SimpleElemParser (el)
-import Elem.Types (innerText')
+import Scrappy.Scrape (runScraperOnHtml)
+import Scrappy.Elem.ChainHTML (contains)
+import Scrappy.Elem.SimpleElemParser (el)
+import Scrappy.Elem.Types (innerText')
 
 import Text.Parsec (ParsecT, Stream, many)
 import Network.HTTP.Client (Proxy, Manager, HttpException, Response, Proxy(..), responseBody, httpLbs

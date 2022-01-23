@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Requests where 
+module Scrappy.Requests where 
 
 -- Idea: a language extension that allows module organization like:
 
@@ -12,15 +12,15 @@ module Requests where
            -- .Trans
              -- .StateT (f)
              -- .ExceptT (g)
-import Proxies (mkProxdManager)
-import BuildActions (FilledForm(..), showQString, Namespace, QueryString, FormError(..))
-import Scrape (ScraperT, runScraperOnHtml, hoistMaybe)
-import Find (findNaive)
-import Elem.ChainHTML (contains)
-import Elem.SimpleElemParser (el)
-import Elem.Types (innerText', ElemHead)
-import Links (BaseUrl, Clickable(..))
-import Types (CookieManager(..))
+import Scrappy.Proxies (mkProxdManager)
+import Scrappy.BuildActions (FilledForm(..), showQString, Namespace, QueryString, FormError(..))
+import Scrappy.Scrape (ScraperT, runScraperOnHtml, hoistMaybe)
+import Scrappy.Find (findNaive)
+import Scrappy.Elem.ChainHTML (contains)
+import Scrappy.Elem.SimpleElemParser (el)
+import Scrappy.Elem.Types (innerText', ElemHead)
+import Scrappy.Links (BaseUrl, Clickable(..))
+import Scrappy.Types (CookieManager(..))
 
 import Test.WebDriver (WD, getSource, runWD, openPage, getCurrentURL, executeJS)
 import Test.WebDriver.Commands.Wait (waitUntil, expect, )

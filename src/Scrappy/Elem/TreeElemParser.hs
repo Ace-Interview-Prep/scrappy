@@ -5,20 +5,20 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TupleSections #-}
 
-module Elem.TreeElemParser where
+module Scrappy.Elem.TreeElemParser where
 
 import Control.Monad.IO.Class
 
-import Elem.ElemHeadParse (parseOpeningTag, hrefParser', parseOpeningTagDesc, mkAttrsDesc, attrParser)
-import Elem.Types (Elem, Attrs, ElemHead, TreeHTML(TreeHTML), HTMLMatcher (IText, Element, Match)
+import Scrappy.Elem.ElemHeadParse (parseOpeningTag, hrefParser', parseOpeningTagDesc, mkAttrsDesc, attrParser)
+import Scrappy.Elem.Types (Elem, Attrs, ElemHead, TreeHTML(TreeHTML), HTMLMatcher (IText, Element, Match)
                   , InnerTextHTMLTree(InnerTextHTMLTree), innerTree, innerText, matches, GroupHtml
                   , Elem', TreeIndex, attrs, elTag, ShowHTML, showH, _innerTree', matches'
                   , ElementRep, mkGH, innerText', _innerText, _matches, foldFuncTrup
                   , UrlPagination(..), enoughMatchesTree, selfClosingTextful, endTag)
 
-import Elem.ChainHTML (someHtml, manyHtml, nl)
-import Elem.SimpleElemParser (elemParser)
-import Find (findNaive)
+import Scrappy.Elem.ChainHTML (someHtml, manyHtml, nl)
+import Scrappy.Elem.SimpleElemParser (elemParser)
+import Scrappy.Find (findNaive)
 
 import Control.Monad (when)
 import Control.Applicative (liftA2)

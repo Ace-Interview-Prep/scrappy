@@ -3,14 +3,14 @@
 
 -- | This will eventually be a beautiful interface between NLP and scrappy
 
-module Elem.ITextElemParser where
+module Scrappy.Elem.ITextElemParser where
 
 
-import Elem.TreeElemParser (treeElemParser, sameTreeH)
-import Elem.SimpleElemParser (elemParser)
-import Elem.ElemHeadParse (parseOpeningTag, buildElemsOpts, attrsParser
+import Scrappy.Elem.TreeElemParser (treeElemParser, sameTreeH)
+import Scrappy.Elem.SimpleElemParser (elemParser)
+import Scrappy.Elem.ElemHeadParse (parseOpeningTag, buildElemsOpts, attrsParser
                           , mkElemtagParser)
-import Elem.Types (HTMLMatcher(..), Elem'(..), Elem, Attrs, ShowHTML(..)
+import Scrappy.Elem.Types (HTMLMatcher(..), Elem'(..), Elem, Attrs, ShowHTML(..)
                   , TreeHTML(..), endTag
                   , selfClosingTextful, noPat, innerText', _innerTree'
                   , attrs, elTag, coerceAttrs
@@ -25,8 +25,8 @@ import Data.Either (fromRight)
 import Data.List (intercalate)
 
 -- testing writersAbstract
-import Find 
-import Elem.ChainHTML
+import Scrappy.Find 
+import Scrappy.Elem.ChainHTML
 
 
 

@@ -1,10 +1,10 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Find where
+module Scrappy.Find where
 
-import Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', TreeHTML, ShowHTML)
+import Scrappy.Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', TreeHTML, ShowHTML)
 -- import Elem.TreeElemParser (findSameTreeH)
-import Types (ScrapeFail(..))
+import Scrappy.Types (ScrapeFail(..))
 
 import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero) 
 import Data.Text (Text)

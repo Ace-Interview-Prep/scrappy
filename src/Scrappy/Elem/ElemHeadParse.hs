@@ -1,9 +1,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 
 
-module Elem.ElemHeadParse where
+module Scrappy.Elem.ElemHeadParse where
 
-import Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs)) -- Attr)
+import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs)) -- Attr)
 
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,

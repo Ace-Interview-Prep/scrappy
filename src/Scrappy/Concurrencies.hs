@@ -2,7 +2,7 @@
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Concurrencies where
+module Scrappy.Concurrencies where
 
 
 import Control.Monad.IO.Class (MonadIO)

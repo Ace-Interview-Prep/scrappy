@@ -1,15 +1,15 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TupleSections #-}
 
-module Elem.ChainHTML where
+module Scrappy.Elem.ChainHTML where
 
 
 
-import Find (findNaive)
-import Links (maybeUsefulUrl)
-import Elem.SimpleElemParser (elemParser)
-import Elem.ElemHeadParse (parseOpeningTag, hrefParser)
-import Elem.Types (Elem', ShowHTML, ElemHead, Elem, innerText'
+import Scrappy.Find (findNaive)
+import Scrappy.Links (maybeUsefulUrl)
+import Scrappy.Elem.SimpleElemParser (elemParser)
+import Scrappy.Elem.ElemHeadParse (parseOpeningTag, hrefParser)
+import Scrappy.Elem.Types (Elem', ShowHTML, ElemHead, Elem, innerText'
                   , matches')
 
 import Control.Monad.Trans.Maybe (MaybeT)

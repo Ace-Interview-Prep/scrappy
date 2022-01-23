@@ -77,21 +77,21 @@ extra-source-files:  README.MD
 
 library
   -- Modules exported by the library.
-  exposed-modules:    Find
-                    , Scrape
-                    , BuildActions
-                    , Elem.Types
-                    , Elem.TreeElemParser
-                    , Elem.SimpleElemParser
-                    , Elem.ElemHeadParse
-                    , Elem.ITextElemParser
-                    , Elem.ChainHTML
-                    , Links
-                    , Requests
+  exposed-modules:    Scrappy.Find
+                    , Scrappy.Scrape
+                    , Scrappy.BuildActions
+                    , Scrappy.Elem.Types
+                    , Scrappy.Elem.TreeElemParser
+                    , Scrappy.Elem.SimpleElemParser
+                    , Scrappy.Elem.ElemHeadParse
+                    , Scrappy.Elem.ITextElemParser
+                    , Scrappy.Elem.ChainHTML
+                    , Scrappy.Links
+                    , Scrappy.Requests
                     -- Needs a lot of work, is more like an idea rn
                     -- , Concurrencies
-                    , Proxies
-                    , Types
+                    , Scrappy.Proxies
+                    , Scrappy.Types
 
 
 

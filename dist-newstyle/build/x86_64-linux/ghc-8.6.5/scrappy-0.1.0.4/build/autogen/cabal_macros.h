@@ -99,15 +99,15 @@
   (major1) == 1 && (major2) == 7 && (minor) <= 10)
 #endif /* MIN_VERSION_extra */
 
-/* package http-client-0.7.9 */
+/* package http-client-0.7.10 */
 #ifndef VERSION_http_client
-#define VERSION_http_client "0.7.9"
+#define VERSION_http_client "0.7.10"
 #endif /* VERSION_http_client */
 #ifndef MIN_VERSION_http_client
 #define MIN_VERSION_http_client(major1,major2,minor) (\
   (major1) <  0 || \
   (major1) == 0 && (major2) <  7 || \
-  (major1) == 0 && (major2) == 7 && (minor) <= 9)
+  (major1) == 0 && (major2) == 7 && (minor) <= 10)
 #endif /* MIN_VERSION_http_client */
 
 /* package http-client-tls-0.3.5.3 */

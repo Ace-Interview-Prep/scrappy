@@ -1,16 +1,15 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Scrape where
+module Scrappy.Scrape where
 
 -- Basically just html patterns from testing / courtney market stuff
-import Elem.Types (Elem', innerText')
-import Elem.ElemHeadParse (hrefParser, parseOpeningTag)
-import Elem.SimpleElemParser (el)
-import Elem.ChainHTML ((</>>))
-
-import Find (findNaive)
-import Links (Html, maybeUsefulUrl)
+import Scrappy.Elem.Types (Elem', innerText')
+import Scrappy.Elem.ElemHeadParse (hrefParser, parseOpeningTag)
+import Scrappy.Elem.SimpleElemParser (el)
+import Scrappy.Elem.ChainHTML ((</>>))
+import Scrappy.Find (findNaive)
+import Scrappy.Links (Html, maybeUsefulUrl)
 
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Data.Functor.Identity (Identity)

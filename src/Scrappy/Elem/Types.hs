@@ -8,7 +8,7 @@
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FunctionalDependencies #-}
 
-module Elem.Types where
+module Scrappy.Elem.Types where
 
 import Data.Text (Text, unpack)
 import Data.Map (Map, toList)

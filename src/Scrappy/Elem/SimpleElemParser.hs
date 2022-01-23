@@ -2,11 +2,11 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
 
-module Elem.SimpleElemParser where
+module Scrappy.Elem.SimpleElemParser where
 
 
-import Elem.ElemHeadParse (parseOpeningTag)
-import Elem.Types (ShowHTML, InnerHTMLRep, Elem, Attrs, Elem'(Elem'), InnerTextResult(InnerTextResult)
+import Scrappy.Elem.ElemHeadParse (parseOpeningTag)
+import Scrappy.Elem.Types (ShowHTML, InnerHTMLRep, Elem, Attrs, Elem'(Elem'), InnerTextResult(InnerTextResult)
                   , _fullInner, _matchesITR, innerText, matches, showH, foldHtmlMatcher
                   , HTMLMatcher(IText, Match, Element), ElementRep, matches, matches'
                   , _matchesITR, _fullInner -- only for deprecated function elemParserOld 
