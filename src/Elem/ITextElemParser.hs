@@ -32,7 +32,7 @@ type Html = String
   -- parse onlyPlainText "" $ (mconcat . catEithers) divied
 
 removeStyleTags :: Html -> Html
-removeStyleTags html = (mconcat . catEithers) $ fromRight undefined $ parse (divideUp expr) "" html
+removeStyleTags html = (mconcat . catEithers) $ fromRight [] $ parse (divideUp expr) "" html
   where expr = (fmap show $ parseOpeningTag (Just styleTags) [])
                <|> (string "</" >> buildElemsOpts styleTags >> string ">")
         styleTags =  ["b", "strong", "i", "em", "mark", "small", "ins", "sub", "sup"] 
@@ -61,6 +61,16 @@ catEithers (x:xs) = case x of
 divideUp :: Stream s m Char => ParsecT s u m String -> ParsecT s u m [Either String String]
 divideUp parser = many ((Right <$> parser) <|> ( (Left . (:[]) ) <$> anyChar)) 
 
+-- | If I can pass a condition to this,
+-- | it would be useful for combining individual elements
+-- |
+
+plainTextPattern :: (String -> Bool) -> ParsecT s u m String
+plainTextPattern f =
+
+plainTextGroup :: (String -> Bool) -> ParsecT s u m [String]
+plainTextGroup f = some
+
 onlyPlainText :: Stream s m Char => ParsecT s u m String
 onlyPlainText = fmap (\(ACT strings) -> mconcat strings) specialElemParser 
   where
@@ -85,7 +95,7 @@ onlyPlainText = fmap (\(ACT strings) -> mconcat strings) specialElemParser
                             -- >> (string " " <|> string ">")))
 
 -- Not for getting matches 
-data AccumITextElem a = ACT [String]
+data AccumITextElem = ACT [String]
 
 textOnlyFoldr :: HTMLMatcher AccumITextElem String -> (String, [String]) -> (String, [String]) 
 textOnlyFoldr htmlM (itextAccum, fromElemAccum) = case htmlM of 

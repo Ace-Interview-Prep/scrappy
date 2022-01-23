@@ -96,4 +96,4 @@ extractDadBod :: Response ByteString -> String
 extractDadBod response = (unpack . LazyTX.toStrict . mySafeDecoder . responseBody) response
 
 mySafeDecoder :: ByteString -> LazyTX.Text
-mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
+mySafeDecoder = decodeUtf8Withith.Lazy (\_ _ -> Just '?')

@@ -12,8 +12,19 @@ import Data.Time.Clock.System (SystemTime)
 
 
 
+unless (Site == SiteEndState) $ putBackMVar
+
+or we could destroy the MVar on the global TVar via a destructive update
 
 
+
+initTVar :: [Site] -> (TVar [MVar Site], TVar [MVar FreeSite])
+initTVar = undefined
+
+IF I set this up like so, then the next state of TVar to write back is immediately known
+meaning that it will be locked for the smallest amount of time possible
+
+-- Each individual site is its own MVar
 
 
 

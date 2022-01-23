@@ -579,6 +579,30 @@ instance SessionState Manager where
 
 
 
+getWritePdf :: WDSession -> Url -> MaybeT IO ()
+getWritePdf sv url = do
+  pdfOrHtml <- liftIO $ getHtmlST sv url
+  let
+    test html = runScraperOnHtml htmlHead (take 1000 html)
+  case test pdfOrHtml of
+    Just _ -> do --hoistMaybe Nothing
+      link <- hoistMaybe $ runScraperOnHtml downloadLink pdfOrHtml
+      getWritePdf sv link
+      hOrP <- getHtmlST sv link
+      case test hOrP of
+        Just _ -> hoistMaybe Nothing
+        Nothing -> do
+          let
+            b = (<>) name . filter (/='/') . dropWhile (/= '/') $ pdfLink
+          liftIO $ indexWriteToCorrectFolder genre (fromRight b $ getHostName pdfLink) pdfLink html
+          return ()
+
+    Nothing -> do
+      let
+        b = (<>) name . filter (/='/') . dropWhile (/= '/') $ pdfLink
+      liftIO $ indexWriteToCorrectFolder genre (fromRight b $ getHostName pdfLink) pdfLink html
+      return ()
+
 -- saveReqForm req = do
   -- manager <- mkProxdManager
   -- baseGetHtml
