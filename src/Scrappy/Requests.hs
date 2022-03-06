@@ -68,6 +68,17 @@ data ExistT m a = ExistT { runExistT :: MaybeT m a }
 
 type RequestJS = String -- fake just for the idea
 
+
+
+-- Regarding the need to model similar to a browser here's what we know
+
+--   -> The browser gets the index.html (like we do with getHtml, getHtml' ((which should be renamed to getHtmlRaw))
+--   -> When the browser gets this it parses the entire HTML structure and finds what it needs to request
+--     --> links for css (currently negligible) and scripts which do not exist in the code but have a src attribute 
+--   -> Also if an action attribute is 0 then it's the current URL 
+
+
+
 -- | Perform a request which has callbacks to both HTTP and JS
 -- | this idea should emulate what happens if a user clicks on a
 -- | link which needs JS to handle redirection of events 

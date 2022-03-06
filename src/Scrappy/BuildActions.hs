@@ -70,7 +70,7 @@ data FilledForm = FilledForm { actionUrl :: Url -- | from action attribute
                              , qStringVariants :: [QueryString] --  List of all possible queries given the parsed form. 
                              }
 
-data EditableForm = EditableForm { actioUrl :: Url
+data EditableForm = EditableForm { _actionUrl :: Url
                                  , rMethod :: Method
                                  , params :: Map Namespace Option
                                  } 

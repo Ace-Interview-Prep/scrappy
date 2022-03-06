@@ -2,7 +2,7 @@
 , exceptions, extra, HTTP, http-client, http-client-tls, http-types
 , lens, lib, megaparsec, modern-uri, mtl, parallel, parsec
 , replace-megaparsec, stm, text, time, transformers, webdriver
-, witherable
+, witherable, jsaddle
 }:
 mkDerivation {
   pname = "scrappy";
@@ -12,7 +12,7 @@ mkDerivation {
     base bibtex bytestring containers directory exceptions extra HTTP
     http-client http-client-tls http-types lens megaparsec modern-uri
     mtl parallel parsec replace-megaparsec stm text time transformers
-    webdriver witherable
+    webdriver witherable jsaddle
   ];
   testHaskellDepends = [ base ];
   homepage = "https://github.com/Ace-Interview-Prep/scrappy";

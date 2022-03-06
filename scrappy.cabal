@@ -92,6 +92,7 @@ library
                     -- , Concurrencies
                     , Scrappy.Proxies
                     , Scrappy.Types
+                    , Scrappy.JS
 
 
 
@@ -128,7 +129,9 @@ library
                      , bibtex
                      , lens
                      , witherable
-                     
+                     , jsaddle
+                     , deepseq
+                     , random
                      -- , raw-strings-qq
   -- Directories containing source files.
   hs-source-dirs:      src
