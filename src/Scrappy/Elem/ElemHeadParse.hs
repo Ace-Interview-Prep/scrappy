@@ -3,15 +3,30 @@
 
 module Scrappy.Elem.ElemHeadParse where
 
-import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs)) -- Attr)
+import Scrappy.Links (Link, CurrentUrl)
+import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs), getHrefAttrs) -- Attr)
 
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
                    alphaNum, many1, between, many, letter, parserFail)
 import Data.Map as Map (Map, fromList, lookup, toList) 
 import Data.Maybe (fromMaybe)
+import Witherable (mapMaybe)
+
+import Scrappy.Types
 
 -- | needs to use many for multiple links
+
+
+
+href :: Stream s m Char => Bool -> CurrentUrl -> ParsecT s u m Link
+href booly cUrl = ((getHrefAttrs booly cUrl) . snd) `mapMaybe` (parseOpeningTag (Just ["a"]) [])
+
+href' :: Stream s m Char => Maybe CurrentUrl -> ParsecT s u m Link
+href' = undefined --  bo
+
+
+
 
 
 -- | Safe because it forces parse of the entire ElemHead then pulls if there

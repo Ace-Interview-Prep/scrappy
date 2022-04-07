@@ -18,8 +18,8 @@ import Scrappy.Scrape (ScraperT, runScraperOnHtml, hoistMaybe)
 import Scrappy.Find (findNaive)
 import Scrappy.Elem.ChainHTML (contains)
 import Scrappy.Elem.SimpleElemParser (el)
-import Scrappy.Elem.Types (innerText', ElemHead)
-import Scrappy.Links (BaseUrl, Clickable(..))
+import Scrappy.Elem.Types (innerText', ElemHead, Clickable(..))
+import Scrappy.Links (BaseUrl, Link(..), renderLink)
 import Scrappy.Types (CookieManager(..))
 
 import Test.WebDriver (WD, getSource, runWD, openPage, getCurrentURL, executeJS)
@@ -87,7 +87,7 @@ performRequestJS = undefined
 
 -- Need a section for Headers logic
 
-type Link = String
+
 type ParsecError = ParseError
 
 
@@ -122,23 +122,23 @@ runScraperM url scraper = (liftIO $ getHtml' url) >>= scraper
 
 
 
-trySiteLink :: MonadIO m => Url -> (Html -> MaybeT m ()) -> MaybeT m Url 
+trySiteLink :: MonadIO m => Link -> (Html -> MaybeT m ()) -> MaybeT m Link
 trySiteLink url scraperBasedEffects = do
-  html <- liftIO $ getHtml' url
+  html <- liftIO $ getHtml' (renderLink url)
   scraperBasedEffects html
   return url 
 
 
 -- | propogate to requests module
-runScraperOnUrl' :: (MonadIO m, MonadThrow m) => Url -> ScraperT a -> m (Maybe [a])
+runScraperOnUrl' :: (MonadIO m, MonadThrow m) => Link -> ScraperT a -> m (Maybe [a])
 runScraperOnUrl' url p = fmap (runScraperOnHtml p) (getHtml'' url)
 
  
 -- | Get html with no Proxy 
-getHtml'' :: (MonadThrow m, MonadIO m) => Html -> m Html
+getHtml'' :: (MonadThrow m, MonadIO m) => Link -> m Html
 getHtml'' url = do
   mgrHttps <- liftIO $ newManager tlsManagerSettings
-  requ <- parseRequest url
+  requ <- parseRequest (renderLink url)
   response <- liftIO $ httpLbs requ mgrHttps
   return $ extractDadBod response
 
@@ -150,10 +150,10 @@ getHtml'' url = do
 -- | Should change these to name_ and then make these names do same thing except read in a
 -- | session variable 
 type Url = String 
-runScraperOnUrl :: Url -> Parsec Html () a -> IO (Maybe [a])
-runScraperOnUrl url p = fmap (runScraperOnHtml p) (getHtml' url)
+runScraperOnUrl :: Link -> Parsec Html () a -> IO (Maybe [a])
+runScraperOnUrl (Link url) p = fmap (runScraperOnHtml p) (getHtml' url)
 
-runScraperOnUrls :: [Url] -> Parsec Html () a -> IO (Maybe [a])
+runScraperOnUrls :: [Link] -> Parsec Html () a -> IO (Maybe [a])
 runScraperOnUrls urls p = fmap (foldr (<>) Nothing) $ mapM (flip runScraperOnUrl p) urls 
 
 
@@ -168,22 +168,17 @@ runScrapersOnUrls = undefined
 type STM = IO 
 
 -- | Merge Maybe [a] when multiple urls 
-concurrentlyRunScrapersOnUrls :: [Url] -> [ParsecT s u m a] -> STM (Maybe [a])
+concurrentlyRunScrapersOnUrls :: [Link] -> [ParsecT s u m a] -> STM (Maybe [a])
 concurrentlyRunScrapersOnUrls = undefined 
   -- inner will call concurrent stream functions on the given urls 
 
 
 
-extractDadBod :: Response ByteString -> String 
-extractDadBod response = (unpack . LazyTX.toStrict . mySafeDecoder . responseBody) response
-
-mySafeDecoder :: ByteString -> LazyTX.Text
-mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
-
 -- doSignin :: ElemHead -> ElemHead -> Url 
  
--- | Get html with no Proxy 
-getHtml' :: Html -> IO Html
+-- | Get html with no Proxy
+-- | Raw af
+getHtml' :: Url -> IO Html
 getHtml' url = do
   mgrHttps <- newManager tlsManagerSettings
   requ <- parseRequest url
@@ -192,10 +187,12 @@ getHtml' url = do
   
 
 
+
+
 -- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails 
-getHtml :: Manager -> Url -> IO (Manager, Html)
+getHtml :: Manager -> Link -> IO (Manager, Html)
 getHtml mgr url = do
-  requ <- parseRequest url
+  requ <- parseRequest (renderLink url)
   let
     headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
               , (hAcceptLanguage, "en-US,en;q=0.5")
@@ -209,7 +206,7 @@ getHtml mgr url = do
   return (mgr', r)
 
 
-recoverMgr' :: String -> HttpException -> IO (Manager, String)
+recoverMgr' :: Link -> HttpException -> IO (Manager, String)
 recoverMgr' url _ = mkProxdManager >>= flip getHtml url
 
 
@@ -306,9 +303,9 @@ type Port = String
 --   pure $ (() <$ eExcSV)
 
 class SessionState a where
-  getHtmlST :: (MonadThrow m, MonadIO m) => a -> Url -> m (Html, a)
-  getHtmlAndUrl :: (MonadThrow m, MonadIO m) => a -> Url -> m (Html, Url, a)
-  submitForm :: (MonadThrow m, MonadIO m) => a -> FilledForm -> m ((Html, Url, a), FilledForm)
+  getHtmlST :: (MonadThrow m, MonadIO m) => a -> Link -> m (Html, a)
+  getHtmlAndUrl :: (MonadThrow m, MonadIO m) => a -> Link -> m (Html, Link, a)
+  submitForm :: (MonadThrow m, MonadIO m) => a -> FilledForm -> m ((Html, Link, a), FilledForm)
   click :: (MonadThrow m, MonadIO m) => FilePath -> a -> Clickable -> m (String, a)
   --  Download a pdf link
   clickWritePdf :: (MonadThrow m, MonadIO m) => a -> FilePath -> Clickable -> m (Either ScrapeException a)
@@ -318,20 +315,21 @@ class SessionState a where
                   -> FilePath -- where to save
                   -> Clickable 
                   -> IO (Either ScrapeException (), a) 
-    
+
+  -- askCookies :: m CookieJar 
 
 
 
 
 
 instance SessionState Manager where
-  getHtmlST manager url = do
-    (m, s) <- liftIO $ getHtml manager url
+  getHtmlST manager link = do
+    (m, s) <- liftIO $ getHtml manager link
     return (s, m)
 
-  getHtmlAndUrl manager url = do
+  getHtmlAndUrl manager (Link url) = do
     req <- parseRequest url
-    liftIO $ catch (baseGetHtml manager req) (saveReq' url getHtmlAndUrl)
+    liftIO $ catch (baseGetHtml manager req) (saveReq' (Link url) getHtmlAndUrl)
 
   -- Note: qStrVari has data on basic params factored in
   submitForm manager (FilledForm actionUrl reqM term tInput qStrVari) = do
@@ -378,15 +376,15 @@ setCJ :: CookieJar -> Request -> Request
 setCJ cj req = req { cookieJar = Just cj }
 
 
-buildReq :: MonadThrow m => CookieJar -> Url -> m Request
-buildReq cj url = setCJ cj <$> parseRequest url
+buildReq :: MonadThrow m => CookieJar -> Link -> m Request
+buildReq cj (Link url) = setCJ cj <$> parseRequest url
 
 
 
 -- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails
-getHtmlMgr :: Manager -> Url -> IO (Manager, Html)
+getHtmlMgr :: Manager -> Link -> IO (Manager, Html)
 getHtmlMgr mgr url = do
-  requ <- parseRequest url
+  requ <- parseRequest (renderLink url)
   let
     headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
               , (hAcceptLanguage, "en-US,en;q=0.5")
@@ -401,7 +399,7 @@ getHtmlMgr mgr url = do
 
 
 {-# DEPRECATED baseGetHtml "needs extractDadBod" #-}
-baseGetHtml :: Manager -> Request -> IO (Html, Url, Manager)
+baseGetHtml :: Manager -> Request -> IO (Html, Link, Manager)
 -- baseGetHtml Request -> ReaderT Manager IO (Html, Url)
 baseGetHtml manager req = do
   hResponse <- responseOpenHistory req manager
@@ -409,7 +407,7 @@ baseGetHtml manager req = do
     finReq = hrFinalRequest hResponse
     dadBodNew response = (unpack . decodeUtf8) response
   finResBody <- brRead $ responseBody $ hrFinalResponse hResponse
-  return (dadBodNew finResBody, (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
+  return (dadBodNew finResBody, Link $ (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
 
 
 -- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails
@@ -501,9 +499,45 @@ getHistoriedBody res = fmap (readHtml . fromStrict) $ brRead . responseBody $ re
 readHtml :: ByteString -> Html
 readHtml = unpack . LazyTX.toStrict . mySafeDecoder
 
+
+ 
+-- | Get html with no Proxy 
+getHtmlText :: Url -> IO Text
+getHtmlText url = do
+  mgrHttps <- newManager tlsManagerSettings
+  requ <- parseRequest url
+  let
+    headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0")
+              , (hAcceptLanguage, "en-US,en;q=0.5")
+              , (hAcceptEncoding, "gzip, deflate, br")
+              , (hConnection, "keep-alive")
+              ]
+    req = requ { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
+               , secure = True
+               }
+
+  response <- httpLbs requ mgrHttps
+  return $ extractDadBodText response
+
+
+
+  
+
+extractDadBodText :: Response ByteString -> Text
+extractDadBodText = LazyTX.toStrict . mySafeDecoder . responseBody
+
+
+
+extractDadBod :: Response ByteString -> String 
+extractDadBod = unpack . LazyTX.toStrict . mySafeDecoder . responseBody
+
+mySafeDecoder :: ByteString -> LazyTX.Text
+mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
+
+
 instance SessionState CookieManager where
-  getHtmlST cm@(CookieManager cj mgr) url = do
-    req <- buildReq cj url
+  getHtmlST cm@(CookieManager cj mgr) link = do
+    req <- buildReq cj link
     (manager, response) <- persistGet mgr req
     let
       finalResponse = hrFinalResponse response
@@ -521,7 +555,7 @@ instance SessionState CookieManager where
       newCookies = responseCookieJar finalResponse
       lastUrl = getURL $ hrFinalRequest response
     html <- liftIO $ getHistoriedBody finalResponse
-    return (html, lastUrl, CookieManager (cj <> newCookies) manager)
+    return (html, Link lastUrl, CookieManager (cj <> newCookies) manager)
     
     -- (html, ) getHtmlST cm url 
     -- req <- parseRequest url
@@ -591,14 +625,14 @@ instance SessionState WDSession where
         liftIO $ print "do get"
         -- write Url then fetch it
 
-        truple@(html, url, wdSesh') <- liftIO $ runWD wdSesh (wdSubmitFormGET actionUrl (head tio <> qStr))
+        truple@(html, (Link url), wdSesh') <- liftIO $ runWD wdSesh (wdSubmitFormGET actionUrl (head tio <> qStr))
         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
       else
       do
         liftIO $ print "do post"
         -- write form elem with static (namespace,value) then hit submit
 
-        truple@(html,url,wdSesh') <- liftIO $ runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
+        truple@(html,(Link url),wdSesh') <- liftIO $ runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
 
   -- this should be written to not be only for pdfs ideally
@@ -850,21 +884,21 @@ performSiteStateSingle s = do
 
 
 saveReq :: Request
-        -> (Manager -> Request -> IO (Html, Url, Manager))
+        -> (Manager -> Request -> IO (Html, Link, Manager))
         -> HttpException
-        -> IO (Html, Url, Manager)
+        -> IO (Html, Link, Manager)
 saveReq req func _ = do
   newManager <- mkProxdManager
   func newManager req
 
 
-saveReq' :: Url
-        -> (Manager -> Url -> IO (Html, Url, Manager))
-        -> HttpException
-        -> IO (Html, Url, Manager)
-saveReq' req func _ = do
+saveReq' :: Link
+         -> (Manager -> Link -> IO (Html, Link, Manager))
+         -> HttpException
+         -> IO (Html, Link, Manager)
+saveReq' link func _ = do
   newManager <- mkProxdManager
-  func newManager req
+  func newManager link
  
     -- hrFinalRequest res
 
@@ -942,7 +976,7 @@ attrsXpath m =
         -- openPage $ baseU <> "/" <> (unpack $ aAttr <> (showQString $ (head tio) <> (head qStrVari)))
         -- (,,) <$> (fmap unpack getSource) <*> getCurrentURL <*> getSession
 
-wdSubmitFormGET :: Url -> QueryString -> WD (String, Url, WDSession)
+wdSubmitFormGET :: Url -> QueryString -> WD (String, Link, WDSession)
 wdSubmitFormGET actionUrl tioqStrVari = do
   openPage (actionUrl <> "?" <> (unpack (showQString $ tioqStrVari)))
   src <- waitUntil 10 (do
@@ -950,7 +984,7 @@ wdSubmitFormGET actionUrl tioqStrVari = do
                           expect (if ((length (unpack src)) < 50000) then False else True)
                           return $ unpack src
                       )
-  (,,) <$> (fmap unpack getSource) <*> getCurrentURL <*> getSession
+  (,,) <$> (fmap unpack getSource) <*> (Link <$> getCurrentURL) <*> getSession
 
 
 -- postFormWD :: WDSession -> FilledForm -> IO (Html, Url, WDSession)
@@ -997,7 +1031,7 @@ writeParam (n, v) =
   <> " value=\"" <> v <> "\""
   <> ">"
 
-submitPostFormWD :: Text -> WD (Html, Url, WDSession)
+submitPostFormWD :: Text -> WD (Html, Link, WDSession)
 submitPostFormWD formString = do
   -- liftIO $ print "the magic expression is!!!"
   -- liftIO $ print formString
@@ -1011,7 +1045,7 @@ submitPostFormWD formString = do
 
   src <- waitUntil 10
          (do { src <- getSource; expect (if ((length (unpack src)) < 50000) then False else True); return src })
-  (unpack src,,) <$> getCurrentURL <*> getSession
+  (unpack src,,) <$> (Link <$> getCurrentURL) <*> getSession
 
   -- getHtmlFlex manager req = getHtmlFlexWd
 
@@ -1028,8 +1062,8 @@ submitPostFormWD formString = do
 --     Right res -> ""
 --     Left _ -> ""
 
-getHtmlWD :: MonadIO m => WDSession -> Url -> m (Html, WDSession)
-getHtmlWD seshVar url = liftIO $ runWD seshVar (wd url)
+getHtmlWD :: MonadIO m => WDSession -> Link -> m (Html, WDSession)
+getHtmlWD seshVar (Link url) = liftIO $ runWD seshVar (wd url)
   where
     wd :: Url -> WD (Html, WDSession)
     wd urlI = do
@@ -1046,18 +1080,16 @@ getHtmlWD seshVar url = liftIO $ runWD seshVar (wd url)
                                   -- expect (if ((length (unpack src)) < 2000) then False else True)
                                   -- return src
                               -- )
-getHtmlUWD :: MonadIO m => WDSession -> Url -> m (Html, Url, WDSession)
-getHtmlUWD sv url = liftIO $ runWD sv (f_ url)
-
-  -- (,,) <$> getCurrentUrl <*> getSource <*> getSession
-
-f_ :: Url -> WD (Html, Url, WDSession)
-f_ url = do
-  -- openPage url
-  openPage url
-  src <- waitUntil 10
-         (do { src <- getSource; expect (if ((length (unpack src)) < 10000) then False else True); return src })
-  (unpack src,,) <$>  getCurrentURL <*> getSession
+getHtmlUWD :: MonadIO m => WDSession -> Link -> m (Html, Link, WDSession)
+getHtmlUWD sv (Link url) = liftIO $ runWD sv (f_ url)
+  where 
+    f_ :: Url -> WD (Html, Link, WDSession)
+    f_ url = do
+      -- openPage url
+      openPage url
+      src <- waitUntil 10
+             (do { src <- getSource; expect (if ((length (unpack src)) < 10000) then False else True); return src })
+      (unpack src,,) <$>  (Link <$> getCurrentURL) <*> getSession
 
 
 

@@ -1,0 +1,1 @@
+Script (fromList []) "let fs = require('fs');var text = fs.readFileSync(\"./hoogle.html\").toString('utf-8');console.log(text);"

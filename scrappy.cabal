@@ -93,6 +93,7 @@ library
                     , Scrappy.Proxies
                     , Scrappy.Types
                     , Scrappy.JS
+                    , Scrappy.JSFFI
 
 
 
@@ -132,6 +133,13 @@ library
                      , jsaddle
                      , deepseq
                      , random
+                     , template-haskell
+                     , which
+                     , process
+                     , temporary
+                     , MissingH
+                     , raw-strings-qq
+                     , network-uri
                      -- , raw-strings-qq
   -- Directories containing source files.
   hs-source-dirs:      src

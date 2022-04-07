@@ -22,13 +22,16 @@ import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char)
 type ScraperT a = ParsecT Html () Identity a 
 
 
--- | Upgrade an error to discard parser 
-instance Filterable (ParsecT s u f) where
-  mapMaybe f ma = do
-    x <- ma
-    case f x of
-      Just a -> return a 
-      Nothing -> parserZero
+
+-- | Generate a scraping expression where when found, it will generate and link in a data structure
+-- | to a relevant next pattern. For instance, an element of interest being found then switches the
+-- | scraper expression to be a reference to itself
+-- |
+-- | for instance (el "a" [("id", "x")]) -> let ALPHANUM = document.select(this) -> someThingUsing ALPHANUM_MATCH
+-- | in a statement --> which references [A, B, C] 
+scrapeLinked :: ParsecT s u m a -> ParsecT s u m [String]
+scrapeLinked = undefined
+
 
 
 -- | Super common case analysis
@@ -115,14 +118,14 @@ runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
 -- clean = undefined -- drop if == ( \n | \" | '\\' )
 
 
--- | uses maybeUsefulUrl to get all links on page pointing only to same site links
-allLinks :: String -> ParsecT String () Identity [String] 
-allLinks baseUrl = do
-  x <- findNaive hrefParser 
-  return $ case x of
-    Just (x':xs') -> catMaybes $ fmap (maybeUsefulUrl baseUrl) (x':xs')
-    Just [] -> []
-    Nothing -> [] 
+-- -- | uses maybeUsefulUrl to get all links on page pointing only to same site links
+-- allLinks :: String -> ParsecT String () Identity [String] 
+-- allLinks baseUrl = do
+--   x <- findNaive hrefParser 
+--   return $ case x of
+--     Just (x':xs') -> catMaybes $ fmap (maybeUsefulUrl baseUrl) (x':xs')
+--     Just [] -> []
+--     Nothing -> [] 
 
 type Name = String -- placeholder
 tableItem :: Name -> Elem' String

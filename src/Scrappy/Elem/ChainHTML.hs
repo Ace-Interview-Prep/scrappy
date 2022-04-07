@@ -47,14 +47,14 @@ clean :: String -> String
 clean = undefined -- drop if == ( \n | \" | '\\' )
 
 
--- same site is guranteed
-allLinks :: String -> ParsecT String () Identity [String] 
-allLinks baseUrl = do
-  x <- findNaive hrefParser 
-  return $ case x of
-    Just (x':xs') -> catMaybes $ fmap (maybeUsefulUrl baseUrl) (x':xs')
-    Just [] -> []
-    Nothing -> [] 
+-- -- same site is guranteed
+-- allLinks :: String -> ParsecT String () Identity [String] 
+-- allLinks baseUrl = do
+--   x <- findNaive hrefParser 
+--   return $ case x of
+--     Just (x':xs') -> catMaybes $ fmap (maybeUsefulUrl baseUrl) (x':xs')
+--     Just [] -> []
+--     Nothing -> [] 
 
 
 

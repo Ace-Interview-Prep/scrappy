@@ -11,15 +11,15 @@
   (major1) == 0 && (major2) == 1 && (minor) <= 0)
 #endif /* MIN_VERSION_scrappy */
 
-/* package HTTP-4000.3.16 */
+/* package HTTP-4000.4.0 */
 #ifndef VERSION_HTTP
-#define VERSION_HTTP "4000.3.16"
+#define VERSION_HTTP "4000.4.0"
 #endif /* VERSION_HTTP */
 #ifndef MIN_VERSION_HTTP
 #define MIN_VERSION_HTTP(major1,major2,minor) (\
   (major1) <  4000 || \
-  (major1) == 4000 && (major2) <  3 || \
-  (major1) == 4000 && (major2) == 3 && (minor) <= 16)
+  (major1) == 4000 && (major2) <  4 || \
+  (major1) == 4000 && (major2) == 4 && (minor) <= 0)
 #endif /* MIN_VERSION_HTTP */
 
 /* package base-4.12.0.0 */
@@ -66,6 +66,17 @@
   (major1) == 0 && (major2) == 6 && (minor) <= 0)
 #endif /* MIN_VERSION_containers */
 
+/* package deepseq-1.4.4.0 */
+#ifndef VERSION_deepseq
+#define VERSION_deepseq "1.4.4.0"
+#endif /* VERSION_deepseq */
+#ifndef MIN_VERSION_deepseq
+#define MIN_VERSION_deepseq(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  4 || \
+  (major1) == 1 && (major2) == 4 && (minor) <= 4)
+#endif /* MIN_VERSION_deepseq */
+
 /* package directory-1.3.3.0 */
 #ifndef VERSION_directory
 #define VERSION_directory "1.3.3.0"
@@ -99,26 +110,26 @@
   (major1) == 1 && (major2) == 7 && (minor) <= 10)
 #endif /* MIN_VERSION_extra */
 
-/* package http-client-0.7.10 */
+/* package http-client-0.7.11 */
 #ifndef VERSION_http_client
-#define VERSION_http_client "0.7.10"
+#define VERSION_http_client "0.7.11"
 #endif /* VERSION_http_client */
 #ifndef MIN_VERSION_http_client
 #define MIN_VERSION_http_client(major1,major2,minor) (\
   (major1) <  0 || \
   (major1) == 0 && (major2) <  7 || \
-  (major1) == 0 && (major2) == 7 && (minor) <= 10)
+  (major1) == 0 && (major2) == 7 && (minor) <= 11)
 #endif /* MIN_VERSION_http_client */
 
-/* package http-client-tls-0.3.5.3 */
+/* package http-client-tls-0.3.6.1 */
 #ifndef VERSION_http_client_tls
-#define VERSION_http_client_tls "0.3.5.3"
+#define VERSION_http_client_tls "0.3.6.1"
 #endif /* VERSION_http_client_tls */
 #ifndef MIN_VERSION_http_client_tls
 #define MIN_VERSION_http_client_tls(major1,major2,minor) (\
   (major1) <  0 || \
   (major1) == 0 && (major2) <  3 || \
-  (major1) == 0 && (major2) == 3 && (minor) <= 5)
+  (major1) == 0 && (major2) == 3 && (minor) <= 6)
 #endif /* MIN_VERSION_http_client_tls */
 
 /* package http-types-0.12.3 */
@@ -132,15 +143,26 @@
   (major1) == 0 && (major2) == 12 && (minor) <= 3)
 #endif /* MIN_VERSION_http_types */
 
-/* package lens-5.1 */
+/* package jsaddle-0.9.8.1 */
+#ifndef VERSION_jsaddle
+#define VERSION_jsaddle "0.9.8.1"
+#endif /* VERSION_jsaddle */
+#ifndef MIN_VERSION_jsaddle
+#define MIN_VERSION_jsaddle(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  9 || \
+  (major1) == 0 && (major2) == 9 && (minor) <= 8)
+#endif /* MIN_VERSION_jsaddle */
+
+/* package lens-5.0.1 */
 #ifndef VERSION_lens
-#define VERSION_lens "5.1"
+#define VERSION_lens "5.0.1"
 #endif /* VERSION_lens */
 #ifndef MIN_VERSION_lens
 #define MIN_VERSION_lens(major1,major2,minor) (\
   (major1) <  5 || \
-  (major1) == 5 && (major2) <  1 || \
-  (major1) == 5 && (major2) == 1 && (minor) <= 0)
+  (major1) == 5 && (major2) <  0 || \
+  (major1) == 5 && (major2) == 0 && (minor) <= 1)
 #endif /* MIN_VERSION_lens */
 
 /* package megaparsec-9.0.1 */
@@ -198,6 +220,28 @@
   (major1) == 3 && (major2) == 1 && (minor) <= 13)
 #endif /* MIN_VERSION_parsec */
 
+/* package process-1.6.5.0 */
+#ifndef VERSION_process
+#define VERSION_process "1.6.5.0"
+#endif /* VERSION_process */
+#ifndef MIN_VERSION_process
+#define MIN_VERSION_process(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  6 || \
+  (major1) == 1 && (major2) == 6 && (minor) <= 5)
+#endif /* MIN_VERSION_process */
+
+/* package random-1.2.1 */
+#ifndef VERSION_random
+#define VERSION_random "1.2.1"
+#endif /* VERSION_random */
+#ifndef MIN_VERSION_random
+#define MIN_VERSION_random(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  2 || \
+  (major1) == 1 && (major2) == 2 && (minor) <= 1)
+#endif /* MIN_VERSION_random */
+
 /* package replace-megaparsec-1.4.4.0 */
 #ifndef VERSION_replace_megaparsec
 #define VERSION_replace_megaparsec "1.4.4.0"
@@ -219,6 +263,28 @@
   (major1) == 2 && (major2) <  5 || \
   (major1) == 2 && (major2) == 5 && (minor) <= 0)
 #endif /* MIN_VERSION_stm */
+
+/* package template-haskell-2.14.0.0 */
+#ifndef VERSION_template_haskell
+#define VERSION_template_haskell "2.14.0.0"
+#endif /* VERSION_template_haskell */
+#ifndef MIN_VERSION_template_haskell
+#define MIN_VERSION_template_haskell(major1,major2,minor) (\
+  (major1) <  2 || \
+  (major1) == 2 && (major2) <  14 || \
+  (major1) == 2 && (major2) == 14 && (minor) <= 0)
+#endif /* MIN_VERSION_template_haskell */
+
+/* package temporary-1.3 */
+#ifndef VERSION_temporary
+#define VERSION_temporary "1.3"
+#endif /* VERSION_temporary */
+#ifndef MIN_VERSION_temporary
+#define MIN_VERSION_temporary(major1,major2,minor) (\
+  (major1) <  1 || \
+  (major1) == 1 && (major2) <  3 || \
+  (major1) == 1 && (major2) == 3 && (minor) <= 0)
+#endif /* MIN_VERSION_temporary */
 
 /* package text-1.2.3.1 */
 #ifndef VERSION_text
@@ -264,6 +330,17 @@
   (major1) == 0 && (major2) == 9 && (minor) <= 0)
 #endif /* MIN_VERSION_webdriver */
 
+/* package which-0.2 */
+#ifndef VERSION_which
+#define VERSION_which "0.2"
+#endif /* VERSION_which */
+#ifndef MIN_VERSION_which
+#define MIN_VERSION_which(major1,major2,minor) (\
+  (major1) <  0 || \
+  (major1) == 0 && (major2) <  2 || \
+  (major1) == 0 && (major2) == 2 && (minor) <= 0)
+#endif /* MIN_VERSION_which */
+
 /* package witherable-0.4.2 */
 #ifndef VERSION_witherable
 #define VERSION_witherable "0.4.2"
@@ -307,6 +384,28 @@
   (major1) == 8 && (major2) <  6 || \
   (major1) == 8 && (major2) == 6 && (minor) <= 5)
 #endif /* MIN_TOOL_VERSION_ghc_pkg */
+
+/* tool ghcjs-8.6.0.1 */
+#ifndef TOOL_VERSION_ghcjs
+#define TOOL_VERSION_ghcjs "8.6.0.1"
+#endif /* TOOL_VERSION_ghcjs */
+#ifndef MIN_TOOL_VERSION_ghcjs
+#define MIN_TOOL_VERSION_ghcjs(major1,major2,minor) (\
+  (major1) <  8 || \
+  (major1) == 8 && (major2) <  6 || \
+  (major1) == 8 && (major2) == 6 && (minor) <= 0)
+#endif /* MIN_TOOL_VERSION_ghcjs */
+
+/* tool ghcjs-pkg-8.6.5 */
+#ifndef TOOL_VERSION_ghcjs_pkg
+#define TOOL_VERSION_ghcjs_pkg "8.6.5"
+#endif /* TOOL_VERSION_ghcjs_pkg */
+#ifndef MIN_TOOL_VERSION_ghcjs_pkg
+#define MIN_TOOL_VERSION_ghcjs_pkg(major1,major2,minor) (\
+  (major1) <  8 || \
+  (major1) == 8 && (major2) <  6 || \
+  (major1) == 8 && (major2) == 6 && (minor) <= 5)
+#endif /* MIN_TOOL_VERSION_ghcjs_pkg */
 
 /* tool haddock-2.22.0 */
 #ifndef TOOL_VERSION_haddock

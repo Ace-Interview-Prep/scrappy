@@ -29,12 +29,12 @@ version :: Version
 version = Version [0,1,0,4] []
 bindir, libdir, dynlibdir, datadir, libexecdir, sysconfdir :: FilePath
 
-bindir     = "/home/nixos/.cabal/bin"
-libdir     = "/home/nixos/.cabal/lib/x86_64-linux-ghc-8.6.5/scrappy-0.1.0.4-inplace"
-dynlibdir  = "/home/nixos/.cabal/lib/x86_64-linux-ghc-8.6.5"
-datadir    = "/home/nixos/.cabal/share/x86_64-linux-ghc-8.6.5/scrappy-0.1.0.4"
-libexecdir = "/home/nixos/.cabal/libexec/x86_64-linux-ghc-8.6.5/scrappy-0.1.0.4"
-sysconfdir = "/home/nixos/.cabal/etc"
+bindir     = "/home/lazylambda/.cabal/bin"
+libdir     = "/home/lazylambda/.cabal/lib/x86_64-linux-ghc-8.6.5/scrappy-0.1.0.4-inplace"
+dynlibdir  = "/home/lazylambda/.cabal/lib/x86_64-linux-ghc-8.6.5"
+datadir    = "/home/lazylambda/.cabal/share/x86_64-linux-ghc-8.6.5/scrappy-0.1.0.4"
+libexecdir = "/home/lazylambda/.cabal/libexec/x86_64-linux-ghc-8.6.5/scrappy-0.1.0.4"
+sysconfdir = "/home/lazylambda/.cabal/etc"
 
 getBinDir, getLibDir, getDynLibDir, getDataDir, getLibexecDir, getSysconfDir :: IO FilePath
 getBinDir = catchIO (getEnv "scrappy_bindir") (\_ -> return bindir)

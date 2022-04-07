@@ -4,21 +4,23 @@
 
 module Scrappy.Elem.SimpleElemParser where
 
+import Scrappy.Elem.Types
 
 import Scrappy.Elem.ElemHeadParse (parseOpeningTag)
-import Scrappy.Elem.Types (ShowHTML, InnerHTMLRep, Elem, Attrs, Elem'(Elem'), InnerTextResult(InnerTextResult)
-                  , _fullInner, _matchesITR, innerText, matches, showH, foldHtmlMatcher
-                  , HTMLMatcher(IText, Match, Element), ElementRep, matches, matches'
-                  , _matchesITR, _fullInner -- only for deprecated function elemParserOld 
-                  , foldFuncTup, endTag, selfClosingTextful, enoughMatches)
+import Scrappy.Links (LastUrl)
 
-  
+import Scrappy.Types -- for witherable instance
+
+import Control.Monad (when)  
 import Control.Applicative (liftA2)
+import Witherable (mapMaybe)
 import Text.Megaparsec as MParsec (eitherP, some, manyTill)
 import Text.Parsec (ParsecT, Stream, string, try, (<|>), parserZero, anyChar, char, optional, anyToken, parserFail)
+import Text.URI (URI, render)
+import Data.Text (Text, unpack)
 import Data.Map (Map, toList)
 import Data.Maybe (fromMaybe)
-import Control.Monad (when)
+
 
 
 
@@ -73,6 +75,26 @@ elemParser elemList innerSpec attrs = do
 
 
 
+ 
+clickableHref :: Stream s m Char => Bool -> LastUrl -> ParsecT s u m Clickable
+clickableHref booly cUrl = do
+  elA <- parseOpeningTag Nothing [("href", Nothing)]
+  href <- mapMaybe (getHrefAttrs booly cUrl) (pure $ snd elA) 
+  return $ Clickable elA href
+
+
+-- eg clickable' (string "download") 
+clickableHref' :: (Stream s m Char, ShowHTML a) =>
+                  ParsecT s u m a
+               -> Bool
+               -> LastUrl
+               -> ParsecT s u m Clickable 
+clickableHref' innerPat booly cUrl = do
+  e <- elemParser Nothing (Just $ innerPat) [("href", Nothing)]
+  href <- mapMaybe (getHrefEl booly cUrl) (pure e)
+  return $ Clickable (elTag e, attrs e) href
+
+  
 -- instance Monad Elem' where 
 
 sameElTag :: (ShowHTML a, Stream s m Char) => Elem -> Maybe (ParsecT s u m a) -> ParsecT s u m (Elem' a)

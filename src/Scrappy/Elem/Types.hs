@@ -10,6 +10,9 @@
 
 module Scrappy.Elem.Types where
 
+import Scrappy.Links
+
+import Text.URI (URI)
 import Data.Text (Text, unpack)
 import Data.Map (Map, toList)
 import qualified Data.Map as Map
@@ -400,8 +403,18 @@ biggestGroup (n0@(GroupHtml a x1 y1) :n1@(GroupHtml b x2 y2):ghs) = case (x1 * y
   
 
 
-getHref :: ElementRep e => e a -> Maybe String
-getHref e = ((Map.lookup "href") . attrs) e
+
+
+getHrefEl :: ElementRep e => Bool -> CurrentUrl -> e a -> Maybe Link
+getHrefEl b cUrl e = getHrefAttrs b cUrl $ attrs e 
+
+getHrefAttrs :: Bool -> CurrentUrl -> Map String String -> Maybe Link 
+getHrefAttrs b cUrl atribs = parseLink b cUrl =<< Map.lookup "href" atribs   
+
+  
+
+-- getHref :: ElementRep e => e a -> Maybe String
+-- getHref e = ((Map.lookup "href") . attrs) e
 
 
 
@@ -475,12 +488,54 @@ foldFuncTrup hMatcher itr = case hMatcher of
   -- we will test how an element named "div" inside of "a" element would behave
 
 
- 
+data Clickable = Clickable ElemHead Link deriving (Eq, Show)
+
+
+-- | In the future this definitely could be expanded upon for our JS interface
+-- | right now this only works for links but wouldn't literally click a button 
+--mkClickable :: ElemHead -> Elem' a -> Maybe Clickable
+--mkClickable eHead emnt = do
+  -- href <- getHref emnt
+ -- pure $ Clickable eHead href
+
+
+
+  
+-- scrapeClickable :: Stream s m Char => LastUrl -> ParsecT s u m Clickable
+-- scrapeClickable lastUrl = do
+--   e <- elemParser Nothing (Just $ string "download") [("href", Nothing)]
+--   href <- mapMaybe getHref $ pure e 
+--   let
+--     mkURI' :: Text -> Maybe URI
+--     mkURI' = mkURI
+--   uri <- mapMaybe mkURI' . pure . pack $ fixUrl lastUrl href 
+--   return $ Clickable (elTag e, attrs e) (unpack . render $ uri)
+
+
+mkClickableEH :: Bool -> CurrentUrl -> ElemHead -> Maybe Clickable
+mkClickableEH booly cUrl (e, ats) = do
+  h <- getHrefAttrs booly cUrl ats
+  pure $ Clickable (e, ats) h
+
+
+mkClickable :: ElementRep e => Bool -> CurrentUrl -> e a -> Maybe Clickable
+mkClickable booly cUrl e = do
+  let ats = attrs e
+  h <- getHrefAttrs booly cUrl ats
+  pure $ Clickable (elTag e,ats) h
+
+
+getLink :: Clickable -> Link
+getLink (Clickable _ link) = link
+
+getSrc = undefined -- just like getHref xo
 
 -- -- |data ElemHead = (Elem/Text, Attrs)
 -- -- | Note: Attrs will be changed to being a Map String String
 -- makeBranch :: ShowHTML a => TreeHTML a -> Tree ElemHead
 -- makeBranch treeH = Node (elTag treeH, attrs treeH) (_innerTree' treeH)
+
+
 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

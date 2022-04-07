@@ -6,10 +6,13 @@ import Scrappy.Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', 
 -- import Elem.TreeElemParser (findSameTreeH)
 import Scrappy.Types (ScrapeFail(..))
 
-import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero) 
+import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero, anyChar
+                   , many) 
 import Data.Text (Text)
 import Data.Functor.Identity (Identity)
 import Data.Either (fromRight)
+
+
 -- | This module provides an interface for getting patterns seperated by whatever in a given source
 -- | that you plan to parse
 
@@ -81,8 +84,44 @@ find parser = do
     Left NonMatch -> find parser
 -- return (x:xs)
 
+-- | Should never throw Left or I did it wrong
+streamEdit :: ParsecT String () Identity a -> (a -> String) -> String -> String
+streamEdit p f s = fromRight undefined $ parse (findEdit f p) "" s
 
 
+-- -- Note: List will be backwards as is 
+findEdit :: Stream String m Char => (a -> String) -> ParsecT String u m a -> ParsecT String u m String 
+findEdit f parser = do
+  let endStream = try eof >> (return EOF)
+  x <- ((Edit . f) <$> (try parser)) <|> (Carry <$> anyChar) <|> endStream
+  case x of
+    Edit str -> fmap (str <>) (findEdit f parser) 
+    Carry chr -> fmap ([chr] <>) (findEdit f parser) 
+    EOF -> return [] 
+
+
+-- -- Note: List will be backwards as is 
+editFirst :: Stream String m Char => (a -> String) -> ParsecT String u m a -> ParsecT String u m String 
+editFirst f parser = do
+  let endStream = try eof >> (return EOF)
+  x <- ((Edit . f) <$> (try parser)) <|> (Carry <$> anyChar) <|> endStream
+  case x of
+    Edit str -> fmap (str <>) $ many anyChar -- consume rest automatically  --  (findEdit f parser) 
+    Carry chr -> fmap ([chr] <>) (findEdit f parser) 
+    EOF -> return [] 
+
+
+
+-- endStream :: (Stream s m t, Show t) => ParsecT s u m (Either ScrapeFail a)
+-- endStream = try (eof) >> (return $ Left Eof)
+
+    
+-- return (x:xs)
+
+-- | We can define Edit to be a string because we know it will turn back into one
+data StreamEditCase = EOF
+                    | Carry Char
+                    | Edit String
 
 
 -- findSome = undefined
