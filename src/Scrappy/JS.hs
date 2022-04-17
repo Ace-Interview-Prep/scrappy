@@ -11,7 +11,7 @@ import Scrappy.Requests (getHtml, getHtml', SessionState(..), Html)
 import Scrappy.Scrape (ScraperT, scrape, exists)
 import Scrappy.Elem.SimpleElemParser (el, manyTill_)
 import Scrappy.Elem.Types (Elem'(..))
-import Scrappy.Links (BaseUrl, Src, fixRelativeUrl)
+import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink)
 import Scrappy.Find
 
 import Language.Haskell.TH (recover)
@@ -42,7 +42,16 @@ import Data.String.Utils (strip)
 
 import Text.RawString.QQ (r)
 
+import Data.Aeson.TH (defaultOptions, deriveJSON)
 
+
+-- Heres the solution:
+
+  
+--   I stream edit the collection of JS scripts (so first I concat them)
+
+--   I stream edit, changing parsed DOMRefs into expressions that are effectively
+--   fancy rewirings of \spec -> scrape elemParser spec
 
 
 
@@ -94,7 +103,7 @@ newtype MonadJS m a = MonadJS { runMonadJS :: StateT JSAST m a }
 
 
 type Attributes = M.Map String String
-data Script = Script Attributes Body deriving (Show, Eq) 
+data Script = Script Attributes Text deriving (Show, Eq) 
 
 
 instance Semigroup Script where
@@ -115,20 +124,46 @@ instance Monoid Script where
 -- --  print src
 
 
+-- could do:
+
+--   fetch normally
+--   when (not . exists $ target) $ do runVDOMFetch lastUrl
+--      when this == none $ do endsite 
 
 
-  
+--getHtmlPromise :: Link -> Html
 
--- -- This is fine cuz I'll probably eliminate Attrs field in script 
--- toScript' :: SessionState sv => sv -> BaseUrl -> Src -> String -> IO Script
--- toScript' sv baseU src inner
---   | null inner && (isInfixOf baseU src) = getHtmlST sv src >>= (\(scriptSrc, _) -> pure $ Script mempty $ pack scriptSrc) 
---   | null inner && (src /= "") = do
---       -- getHtml with rectified URL then set as body
---       let url = fixRelativeUrl baseU src
---       (scriptSrc,_) <- getHtmlST sv url
---       pure $ Script mempty $ pack inner
---   | otherwise = pure $ Script mempty $ pack inner
+
+--           writeFile url html
+--           writeFile (url <> "2") htmlV
+
+-- someFunc :: Html -> Maybe a
+
+        
+
+
+
+data Fail = Fail { url :: Link
+                 , html :: Html
+                 } deriving (Show) --- , Generic)
+
+
+
+
+
+
+      
+
+-- This is fine cuz I'll probably eliminate Attrs field in script 
+toScript' :: SessionState sv => sv -> LastUrl -> Src -> String -> IO Script
+toScript' sv baseU src inner
+  | null inner && (isInfixOf baseU src) = getHtmlST sv src >>= (\(scriptSrc, _) -> pure $ Script mempty $ pack scriptSrc) 
+  | null inner && (src /= "") = do
+      -- getHtml with rectified URL then set as body
+      let url = fixRelativeUrl baseU src
+      (scriptSrc,_) <- getHtmlST sv url
+      pure $ Script mempty $ pack inner
+  | otherwise = pure $ Script mempty $ pack inner
 
   -- case (null inner && (src /= Nothing)) of
   --   True -> do
@@ -356,7 +391,7 @@ runVDOM baseUrl htmlString = fst <$> runVDOMWith baseUrl htmlString mempty
 -- | There's probably an implementation which uses laziness to our advantage
 -- | where we are only calling node on functions where we have to 
 runVDOM' :: Html -> ExceptT ParseError IO Html
-runVDOM' htmlString = fst <$> runVDOMWith "" htmlString mempty 
+runVDOM' htmlString = fst <$> runVDOMWith (Link "") htmlString mempty 
 
 
 
@@ -729,7 +764,7 @@ runVDOMWith :: BaseUrl -> Html -> JS -> ExceptT ParseError IO (Html, [JSVal])
 runVDOMWith baseUrl indexHtml (JS js) = withTempFile "." "index.html" $ \htmlFPath handle -> do
   liftIO $ hPutStr handle $ pack indexHtml 
   liftIO $ hFlush handle
-  liftIO $ print $ pack baseUrl
+  liftIO $ print $ pack $ renderLink baseUrl
   rawJSVal <- liftIO $ runJSWithCli $ mkVDOMScript htmlFPath
   except $ parse jsStdOutParser "" rawJSVal 
   where
@@ -751,16 +786,45 @@ runVDOMWith baseUrl indexHtml (JS js) = withTempFile "." "index.html" $ \htmlFPa
       $  "let fs = require('fs');"
       <> "let jsdom = require('jsdom');" 
       <> ("fs.readFile('" <> (pack fp) <> "', function(err, text) {")
-      <> "const rLoader = new jsdom.ResourceLoader({ strictSSL: true, userAgent: \"Mellblomenator/9000\",});"
+      <> "const rLoader = new jsdom.ResourceLoader({ strictSSL: false, userAgent: \"Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0\",});"
       <> "const virtualConsole = new jsdom.VirtualConsole();"
-      <> "virtualConsole.sendTo(console, { omitJSDOMErrors: true });"
+      <> "virtualConsole.sendTo(console, { omitJSDOMErrors: false });"
       <> "let dom = new jsdom.JSDOM(text, { runScripts: \"dangerously\", resources: rLoader"
-      <> ", url: \"" <> (pack baseUrl) <> "\", virtualConsole});"
+      <> ", url: \"" <> (pack . renderLink $ baseUrl) <> "\", virtualConsole});"
       <> js
       <> (pack ['\n'])
       <> "console.log('!@#$%^&*()');" -- seperate result: is sufficiently unlikely to occur 
       <> "console.log(dom.serialize());"
       <> "});"
+
+
+                   
+-- | Scripts can reference the DOM by using the name 'dom' 
+-- | Could make this a Monad if it is worth it
+-- | Currently, you need to console.log the return value or this runs but doesnt return
+fetchVDOMWith :: Link -> JS -> ExceptT ParseError IO (Html, [JSVal])
+fetchVDOMWith (Link url) (JS js) = do
+  rawJSVal <- liftIO $ runJSWithCli $ mkVDOMScript
+  except $ parse jsStdOutParser "" rawJSVal 
+  where
+    mkVDOMScript = Script mempty
+      $  "let fs = require('fs');"
+      <> "let jsdom = require('jsdom');" 
+--      <> ("fs.readFile('" <> (pack fp) <> "', function(err, text) {")
+      <> "const rLoader = new jsdom.ResourceLoader({ strictSSL: false, userAgent: \"Mozilla/5.0 (X11; Linux x86_64; rv:84.0) Gecko/20100101 Firefox/84.0\",});"
+      <> "const virtualConsole = new jsdom.VirtualConsole();"
+      <> "virtualConsole.sendTo(console, { omitJSDOMErrors: false });"
+      <> "let options = { runScripts: \"dangerously\", resources: rLoader, virtualConsole};"
+--      <> "let dom = new jsdom.JSDOM(text, { runScripts: \"dangerously\", resources: rLoader, virtualConsole});"
+      <> "jsdom.JSDOM.fromURL(\"" <> (pack url) <> "\", options).then(document =>"
+      <> js
+      <> (pack ['\n'])
+      <> "console.log('!@#$%^&*()');" -- seperate result: is sufficiently unlikely to occur 
+      <> "console.log(dom.serialize());"
+      <> ")"
+      
+--      <> "});"
+
 
 -- type Url = Text -- String
 -- getHtmlJS :: Url -> IO Html 
@@ -1015,3 +1079,17 @@ data ScriptText = ScriptText Text
 
 
 
+deriveJSON defaultOptions ''Fail
+
+
+
+
+
+
+
+
+
+
+
+
+  

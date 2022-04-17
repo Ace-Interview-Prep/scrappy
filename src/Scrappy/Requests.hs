@@ -33,10 +33,7 @@ import Test.WebDriver.Session (getSession, WDSession)
 import Control.Concurrent (threadDelay)
 import Network.HTTP.Types.Header 
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.HTTP.Client (Manager, Proxy(..), HttpException, httpLbs, responseBody, parseRequest
-                           , secure, requestHeaders, newManager, useProxy, managerSetSecureProxy
-                           , queryString, path, host, hrFinalRequest, responseOpenHistory, hrFinalResponse
-                           , brConsume, brRead, Request, method, Response, CookieJar, responseCookieJar, cookieJar,  HistoriedResponse, BodyReader)
+import Network.HTTP.Client 
 import Network.HTTP.Types.Method (methodGet, Method,)
 
 import System.Directory (removeFile, copyFile, getAccessTime, listDirectory)
@@ -55,18 +52,37 @@ import Data.Map (Map, toList)
 import Data.List (isInfixOf)
 import Data.List.Extra (isSuffixOf, maximumBy)
 import Data.Text (Text, unpack, pack)
-import Data.Text.Encoding (encodeUtf8, decodeUtf8)
+import Data.Text.Encoding (encodeUtf8, decodeUtf8, decodeUtf8With)
 import qualified Data.Text.Lazy as LazyTX (toStrict, Text)
 import qualified Data.Text.Lazy.Encoding as Lazy (decodeUtf8With)
-import Data.ByteString.Lazy (ByteString, fromStrict)
+import qualified Data.ByteString.Lazy as LBS 
+import qualified Data.ByteString as BS 
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock.System (SystemTime(MkSystemTime), getSystemTime, systemSeconds)
 import Data.Int (Int64)
 
+import Data.Aeson (encodeFile)
 
 data ExistT m a = ExistT { runExistT :: MaybeT m a } 
 
-type RequestJS = String -- fake just for the idea
+
+
+
+
+-- runSomeFunc :: MonadIO m => FilePath -> Url -> (Html -> MaybeT m a) -> MaybeT m a
+-- runSomeFunc fp url someFunc = do
+--   (html, _) <- liftIO $ getHtmlST url
+  
+--   case someFunc html of
+--     Just a -> pure a
+--     Nothing -> do
+--       htmlV <- fetchVDOM url
+--       case someFunc htmlV of
+--         Just a -> pure . Just $ a
+--         Nothing -> do
+-- --          encodeFile (mkFileUrl url) 
+--           pure . Just $ Nothing
+
 
 
 
@@ -78,12 +94,6 @@ type RequestJS = String -- fake just for the idea
 --   -> Also if an action attribute is 0 then it's the current URL 
 
 
-
--- | Perform a request which has callbacks to both HTTP and JS
--- | this idea should emulate what happens if a user clicks on a
--- | link which needs JS to handle redirection of events 
-performRequestJS :: RequestJS -> IO Html
-performRequestJS = undefined
 
 -- Need a section for Headers logic
 
@@ -230,7 +240,7 @@ recoverMgr' url _ = mkProxdManager >>= flip getHtml url
 --   fetch newUrl -- lazily puts (IsUrl String)
 
 -- -- A site could also keep hold of a Map of all urls on site
---   -- We could also use this information for patterns
+--   -- We could also use this informatsion for patterns
 --   -- ie a Contact us section would probably be shallower a tree 
 
 
@@ -375,9 +385,24 @@ instance SessionState Manager where
 setCJ :: CookieJar -> Request -> Request
 setCJ cj req = req { cookieJar = Just cj }
 
+setBasicHeaders :: Request -> Request
+setBasicHeaders req =
+  let   
+    headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0")
+              , (hAcceptLanguage, "en-US,en;q=0.5")
+              --, (hAcceptEncoding, "gzip, deflate, br")
+              , (hConnection, "keep-alive")
+              ]
+  in req { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
+         , secure = True
+         }
+  
 
 buildReq :: MonadThrow m => CookieJar -> Link -> m Request
-buildReq cj (Link url) = setCJ cj <$> parseRequest url
+buildReq cj (Link url) = do
+  req <- parseRequest url
+  pure $ (setCJ cj) . setBasicHeaders $ req
+--  ((setCJ cj) . setBasicHeaders) <$> parseRequest url
 
 
 
@@ -406,7 +431,7 @@ baseGetHtml manager req = do
   let
     finReq = hrFinalRequest hResponse
     dadBodNew response = (unpack . decodeUtf8) response
-  finResBody <- brRead $ responseBody $ hrFinalResponse hResponse
+  finResBody <- fmap mconcat $ brConsume $ responseBody $ hrFinalResponse hResponse
   return (dadBodNew finResBody, Link $ (unpack . decodeUtf8) $ (host finReq) <> (path finReq) <> (queryString finReq), manager)
 
 
@@ -427,7 +452,7 @@ getHtmlHeaderMgr :: [Header] -> Manager -> Url -> IO (Manager, Html)
 getHtmlHeaderMgr headers mgr url = do
   -- (fmap.fmap) extractDadBod . $
   (mgr, res) <- persistGet mgr =<< mkReq headers url
-  res' <- getHistoriedBody $ hrFinalResponse res
+  res' <- readMyBody $ hrFinalResponse res
   pure (mgr, res')
   
 
@@ -439,7 +464,7 @@ mkReq headers url = fmap (setHeaders headers) $ parseRequest url
 recoverMgr :: Request
            -> HttpException
            -> IO (Manager, HistoriedResponse BodyReader)
-recoverMgr req _ = flip persistGet req =<< mkProxdManager
+recoverMgr req _ = print "recover manager" >> (flip persistGet req =<< mkProxdManager)
 
 persistGet :: MonadIO m => Manager
            -> Request
@@ -484,9 +509,6 @@ mkFormRequest url reqMethod qString = do
              , queryString = encodeUtf8 . showQString $ qString
              }
 
-getHistoriedBody :: Response BodyReader -> IO Html 
-getHistoriedBody res = fmap (readHtml . fromStrict) $ brRead . responseBody $ res
-
 
 -- extractDadBod :: Response ByteString -> String 
 -- extractDadBod response = (unpack . LazyTX.toStrict . mySafeDecoder . responseBody) response
@@ -494,10 +516,6 @@ getHistoriedBody res = fmap (readHtml . fromStrict) $ brRead . responseBody $ re
  
 -- mySafeDecoder :: ByteString -> LazyTX.Text
 -- mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
-
-
-readHtml :: ByteString -> Html
-readHtml = unpack . LazyTX.toStrict . mySafeDecoder
 
 
  
@@ -523,28 +541,84 @@ getHtmlText url = do
 
   
 
-extractDadBodText :: Response ByteString -> Text
+extractDadBodText :: Response LBS.ByteString -> Text
 extractDadBodText = LazyTX.toStrict . mySafeDecoder . responseBody
 
 
 
-extractDadBod :: Response ByteString -> String 
+extractDadBod :: Response LBS.ByteString -> String 
 extractDadBod = unpack . LazyTX.toStrict . mySafeDecoder . responseBody
 
-mySafeDecoder :: ByteString -> LazyTX.Text
+extractDadBod' :: LBS.ByteString -> String 
+extractDadBod' = unpack . LazyTX.toStrict . mySafeDecoder
+
+mySafeDecoder :: LBS.ByteString -> LazyTX.Text
 mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
 
+getHistoriedBody res = fmap (readHtml . LBS.fromStrict) $ brRead . responseBody $ res
 
+--ewqweqq
+-- -- Since 0.4.1
+-- withResponseHistory :: Request
+--                     -> Manager
+--                     -> (HistoriedResponse BodyReader -> IO a)
+--                     -> IO a
+-- withResponseHistory req man = bracket
+--     (responseOpenHistory req man)
+--     (responseClose . hrFinalResponse)
+
+
+httpHistLbs :: Request -> Manager -> IO (HistoriedResponse LBS.ByteString)
+httpHistLbs req man = withResponseHistory req man $ \hRes -> do
+  bss <- brConsume $ responseBody . hrFinalResponse $ hRes
+--  return $ hRes { responseBody = LBS.fromChunks bss }
+  pure $ f' hRes (f (hrFinalResponse hRes) (LBS.fromChunks bss))
+  where
+    f' hr r = hr { hrFinalResponse = r } 
+    f res b = res { responseBody = b }  
+
+-- httpHistLbs = withResponseHistory req man $ \hrbr ->
+--   pure () 
+
+
+test2 = do
+  req <- parseRequest "https://www.google.com/"
+  mgr <- newManager tlsManagerSettings
+  hRes <- httpHistLbs req mgr
+--  print $ extractDadBod . hrFinalResponse $ hRes
+  print . fst =<< getHtmlST (CookieManager mempty mgr) (Link "https://www.google.com/")
+  -- print $ responseBody . hrFinalResponse $ hRes
+  pure ()
+
+readMyBody :: Response (IO BS.ByteString) -> IO Html 
+readMyBody res = do
+  chunks <- brConsume $ ((responseBody $ res) :: BodyReader)
+  chunk <- brRead . responseBody $ res
+  print chunk
+  let
+--    body :: ByteString
+    body = LBS.fromChunks chunks
+  print "hey"
+  --print body
+  pure $ unpack . LazyTX.toStrict . mySafeDecoder  {-(readHtml . fromStrict)-} $ body
+  where
+    mySafeDeco :: LBS.ByteString -> LazyTX.Text
+    mySafeDeco = Lazy.decodeUtf8With (\_ _ -> Just '?')
+  
+readHtml :: LBS.ByteString -> Html
+readHtml = unpack . LazyTX.toStrict . mySafeDecoder
+
+mkRGateUrl pgNum term = rGateBaseUrl <> "/search/publication?q=" <> term <> "&page=" <> (show pgNum)
+
+rGateBaseUrl = "https://www.researchgate.net"
+
+-- TODO(galen): rewrite these funcs to use httpHistLbs where applicable 
 instance SessionState CookieManager where
   getHtmlST cm@(CookieManager cj mgr) link = do
     req <- buildReq cj link
-    (manager, response) <- persistGet mgr req
-    let
-      finalResponse = hrFinalResponse response
-      
-      newCookies = responseCookieJar finalResponse
-    html <- liftIO $ getHistoriedBody finalResponse
-    return (html, CookieManager (cj <> newCookies) manager)
+    hRes <- liftIO $ httpHistLbs req mgr
+    let newCookies = responseCookieJar . hrFinalResponse $ hRes
+    return (extractDadBod . hrFinalResponse $ hRes, CookieManager (cj <> newCookies) mgr)
 
   getHtmlAndUrl (CookieManager cj mgr) url = do
     req <- buildReq cj url
@@ -554,7 +628,7 @@ instance SessionState CookieManager where
       
       newCookies = responseCookieJar finalResponse
       lastUrl = getURL $ hrFinalRequest response
-    html <- liftIO $ getHistoriedBody finalResponse
+    html <- liftIO $ readMyBody finalResponse
     return (html, Link lastUrl, CookieManager (cj <> newCookies) manager)
     
     -- (html, ) getHtmlST cm url 
@@ -569,7 +643,7 @@ instance SessionState CookieManager where
       
       newCookies = responseCookieJar finalResponse
     -- undefined cuz it needs to be removed --> this is never used here
-    html <- liftIO $ getHistoriedBody finalResponse
+    html <- liftIO $ readMyBody finalResponse
     pure ((html, undefined, CookieManager (cj <> newCookies) manager), drop1qStrVar form)
 
   -- in future we could use applyJS or something to make perfect

@@ -248,6 +248,10 @@ data Elem' a = Elem' { _el :: Elem -- change to Elem?
                      , innerHtmlFull :: String
                      } deriving Show
 
+instance ToJSON (Elem' a) where
+  toJSON = writeTheHtmlEquivalent 
+
+
 data InnerTextResult a = InnerTextResult { _matchesITR :: [a]
                                          , _fullInner :: String -- set to Nothing if TextOnly
                                          } deriving Show
@@ -405,10 +409,10 @@ biggestGroup (n0@(GroupHtml a x1 y1) :n1@(GroupHtml b x2 y2):ghs) = case (x1 * y
 
 
 
-getHrefEl :: ElementRep e => Bool -> CurrentUrl -> e a -> Maybe Link
+getHrefEl :: ElementRep e => Bool -> LastUrl -> e a -> Maybe Link
 getHrefEl b cUrl e = getHrefAttrs b cUrl $ attrs e 
 
-getHrefAttrs :: Bool -> CurrentUrl -> Map String String -> Maybe Link 
+getHrefAttrs :: Bool -> LastUrl -> Map String String -> Maybe Link 
 getHrefAttrs b cUrl atribs = parseLink b cUrl =<< Map.lookup "href" atribs   
 
   
@@ -512,13 +516,13 @@ data Clickable = Clickable ElemHead Link deriving (Eq, Show)
 --   return $ Clickable (elTag e, attrs e) (unpack . render $ uri)
 
 
-mkClickableEH :: Bool -> CurrentUrl -> ElemHead -> Maybe Clickable
+mkClickableEH :: Bool -> LastUrl -> ElemHead -> Maybe Clickable
 mkClickableEH booly cUrl (e, ats) = do
   h <- getHrefAttrs booly cUrl ats
   pure $ Clickable (e, ats) h
 
 
-mkClickable :: ElementRep e => Bool -> CurrentUrl -> e a -> Maybe Clickable
+mkClickable :: ElementRep e => Bool -> LastUrl -> e a -> Maybe Clickable
 mkClickable booly cUrl e = do
   let ats = attrs e
   h <- getHrefAttrs booly cUrl ats

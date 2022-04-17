@@ -3,7 +3,7 @@
 
 module Scrappy.Elem.ElemHeadParse where
 
-import Scrappy.Links (Link, CurrentUrl)
+import Scrappy.Links (Link, LastUrl, CurrentUrl)
 import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs), getHrefAttrs) -- Attr)
 
 import Text.Megaparsec as MParsec (some, manyTill)
@@ -19,7 +19,7 @@ import Scrappy.Types
 
 
 
-href :: Stream s m Char => Bool -> CurrentUrl -> ParsecT s u m Link
+href :: Stream s m Char => Bool -> LastUrl -> ParsecT s u m Link
 href booly cUrl = ((getHrefAttrs booly cUrl) . snd) `mapMaybe` (parseOpeningTag (Just ["a"]) [])
 
 href' :: Stream s m Char => Maybe CurrentUrl -> ParsecT s u m Link
@@ -123,7 +123,7 @@ attrValueExists (attrF:attrsOut) nextAttr-- (AttrPair nextAttrP:attrsIn)
 
 
 attrName :: Stream s m Char => ParsecT s u m String 
-attrName = some (alphaNum <|> char '-')
+attrName = some (alphaNum <|> char '-' <|> char '_')
 -- | Need lower|UPPER case insensitivity
            --
 

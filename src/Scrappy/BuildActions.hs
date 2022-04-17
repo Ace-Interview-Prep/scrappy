@@ -15,7 +15,7 @@ import Scrappy.Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attr
 import Scrappy.Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag, attrsMatch')
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
-import Scrappy.Links (maybeUsefulUrl, Url, BaseUrl )
+import Scrappy.Links (maybeUsefulUrl, Url, BaseUrl, Link(..) )
 import Scrappy.Find (findNaive, findSomeHTMLNaive)
 import Scrappy.Scrape
 import Scrappy.Types (CookieManager)
@@ -89,7 +89,7 @@ type QueryString = [(Namespace, Option)]
 
 -- | This may introduce a small need for lenses 
 mkEditableForm :: ParsedForm -> BaseUrl -> EditableForm
-mkEditableForm (ParsedForm act meth inpEls) baseUrl =
+mkEditableForm (ParsedForm act meth inpEls) (Link baseUrl) =
   EditableForm (baseUrl <> "/" <> (unpack act)) meth map 
   where
     map = simplify $ mkQParams "" inpEls
