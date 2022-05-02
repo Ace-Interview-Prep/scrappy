@@ -447,9 +447,42 @@ effectively becomes:
 
   and this.* will be the names of the constructor memory
 
+  and I need to do this in order to run statement by statement 
+
 
 WE also need to have a special way to parse function apps and object insts
 
 new Obj(dep1, dep2, dep3..)
 
 f(dep1, dep2, dep3)
+
+
+The difference between an object and a normal variable is that the initial value is always a real
+expression (1 may be an expression that simply evals to 1) whereas for an object it is the result of
+an AST that has been affected by the constructor
+
+type Object = JSAST
+
+So while a function also has a local JSAST, an Object persists this across time
+
+so I could store as:
+
+
+  let x = new Obj()
+
+  "x" : (resultConstruct :: Object JSAST, [] :: [Update])  -- in a Map Ref ((Object | JSValue),  [Update])
+
+data SomeValue = JSValue RawJS
+               | Object ([Args] -> Map Name SomeValue) RawJS  
+
+data JSAST = JSAST { varRefs :: Map Name (SomeValue, [Update]) -- includes object instances 
+                   , functionRefs :: Map Name RawJS
+                   , objectRefs :: Map Name Constructor RawJS
+                   }
+
+
+type Update = SomeValue -> SomeValue 
+
+State = Object JSAST | JSValue RawJS
+
+
