@@ -486,3 +486,8 @@ type Update = SomeValue -> SomeValue
 State = Object JSAST | JSValue RawJS
 
 
+
+
+-- calling a JS function for an expression
+
+a <*> b <*> (fromMaybe "undefined" <$> runMonadJS name (localAst <> globalAst)) <*> ... <*>  

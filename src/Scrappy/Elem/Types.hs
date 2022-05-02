@@ -12,6 +12,7 @@ module Scrappy.Elem.Types where
 
 import Scrappy.Links
 
+import Data.Aeson
 import Text.URI (URI)
 import Data.Text (Text, unpack)
 import Data.Map (Map, toList)
@@ -248,8 +249,8 @@ data Elem' a = Elem' { _el :: Elem -- change to Elem?
                      , innerHtmlFull :: String
                      } deriving Show
 
-instance ToJSON (Elem' a) where
-  toJSON = writeTheHtmlEquivalent 
+-- instance ToJSON (Elem' a) where
+--   toJSON = writeTheHtmlEquivalent 
 
 
 data InnerTextResult a = InnerTextResult { _matchesITR :: [a]
