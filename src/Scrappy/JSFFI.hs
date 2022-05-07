@@ -9,6 +9,14 @@ Does not handle Object.*(someObj, js) cases (of Type Update)
 
 module Scrappy.JSFFI where
 
+
+
+do
+  letJS name value
+  withJS [name1, name2] $ \(x:x2) -> 
+
+
+
 -- foreign import javascript unsafe
 -- "1+1" 
 
