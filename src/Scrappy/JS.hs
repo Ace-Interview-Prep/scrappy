@@ -11,7 +11,7 @@ import Scrappy.Requests (getHtml, getHtml', SessionState(..), Html)
 import Scrappy.Scrape (ScraperT, scrape, exists)
 import Scrappy.Elem.SimpleElemParser (el, manyTill_)
 import Scrappy.Elem.Types (Elem'(..))
-import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink)
+import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink, LastUrl)
 import Scrappy.Find
 
 import Language.Haskell.TH (recover)
@@ -156,12 +156,12 @@ data Fail = Fail { url :: Link
 
 -- This is fine cuz I'll probably eliminate Attrs field in script 
 toScript' :: SessionState sv => sv -> LastUrl -> Src -> String -> IO Script
-toScript' sv baseU src inner
-  | null inner && (isInfixOf baseU src) = getHtmlST sv src >>= (\(scriptSrc, _) -> pure $ Script mempty $ pack scriptSrc) 
+toScript' sv (Link baseU) src inner
+  | null inner && (isInfixOf baseU src) = getHtmlST sv (Link src) >>= (\(scriptSrc, _) -> pure $ Script mempty $ pack scriptSrc) 
   | null inner && (src /= "") = do
       -- getHtml with rectified URL then set as body
-      let url = fixRelativeUrl baseU src
-      (scriptSrc,_) <- getHtmlST sv url
+      let url = fixRelativeUrl (Link baseU) src
+      (scriptSrc,_) <- getHtmlST sv (Link url)
       pure $ Script mempty $ pack inner
   | otherwise = pure $ Script mempty $ pack inner
 

@@ -92,7 +92,7 @@ library
                     -- , Concurrencies
                     , Scrappy.Proxies
                     , Scrappy.Types
-                    -- , Scrappy.JS
+                    , Scrappy.JS
                     -- , Scrappy.JSFFI
 
 
