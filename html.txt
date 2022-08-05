@@ -1,0 +1,33 @@
+<form data-action="login" method="POST" action="rpc.php" accept-charset="UTF-8" target="uploader">
+    <div class="form-group"><input type="text" class="form-control validation-field" name="email" placeholder="Email"></div>
+    <div class="form-group" style="position: relative;">
+        <input type="password" class="form-control form-control-password validation-field" name="password" placeholder="Password">
+        <span class="glyphicon glyphicon-eye-close btn-show-password"></span>
+        <span class="glyphicon glyphicon-eye-open btn-hide-password hidden"></span>
+    </div>
+
+    <a class="password-recovery-btn" style="padding-top: 4px; padding-bottom: 8px; display: block; color: #8C8C8C; font-size: 12px;" data-auth_modal_toggle="passwordrecovery" href="/passwordreminder.php">
+        <span>Forgot your password?</span>
+    </a>
+
+    
+            <div class="sitemode-toggle">
+            <label class="books-mode">
+                <input type="radio" name="site_mode" value="books" checked="">
+                <span>Books</span>
+            </label>
+            <label class="articles-mode">
+                <input type="radio" name="site_mode" value="articles">
+                <span>Articles</span>
+                <div class="overlay"></div>
+            </label>
+        </div>
+    
+            <div class="form-error validation-error"></div>
+    
+    <button type="submit" name="submit" class="btn btn-info btn-block">Sign In</button>
+    <input type="hidden" name="action" value="login">
+            <input type="hidden" name="isSinglelogin" value="1">
+            <input type="hidden" name="redirectUrl" value="">
+</form>
+

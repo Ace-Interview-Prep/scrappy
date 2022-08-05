@@ -13,6 +13,17 @@ import Control.Monad.Trans.State.Lazy (StateT)
 import Data.Time.Clock.System
 import Data.Text (Text)
 
+import Text.Parsec (ParsecT, parserZero)
+import Witherable
+
+
+-- | Upgrade an error to discard parser 
+instance Filterable (ParsecT s u f) where
+  mapMaybe f ma = do
+    x <- ma
+    case f x of
+      Just a -> return a 
+      Nothing -> parserZero
 
 
 data CookieManager = CookieManager CookieJar Manager 

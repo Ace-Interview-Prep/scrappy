@@ -15,7 +15,7 @@ import Scrappy.Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attr
 import Scrappy.Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag, attrsMatch')
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
-import Scrappy.Links (maybeUsefulUrl, Url, BaseUrl )
+import Scrappy.Links (maybeUsefulUrl, Url, BaseUrl, Link(..) )
 import Scrappy.Find (findNaive, findSomeHTMLNaive)
 import Scrappy.Scrape
 import Scrappy.Types (CookieManager)
@@ -23,6 +23,7 @@ import Scrappy.Types (CookieManager)
 import Network.HTTP.Client (Request, queryString, method, parseRequest)
 import Network.HTTP.Types.Method (Method, methodPost, methodGet)
 import Control.Monad.Catch (MonadThrow)
+import Control.Monad (when)
 import Text.Parsec (ParsecT, ParseError, Stream, many, parse, string, (<|>), parserZero, try)
 import Text.Parsec.Error (Message (Message))
 import Data.Bifunctor (bimap)
@@ -32,7 +33,7 @@ import Data.Text.Encoding (encodeUtf8)
 import Data.Map as Map (Map, insert, adjust, findWithDefault, toList, fromList, lookup, union, empty, insertWith, keys)
 import Data.Maybe (fromMaybe, fromJust, catMaybes)
 import qualified Text.URI as URI  
-import Data.Char (digitToInt)
+import Data.Char (digitToInt, toLower)
 import Data.List (isPrefixOf)
 import Control.Monad.IO.Class
 
@@ -70,10 +71,10 @@ data FilledForm = FilledForm { actionUrl :: Url -- | from action attribute
                              , qStringVariants :: [QueryString] --  List of all possible queries given the parsed form. 
                              }
 
-data EditableForm = EditableForm { actioUrl :: Url
+data EditableForm = EditableForm { _actionUrl :: Url
                                  , rMethod :: Method
                                  , params :: Map Namespace Option
-                                 } 
+                                 } deriving (Eq, Show)
 
 -- data InputElem = Radio Namespace Option | SelectElem (Namespace, [Option]) | Basic Namespace (Maybe Option)
 data ParsedForm = ParsedForm Action Method [InputElem] deriving Show 
@@ -88,7 +89,7 @@ type QueryString = [(Namespace, Option)]
 
 -- | This may introduce a small need for lenses 
 mkEditableForm :: ParsedForm -> BaseUrl -> EditableForm
-mkEditableForm (ParsedForm act meth inpEls) baseUrl =
+mkEditableForm (ParsedForm act meth inpEls) (Link baseUrl) =
   EditableForm (baseUrl <> "/" <> (unpack act)) meth map 
   where
     map = simplify $ mkQParams "" inpEls
@@ -436,7 +437,9 @@ inputTypes = ["button", "checkbox", "color", "date", "datetime-local", "email", 
 -- | && shouldnt this specify certain attrs? 145
 
 -- both Option and Value ~ Text
-data InputElem = Radio Namespace Option | SelectElem (Namespace, [Option]) | Basic Namespace (Maybe Option)
+data InputElem = Radio Namespace Option
+               | SelectElem (Namespace, [Option])
+               | Basic Namespace (Maybe Option)
                deriving (Show, Eq)
                                                               -- Maybe distinguishes between basic
 -- | SO:
@@ -523,46 +526,60 @@ invalidSearchElems matches =
 
  -- length (matches' e) < 3
 
--- | Scape pattern that matches on search forms 
-searchForm :: Stream s m Char => ParsecT s u m (Elem' String)
-searchForm = do
-  let 
-    f = (try $ string "search") <|> (try $ string "Search")
-  e <- elemParser (Just ["form"]) (Just $ f) []
-  if length (matches' e) < 3
-    then parserZero
-    else return e
+-- -- | Scape pattern that matches on search forms
+-- -- | is like formElem but forces find 
+-- searchForm :: Stream s m Char => ParsecT s u m (Elem' String)
+-- searchForm = do
+--   let 
+--     f = (try $ string "search") <|> (try $ string "Search")
+--   e <- elemParser (Just ["form"]) (Just $ f) []
+--   if length (matches' e) < 3
+--     then parserZero
+--     else return e
 
--- | Scape pattern that matches on search forms as well as extracting the action and method attributes  
-formElem :: Stream s m Char => ParsecT s u m ParsedForm
-formElem = do
+-- | Like formElem except that it also checks if the form is for searching, via a dumb manner
+searchForm :: Stream s m Char => ParsecT s u m ParsedForm
+searchForm = do
   Elem' _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
-  -- matchesSafe <- if (length $filter (==Nothing) matches) == 0
-                 -- then return matches
-                 -- else parserZero
-  matchesSafe <- invalidSearchElems matches
   let
-    count = length $ fromMaybe [] $ runScraperOnHtml ((try $ string "Search") <|> string "search") innerT 
-  if count < (min count (length matches))
-    then parserZero
-    else return $ ParsedForm (getAction as) (getMethod as) matchesSafe
-  where
+    count = length $ fromMaybe [] $ runScraperOnHtml ((try $ string "Search") <|> string "search") innerT
     getAction = pack . fromJust . (Map.lookup "action")
     getMethod as = case fromJust ((Map.lookup "method") as) of
                   "get" -> methodGet
                   "post" -> methodPost
 
+  if count < (min count (length matches))
+    then parserZero
+    else return $ ParsedForm (getAction as) (getMethod as) (catMaybes matches)
+  
+
+-- | Scape pattern that matches on search forms as well as extracting the action and method attributes  
+formElem :: Stream s m Char => ParsecT s u m ParsedForm
+formElem = do
+  Elem' _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
+  return $ ParsedForm (getAction as) (getMethod as) (catMaybes matches) 
+  where 
+    getAction = pack . fromJust . (Map.lookup "action")
+    getMethod as = case fmap toLower $ fromJust ((Map.lookup "method") as) of
+                  "get" -> methodGet
+                  "post" -> methodPost
+  
+  -- if count < (min count (length matches))
+  --   then parserZero
+  --   else return $ ParsedForm (getAction as) (getMethod as) matchesSafe
+
+    
 -- | Scrape pattern for <input> element
 inputElem :: Stream s m Char => ParsecT s u m (Maybe InputElem)
 inputElem = (try radioBasic') <|> (fmap Just selectEl)
 
--- checks el tag then returns either radio or 
-radioBasic :: Stream s m Char => ParsecT s u m InputElem
-radioBasic = do
-  (e, attrs) <- parseOpeningTag (Just ["input"]) [] 
-  if (fromMaybe "" $ Map.lookup "type" attrs) == "radio"
-    then return $ Radio (pack . fromJust $ Map.lookup "name" attrs) (pack . fromJust $ Map.lookup "value" attrs)
-    else return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
+-- -- checks el tag then returns either radio or 
+-- radioBasic :: Stream s m Char => ParsecT s u m InputElem
+-- radioBasic = do
+--   (e, attrs) <- parseOpeningTag (Just ["input"]) [] 
+--   if (fromMaybe "" $ Map.lookup "type" attrs) == "radio"
+--     then return $ Radio (pack . fromJust $ Map.lookup "name" attrs) (pack . fromJust $ Map.lookup "value" attrs)
+--     else return $ Basic (pack . fromJust $ Map.lookup "name" attrs) (fmap pack $ Map.lookup "value" attrs)
 
 
 
@@ -623,7 +640,7 @@ processInputEl attrs =
           
       "file" -> return Nothing  ---SHOULD FAIL WHOLE FORM
       "image" -> return Nothing
-      "password" -> return Nothing
+      "password" -> return . Just $ Basic (pack . fromMaybe "password" $ Map.lookup "name" attrs) Nothing
       "reset" -> return Nothing
       "tel" -> return Nothing
       "url"  -> return Nothing
@@ -717,7 +734,7 @@ instance Show FilledForm where
 -- Searches [PeformSearch _    _   FilledForm _ ] 
 
 
-data SearchSumm = SearchSumm Term Method Action [TInputOpt] [QueryString] 
+-- data SearchSumm = SearchSumm Term Method Action [TInputOpt] [QueryString] 
 
 
 --  -- | then for resPapScrap, ((\Form' term reqs -> PerformSearch term reqs stuff) . mkSearch)
@@ -732,16 +749,16 @@ data SearchSumm = SearchSumm Term Method Action [TInputOpt] [QueryString]
   -- mkSearch' baseUrl reqMethod term aAttr (head searchQueriesTextOpts) searchQueriesEnumd
 
 type Term = String 
-data SearchEnum = SearchEnum Term [Request]
-mkSearch' :: Url -> Method -> Term -> Action -> QueryString -> [QueryString] -> Either FormError SearchEnum 
-mkSearch' baseUrl reqMethod term action textIOpt queriesEnumd = do
-  case parseRequest $ baseUrl <> (unpack action) of
-    Right req -> do
-      let
-        req2 = req { method = reqMethod }
-      return $ SearchEnum term
-        $ fmap (\query -> req2 { queryString = encodeUtf8 $ showQString (textIOpt <> query) }) queriesEnumd 
-    Left _ -> Left UrlError 
+-- data SearchEnum = SearchEnum Term [Request]
+-- mkSearch' :: Url -> Method -> Term -> Action -> QueryString -> [QueryString] -> Either FormError SearchEnum 
+-- mkSearch' baseUrl reqMethod term action textIOpt queriesEnumd = do
+--   case parseRequest $ baseUrl <> (unpack action) of
+--     Right req -> do
+--       let
+--         req2 = req { method = reqMethod }
+--       return $ SearchEnum term
+--         $ fmap (\query -> req2 { queryString = encodeUtf8 $ showQString (textIOpt <> query) }) queriesEnumd 
+--     Left _ -> Left UrlError 
   
 showQString :: [(Namespace, Option)] -> Text
 showQString xs = f (head xs) <> showQSInner (tail xs) 

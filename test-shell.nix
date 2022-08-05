@@ -14,8 +14,10 @@ in
     buildInputs = [
       cabal-install
       haskell.compiler.ghc865
+      haskell.compiler.ghcjs
       pkgconfig
       zlib
+      nodejs
     ];
 
     # Ensure that libz.so and other libraries are available to TH

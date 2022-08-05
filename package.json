@@ -1,0 +1,14 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "some booshit",
+  "main": "index.js",
+  "scripts": {
+    "test": "fuckBitches"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "jsdom": "^19.0.0"
+  }
+}
