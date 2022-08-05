@@ -240,8 +240,8 @@ type Body = Text
 -- | Compilation will fail if this does 
 nodePath :: FilePath
 -- nodePath = $(recover (staticWhichNix "node") (staticWhich "node")) 
-nodePath = $(staticWhich "node")
-
+nodePath = --- $(staticWhich "node")
+ $(recover (staticWhichNix "node") (staticWhich "node"))
 
 type JSVal = String -- todo: Text
 
