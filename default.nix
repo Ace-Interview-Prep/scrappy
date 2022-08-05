@@ -24,10 +24,9 @@ mkDerivation {
     raw-strings-qq
     MissingH
   ];
-  librarySystemDepends = [ nodejs nodeDeps ]; # nodeDeps
+  librarySystemDepends = [ nodejs nodeDeps nodeWithJSDom ]; # nodeDeps
   testHaskellDepends = [ base ];
-  # buildInputs = [ pkgs.nodejs ];
   homepage = "https://github.com/Ace-Interview-Prep/scrappy";
   description = "html pattern matching library and high-level interface concurrent requests lib for webscraping";
   license = lib.licenses.bsd3;
-} // { willThisWork = ""; }
+}
