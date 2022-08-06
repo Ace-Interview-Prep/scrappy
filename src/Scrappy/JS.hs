@@ -243,7 +243,7 @@ nodePath :: FilePath
 nodePath = --- $(staticWhich "node")
  $(recover (staticWhichNix "node") (staticWhich "node"))
 
-sanityTest = $(staticWhichNix "cabal")
+
 
 type JSVal = String -- todo: Text
 
