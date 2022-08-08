@@ -16,7 +16,8 @@ import Data.Functor.Identity (Identity)
 import Witherable (Filterable, mapMaybe)
 import Data.Either (fromRight)
 import Data.Maybe (catMaybes, fromMaybe)
-import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char)
+import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char, many, try)
+import Control.Applicative (liftA2) 
 
 
 type ScraperT a = ParsecT Html () Identity a 
@@ -31,6 +32,17 @@ type ScraperT a = ParsecT Html () Identity a
 -- | in a statement --> which references [A, B, C] 
 scrapeLinked :: ParsecT s u m a -> ParsecT s u m [String]
 scrapeLinked = undefined
+
+
+-- TODO(galen): move to Scrappy.Scrape
+-- Generic function for dropping an abstract pattern from text 
+filterFromTextP :: ScraperT a -> ScraperT String
+filterFromTextP p = (many $ try p) >> (liftA2 (:) anyChar $ filterFromTextP p)
+
+-- We can return a string since this will never fail
+-- its provably impossible 
+filterPattern :: String -> ScraperT a -> String
+filterPattern txt p = either undefined id $ parse (filterFromTextP p) "" txt 
 
 
 

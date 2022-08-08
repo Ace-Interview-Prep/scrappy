@@ -15,6 +15,14 @@ import Data.Time.Clock.System (SystemTime)
 
 
 
+-- import Control.Concurrent (threadDelay)
+-- import System.Random (randomRIO)
+type Seconds = Int
+randomThreadDelay :: Maybe (Seconds, Seconds) -> IO ()
+randomThreadDelay tup = case tup of
+  Just tup -> randomRIO tup >>= threadDelay . (1000000 *)
+  Nothing -> randomRIO (0,10) >>= threadDelay . (1000000 *)
+
 
 
 
