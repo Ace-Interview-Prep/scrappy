@@ -14,6 +14,7 @@ The recursive nature of scraping is the central data structure of a URL
 Which makes me think that there may be more to consider at some point with the modern-uri package
 And doing stuff such as building site trees 
 
+
 -}
 
 module Scrappy.Links where
@@ -26,6 +27,8 @@ module Scrappy.Links where
 -- import qualified Network.URI as URI 
 
 import Control.Monad (join)
+import qualified Network.URI as NURI
+-- TODO(galen): Replace with Network.URI and deprecate Text.URI
 import Text.URI (URI, uriQuery, mkURI, uriPath, unRText, emptyURI, uriScheme, uriAuthority, RTextLabel(..))
 import Control.Lens ((^.))
 import qualified Text.URI.Lens as UL
@@ -247,12 +250,19 @@ newtype Link = Link Url deriving (Eq, Show, Ord)
 -- | IE if it is 100% same site
 parseLink :: Bool -> Link -> Url -> Maybe Link
 parseLink False lastUrl someLink =
-  --- Can be any URL 
-  if (join $ fmap uriScheme $ mkURI . pack $ someLink) /= Nothing
-  then Just . Link $ someLink
-  else Just . Link $ fixRelativeUrl (fromJust $ deriveBaseUrl lastUrl) someLink   
+  --- Can be any URL
+  if elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI someLink)) ["https:", "http:"]
+  then 
+    if (join $ fmap uriScheme $ mkURI . pack $ someLink) /= Nothing
+    then Just . Link $ someLink
+    else Just . Link $ fixRelativeUrl (fromJust $ deriveBaseUrl lastUrl) someLink
+  else
+    Nothing 
 parseLink True lastUrl someLink 
-  | not $ diffAuthority someLink lastUrl = Just . Link $ fixURL lastUrl someLink
+  | not $ diffAuthority someLink lastUrl
+    || (not $ elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI someLink)) ["https:", "http:"])
+  = Just . Link $ fixURL lastUrl someLink
+
   | otherwise = Nothing
     
 
