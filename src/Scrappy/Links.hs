@@ -250,7 +250,7 @@ newtype Link = Link Url deriving (Eq, Show, Ord)
 -- | IE if it is 100% same site
 parseLink :: Bool -> Link -> Url -> Maybe Link
 parseLink False lastUrl someLink =
-  --- Can be any URL
+  --- Can be any Authority 
   if elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI someLink)) ["https:", "http:"]
   then 
     if (join $ fmap uriScheme $ mkURI . pack $ someLink) /= Nothing
@@ -259,22 +259,30 @@ parseLink False lastUrl someLink =
   else
     Nothing 
 parseLink True lastUrl someLink 
-  | not $ diffAuthority someLink lastUrl
-    || (not $ elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI someLink)) ["https:", "http:"])
+  | sameAuthority someLink lastUrl
+    && (elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI someLink)) ["https:", "http:"])
   = Just . Link $ fixURL lastUrl someLink
 
   | otherwise = Nothing
     
 
--- | This assumes two full paths aka Link's 
-diffAuthority :: Url -> Link -> Bool 
-diffAuthority a (Link b) =
+-- -- | This assumes two full paths aka Link's 
+-- diffAuthority :: Url -> Link -> Bool 
+-- diffAuthority a (Link b) =
+--   let
+--     authA = maybe (Left False) uriAuthority (mkURI $ pack a)
+--     authB = maybe (Left False) uriAuthority (mkURI $ pack b)
+--   in (isRight authA) && (isRight authB) && (authA /= authB)   
+
+sameAuthority :: Url -> Link -> Bool
+sameAuthority href (Link linky) =
   let
-    authA = maybe (Left False) uriAuthority (mkURI $ pack a)
-    authB = maybe (Left False) uriAuthority (mkURI $ pack b)
-  in (isRight authA) && (isRight authB) && (authA /= authB)   
-
-
+    authA = fmap (NURI.uriRegName) $ NURI.uriAuthority =<< NURI.parseURI href
+    authB = fmap (NURI.uriRegName) $ NURI.uriAuthority =<< NURI.parseURI linky
+  in
+    case (==) <$> authA <*> authB of
+      Just True -> True -- cuz asked if diff
+      _ -> False
   
 -- scrapeSameSiteLinks :: CurrentUrl -> 
 
