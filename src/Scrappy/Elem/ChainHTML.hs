@@ -76,11 +76,13 @@ contains'' :: (Stream s m Char, ShowHTML a) => Shell
            -> ParsecT s u m [a]
 contains'' (e,as) p = matches' <$> elemParser (Just [e]) (Just p) as
 
--- I could always make this generalized to a stream by making
-  -- Stream s => .. data Elem2' = Elem2' s  ...
+parseInShell = contains 
+
+-- | This will be fully removed in the future 
+{-# DEPRECATED contains "this should have been called parseInShell from the start, you probably want contains" #-}
 contains :: ParsecT s u m (Elem' a) -> ParsecT String () Identity b -> ParsecT s u m b
-contains a b = do
-  x <- a
+contains shell b = do
+  x <- shell
 
   let
     ridNL p = (many (char ' ' <|> char '\n')) >> p 
@@ -94,14 +96,19 @@ contains a b = do
 contains' :: ShowHTML a =>
              ParsecT s u m (Elem' a) 
           -> ParsecT String () Identity b
-          -> ParsecT s u m (Maybe [b])
-contains' a b = do
-  x <- a
+          -> ParsecT s u m [b]
+contains' shell b = do
+  x <- shell
   case parse (findNaive b) "" (innerText' x) of
-    Right match -> return match
+    Right (Just matches) -> pure matches
     Left err -> parserFail (show err)
+    Right Nothing -> parserFail "no matches in this container" 
 
-
+containsFirst :: ShowHTML a =>
+                 ParsecT s u m (Elem' a) 
+              -> ParsecT String () Identity b
+              -> ParsecT s u m b
+containsFirst shell b = head <$> contains' shell b
 
 
 sequenceHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m (a, b)
