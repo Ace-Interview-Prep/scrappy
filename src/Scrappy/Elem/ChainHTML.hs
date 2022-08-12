@@ -78,7 +78,8 @@ contains'' (e,as) p = matches' <$> elemParser (Just [e]) (Just p) as
 
 parseInShell = contains 
 
--- | This will be fully removed in the future 
+-- | This will be fully removed in the future
+-- | 99% of the time this is gonna be desired to pair with findNaive 
 {-# DEPRECATED contains "this should have been called parseInShell from the start, you probably want contains' or containsFirst" #-}
 contains :: ParsecT s u m (Elem' a) -> ParsecT String () Identity b -> ParsecT s u m b
 contains shell b = do
@@ -92,7 +93,15 @@ contains shell b = do
     Right match -> return match
     Left err -> parserFail (show err)
 
--- finds multiple matches anywhere inside the passed elem
+-- | finds multiple matches anywhere inside the passed elem
+-- | This function is also quite extensible because when used with `scrape`
+-- | this combo will return a list of list of elems where the hierarchy of HTML has been preserved
+-- | but a great deal of information has been filtered out. An example use case would be knowing that
+-- | you want <p> tags from a Set of very specific shells, this could allow you to analyze what and how many
+-- | came from each shell.
+-- | This also naturally extends to running this same scraper on multiple pages which would allow you to recover
+-- | ample details on the number of match_A in shell_S on Page_P ~~ [[[MatchA]]] and this Match can be any
+-- | arbitarily defined type. You can further imagine pairing with NLP analysis but this is a long enough point here.
 contains' :: ShowHTML a =>
              ParsecT s u m (Elem' a) 
           -> ParsecT String () Identity b
