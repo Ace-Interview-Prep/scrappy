@@ -271,7 +271,7 @@ newtype Link = Link Url deriving (Eq, Show, Ord)
 
 parseLink :: Bool -> Link -> Url -> Maybe Link
 parseLink sameSite lastLink newLink = 
-  case (join $ fmap uriScheme $ mkURI . pack $ newLink) /= Nothing of
+  case (join $ fmap uriScheme $ mkURI . pack $ newLink) == Nothing of
     True ->
       -- must be same site
       -- it doesnt matter the preference/restriction
