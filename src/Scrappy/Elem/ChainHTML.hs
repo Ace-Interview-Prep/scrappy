@@ -79,7 +79,7 @@ contains'' (e,as) p = matches' <$> elemParser (Just [e]) (Just p) as
 parseInShell = contains 
 
 -- | This will be fully removed in the future 
-{-# DEPRECATED contains "this should have been called parseInShell from the start, you probably want contains" #-}
+{-# DEPRECATED contains "this should have been called parseInShell from the start, you probably want contains' or containsFirst" #-}
 contains :: ParsecT s u m (Elem' a) -> ParsecT String () Identity b -> ParsecT s u m b
 contains shell b = do
   x <- shell
