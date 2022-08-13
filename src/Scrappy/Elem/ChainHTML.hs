@@ -123,14 +123,14 @@ containsFirst shell b = head <$> contains' shell b
 sequenceHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m (a, b)
 sequenceHtml p1 p2 = do
   x <- p1
-  _ <- many (char ' ' <|> char '\n')
+  _ <- many (char ' ' <|> char '\n' <|> char '\t')
   y <- p2
   return (x, y)
 
 sequenceHtml_ :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m b
 sequenceHtml_ p1 p2 = do
   _ <- p1
-  _ <- many (char ' ' <|> char '\n')
+  _ <- many (char ' ' <|> char '\n' <|> char '\t')
   p2
 
 (</>>) :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m b 

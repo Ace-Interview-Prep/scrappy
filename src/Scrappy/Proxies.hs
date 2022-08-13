@@ -3,7 +3,7 @@
 module Scrappy.Proxies where
 
 import Scrappy.Scrape (runScraperOnHtml)
-import Scrappy.Elem.ChainHTML (contains)
+import Scrappy.Elem.ChainHTML (containsFirst)
 import Scrappy.Elem.SimpleElemParser (el)
 import Scrappy.Elem.Types (innerText')
 
@@ -59,7 +59,7 @@ scrapeProxyList :: IO [Proxy] -- becoming [[String]]
 scrapeProxyList = do
   response <- getHtml' "https://free-proxy-list.net/"
   let
-    parser = el "tr" [] `contains` b
+    parser = el "tr" [] `containsFirst` b
     b :: Stream s m Char => ParsecT s u m [String]
     b = ((fmap . fmap) innerText' $ many (el "td" []))
 

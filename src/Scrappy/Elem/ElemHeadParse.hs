@@ -54,6 +54,20 @@ parseOpeningTagF attrib predicate = do
     Nothing -> parserZero
     Just a -> if predicate a then return (e,as) else parserFail "couldnt find match parseOpeningTagF"
 
+-- | TODO(galen): make this actually generic, not just for one attr
+parseOpeningTagWhere :: Stream s m Char
+                     => Maybe [Elem]
+                     -> String 
+                     -> (String -> Bool)
+                     -> ParsecT s u m ElemHead --Link
+parseOpeningTagWhere es attrib predicate = do
+  (e, as) <- parseOpeningTag es [(attrib, Nothing)] -- i could in theory pass an expression as value
+  case Map.lookup attrib as of
+    Nothing -> parserZero
+    Just a -> if predicate a then return (e,as) else parserFail "couldnt find match parseOpeningTagF"
+
+
+
 
 -- parseOpeningTagFs :: Stream s m Char => [(String, (String -> Bool)] -> ParsecT s u m ElemHead --Link
 -- parseOpeningTagFs (attrib, predicate):xs = do
