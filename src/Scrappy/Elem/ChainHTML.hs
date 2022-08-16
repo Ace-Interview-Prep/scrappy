@@ -9,7 +9,7 @@ import Scrappy.Find (findNaive)
 import Scrappy.Links (maybeUsefulUrl)
 import Scrappy.Elem.SimpleElemParser (elemParser)
 import Scrappy.Elem.ElemHeadParse (parseOpeningTag, hrefParser)
-import Scrappy.Elem.Types (Elem', ShowHTML, ElemHead, Elem, innerText'
+import Scrappy.Elem.Types (Elem, ShowHTML, ElemHead, HTag, innerText'
                   , matches')
 
 import Control.Monad.Trans.Maybe (MaybeT)
@@ -58,7 +58,7 @@ clean = undefined -- drop if == ( \n | \" | '\\' )
 
 
 
-mustContain :: ParsecT s u m (Elem' a) -> Int -> ParsecT s u m b -> ParsecT s u m (Elem' a)
+mustContain :: ParsecT s u m (Elem a) -> Int -> ParsecT s u m b -> ParsecT s u m (Elem a)
 mustContain e count pat = do
   out <- e
   case parse (findNaive $ string "Search") "" (innerText' out) of
@@ -68,7 +68,7 @@ mustContain e count pat = do
 -- | An elem head configures the bracketing so this is all we need for
 -- | crafting
 
-type Shell =  (Elem, [(String, Maybe String)]) 
+type Shell =  (HTag, [(String, Maybe String)]) 
 
 -- incomplete
 contains'' :: (Stream s m Char, ShowHTML a) => Shell 
@@ -81,7 +81,7 @@ parseInShell = contains
 -- | This will be fully removed in the future
 -- | 99% of the time this is gonna be desired to pair with findNaive 
 {-# DEPRECATED contains "this should have been called parseInShell from the start, you probably want contains' or containsFirst" #-}
-contains :: ParsecT s u m (Elem' a) -> ParsecT String () Identity b -> ParsecT s u m b
+contains :: ParsecT s u m (Elem a) -> ParsecT String () Identity b -> ParsecT s u m b
 contains shell b = do
   x <- shell
 
@@ -103,7 +103,7 @@ contains shell b = do
 -- | ample details on the number of match_A in shell_S on Page_P ~~ [[[MatchA]]] and this Match can be any
 -- | arbitarily defined type. You can further imagine pairing with NLP analysis but this is a long enough point here.
 contains' :: ShowHTML a =>
-             ParsecT s u m (Elem' a) 
+             ParsecT s u m (Elem a) 
           -> ParsecT String () Identity b
           -> ParsecT s u m [b]
 contains' shell b = do
@@ -114,7 +114,7 @@ contains' shell b = do
     Right Nothing -> parserFail "no matches in this container" 
 
 containsFirst :: ShowHTML a =>
-                 ParsecT s u m (Elem' a) 
+                 ParsecT s u m (Elem a) 
               -> ParsecT String () Identity b
               -> ParsecT s u m b
 containsFirst shell b = head <$> contains' shell b

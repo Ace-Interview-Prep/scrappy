@@ -5,7 +5,7 @@ module Scrappy.Scrape where
 
 --test again--
 -- Basically just html patterns from testing / courtney market stuff
-import Scrappy.Elem.Types (Elem', innerText')
+import Scrappy.Elem.Types (Elem, innerText')
 import Scrappy.Elem.ElemHeadParse (hrefParser, parseOpeningTag)
 import Scrappy.Elem.SimpleElemParser (el)
 import Scrappy.Elem.ChainHTML ((</>>))
