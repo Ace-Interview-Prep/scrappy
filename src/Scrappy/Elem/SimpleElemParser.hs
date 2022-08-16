@@ -64,14 +64,14 @@ elemParser elemList innerSpec attrs = do
     True -> do
       (try (string ">") <|> string "/>")
       case innerSpec of
-        Nothing -> return $ Elem' elem' attrs' mempty mempty 
+        Nothing -> return $ Elem elem' attrs' mempty mempty 
         Just _ -> parserZero 
     False -> do
       (asString, matches) <- fmap (foldr foldFuncTup mempty)  -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
         $ (try (string "/>") >> return [])
         <|> (try $ innerElemParser elem' innerSpec) -- need to be sure that we have exhausted looking for an end tag, then we can do the following safely
         <|> (selfClosingTextful innerSpec)
-      return $ Elem' elem' attrs' matches (reverse asString)
+      return $ Elem elem' attrs' matches (reverse asString)
 
 
 -- | Generic interface for building Html element patterns where we do not differentiate based on whats inside
@@ -89,14 +89,14 @@ elemParserWhere elemList innerSpec attr pred = do
     True -> do
       (try (string ">") <|> string "/>")
       case innerSpec of
-        Nothing -> return $ Elem' elem' attrs' mempty mempty 
+        Nothing -> return $ Elem elem' attrs' mempty mempty 
         Just _ -> parserZero 
     False -> do
       (asString, matches) <- fmap (foldr foldFuncTup mempty)  -- this cant be where we do "/>" if we parse ">" in parseOpeningTag
         $ (try (string "/>") >> return [])
         <|> (try $ innerElemParser elem' innerSpec) -- need to be sure that we have exhausted looking for an end tag, then we can do the following safely
         <|> (selfClosingTextful innerSpec)
-      return $ Elem' elem' attrs' matches (reverse asString)
+      return $ Elem elem' attrs' matches (reverse asString)
 
 
 
@@ -249,14 +249,14 @@ selfClosing = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link
 elSelfC :: Stream s m Char => Maybe [HTag] -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
 elSelfC elemOpts attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
-  return $ Elem' tag attrs mempty mempty 
+  return $ Elem tag attrs mempty mempty 
 
 elSelfClosing :: Stream s m Char => Maybe [HTag] -> Maybe (ParsecT s u m a) -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
 elSelfClosing elemOpts innerSpec attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
   case innerSpec of
     Just _ -> parserZero
-    Nothing -> return $ Elem' tag attrs mempty mempty 
+    Nothing -> return $ Elem tag attrs mempty mempty 
 
 elemWithBody :: (ShowHTML a, Stream s m Char) =>
               Maybe [HTag]
@@ -282,7 +282,7 @@ elemParserInternal elemList innerSpec attrs = do
     $ (try (string "/>") >> return [])
     <|> (try $ innerElemParser elem' innerSpec) -- need to be sure that we have exhausted looking for an end tag, then we can do the following safely
     <|> (selfClosingTextful innerSpec)
-  return $ Elem' elem' attrs' matches (reverse asString)
+  return $ Elem elem' attrs' matches (reverse asString)
 
 
 -- elemParserInternalV2 :: (ShowHTML a, Stream s m Char) =>
@@ -511,7 +511,7 @@ elemParserOld elemList innerSpec attrs = do
   (elem', attrs') <- parseOpeningTag elemList attrs
   --note that at this point, there is a set elem' to match  
   inner <- parseInnerHTMLAndEndTag elem' innerSpec
-  return $ Elem' elem' attrs' (_matchesITR inner) (_fullInner inner)
+  return $ Elem elem' attrs' (_matchesITR inner) (_fullInner inner)
 -- | Attrs should really be returned as a map
 
 -- | note that this could even be used for mining text on page
