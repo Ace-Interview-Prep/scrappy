@@ -21,7 +21,7 @@ import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char,
 import Control.Applicative (liftA2) 
 
 
-type ScraperT a = ParsecT Html () Identity a 
+type ScraperT a = ParsecT Text () Identity a 
 
 
 
@@ -31,7 +31,7 @@ type ScraperT a = ParsecT Html () Identity a
 -- |
 -- | for instance (el "a" [("id", "x")]) -> let ALPHANUM = document.select(this) -> someThingUsing ALPHANUM_MATCH
 -- | in a statement --> which references [A, B, C] 
-scrapeLinked :: ParsecT s u m a -> ParsecT s u m [String]
+scrapeLinked :: ScraperT a -> ParsecT s u m [String]
 scrapeLinked = undefined
 
 

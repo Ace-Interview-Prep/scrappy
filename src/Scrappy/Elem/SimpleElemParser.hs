@@ -42,11 +42,10 @@ manyTill_ p end = go
     -- 3) Consider being inside of same element a fail -> then get inner-same element
       -- like 1) but seeks to carry minimal data around it / more honed in
 
-
-type HTag = String 
+ 
 
 -- | Simplest interface to building element patterns 
-el :: Stream s m Char => HTag -> [(String, String)] -> ParsecT s u m (Elem' String)
+el :: Stream s m Char => HTag -> [(String, String)] -> ParsecT s u m (Elem String)
 el element attrss = elemParser (Just (element:[])) Nothing ((fmap . fmap) Just attrss)
 
 
@@ -57,7 +56,7 @@ elemParser :: (ShowHTML a, Stream s m Char) =>
               Maybe [Elem]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
-           -> ParsecT s u m (Elem' a)
+           -> ParsecT s u m (Elem a)
 elemParser elemList innerSpec attrs = do
   (elem', attrs') <- parseOpeningTag elemList attrs
   -- we should now read the elem' to see if in list of self-closing tags
@@ -82,7 +81,7 @@ elemParserWhere :: (ShowHTML a, Stream s m Char) =>
                 -> Maybe (ParsecT s u m a)
                 -> String -> (String -> Bool) -- GOAL: -> [(String, String -> Bool)]
                 -- ^ An attr and a predicate
-                -> ParsecT s u m (Elem' a)
+                -> ParsecT s u m (Elem a)
 elemParserWhere elemList innerSpec attr pred = do
   (elem', attrs') <- parseOpeningTagWhere elemList attr pred
   -- we should now read the elem' to see if in list of self-closing tags
@@ -123,7 +122,7 @@ clickableHref' innerPat booly cUrl = do
   
 -- instance Monad Elem' where 
 
-sameElTag :: (ShowHTML a, Stream s m Char) => Elem -> Maybe (ParsecT s u m a) -> ParsecT s u m (Elem' a)
+sameElTag :: (ShowHTML a, Stream s m Char) => Elem -> Maybe (ParsecT s u m a) -> ParsecT s u m (Elem a)
 sameElTag elem parser = elemParser (Just [elem]) parser []
   
   -- innerMatches el 
@@ -247,12 +246,12 @@ matchesInSameElTag elem parser = do
 selfClosing :: [String]
 selfClosing = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]
 
-elSelfC :: Stream s m Char => Maybe [Elem] -> [(String, Maybe String)] -> ParsecT s u m (Elem' a)
+elSelfC :: Stream s m Char => Maybe [Elem] -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
 elSelfC elemOpts attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
   return $ Elem' tag attrs mempty mempty 
 
-elSelfClosing :: Stream s m Char => Maybe [Elem] -> Maybe (ParsecT s u m a) -> [(String, Maybe String)] -> ParsecT s u m (Elem' a)
+elSelfClosing :: Stream s m Char => Maybe [Elem] -> Maybe (ParsecT s u m a) -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
 elSelfClosing elemOpts innerSpec attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
   case innerSpec of
@@ -263,7 +262,7 @@ elemWithBody :: (ShowHTML a, Stream s m Char) =>
               Maybe [Elem]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
-           -> ParsecT s u m (Elem' a)
+           -> ParsecT s u m (Elem a)
 elemWithBody elemList innerSpec attrs = do
   e <- elemParserInternal elemList innerSpec attrs
   when (length (matches' e) < (case innerSpec of { Nothing -> 0; _ -> 1 })) (parserFail "not enough matches")
@@ -273,7 +272,7 @@ elemParserInternal :: (ShowHTML a, Stream s m Char) =>
               Maybe [Elem]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
-           -> ParsecT s u m (Elem' a)
+           -> ParsecT s u m (Elem a)
 elemParserInternal elemList innerSpec attrs = do
   (elem', attrs') <- parseOpeningTag elemList attrs
   -- we should now read the elem' to see if in list of self-closing tags
@@ -326,7 +325,7 @@ elemParserInternal elemList innerSpec attrs = do
 innerElemParser :: (ShowHTML a, Stream s m Char) =>
                    String
                 -> Maybe (ParsecT s u m a)
-                -> ParsecT s u m [HTMLMatcher Elem' a]
+                -> ParsecT s u m [HTMLMatcher Elem a]
 innerElemParser eTag innerSpec = char '>'
                                  >> manyTill (try (Match <$> (fromMaybe parserZero innerSpec))
                                               <|> (try (IText <$> stylingElem)) -- this line is new/unstable
@@ -507,7 +506,7 @@ elemParserOld :: (Stream s m Char) =>
               Maybe [Elem]
            -> Maybe (ParsecT s u m String)
            -> [(String, Maybe String)]
-           -> ParsecT s u m (Elem' String)
+           -> ParsecT s u m (Elem String)
 elemParserOld elemList innerSpec attrs = do
   (elem', attrs') <- parseOpeningTag elemList attrs
   --note that at this point, there is a set elem' to match  

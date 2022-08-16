@@ -4,7 +4,7 @@
 module Scrappy.Elem.ElemHeadParse where
 
 import Scrappy.Links (Link, LastUrl, CurrentUrl)
-import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs), getHrefAttrs) -- Attr)
+import Scrappy.Elem.Types (HTag, Elem, ElemHead, Attrs, AttrsError(IncorrectAttrs), getHrefAttrs) -- Attr)
 
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
@@ -56,7 +56,7 @@ parseOpeningTagF attrib predicate = do
 
 -- | TODO(galen): make this actually generic, not just for one attr
 parseOpeningTagWhere :: Stream s m Char
-                     => Maybe [Elem]
+                     => Maybe [HTag]
                      -> String 
                      -> (String -> Bool)
                      -> ParsecT s u m ElemHead --Link
@@ -237,7 +237,7 @@ attrsParserDesc attrs = do
 
 
 
-parseOpeningTagDesc :: Stream s m Char => Maybe [Elem] -> [(String, String)] -> ParsecT s u m (Elem, Attrs)
+parseOpeningTagDesc :: Stream s m Char => Maybe [HTag] -> [(String, String)] -> ParsecT s u m (HTag, Attrs)
 parseOpeningTagDesc elemOpts attrs = do
   _ <- char '<'
   elem <- mkElemtagParser elemOpts
@@ -340,7 +340,7 @@ mkAttrsDesc atrs = (fmap . fmap) digitEqFree atrs
   -- |  -> Case of input tag: <input ...."> DONE ie no innerhtml or end tag
   -- |     then this would be more efficient or even maybe we should add an option via
   -- |     a  datatype: InnerTextOpts a = DoesntExist --efficient parser | AnyText | ParserText a
-parseOpeningTag :: Stream s m Char => Maybe [Elem] -> [(String, Maybe String)] -> ParsecT s u m (Elem, Attrs)
+parseOpeningTag :: Stream s m Char => Maybe [HTag] -> [(String, Maybe String)] -> ParsecT s u m (HTag, Attrs)
 parseOpeningTag elemOpts attrsSubset = do
   -- _ <- MParsec.manyTill anyToken (char '<' >> elemOpts >> attrsParser attrsSubset) -- the buildElemsOpts [Elem]
   _ <- char '<'
@@ -369,7 +369,7 @@ parseOpeningTag elemOpts attrsSubset = do
 --   return (attrName', content)
 
 
-mkElemtagParser :: Stream s m Char => Maybe [Elem] -> ParsecT s u m String
+mkElemtagParser :: Stream s m Char => Maybe [HTag] -> ParsecT s u m String
 mkElemtagParser x = case x of
                    -- Nothing -> MParsec.some (noneOf [' ', '>'])
                       --commented out in case below is wrong
@@ -378,7 +378,7 @@ mkElemtagParser x = case x of
 
 
 -- | FUTURE USE CASES: buildElemsOpts :: [ParsecT s u m a] -> ParsecT s u m a -- using <|>
-buildElemsOpts :: Stream s m Char => [Elem] -> ParsecT s u m String
+buildElemsOpts :: Stream s m Char => [HTag] -> ParsecT s u m String
 -- buildElemsOpts [] = <----- i dont think i need this
 buildElemsOpts [] = parserZero
 buildElemsOpts (x:elemsAllow) = try (string x) <|> (buildElemsOpts elemsAllow)

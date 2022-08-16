@@ -67,7 +67,7 @@ instance ShowHTML Text where
 -- Just shared accessors of html datatypes 
 class ElementRep (a :: * -> *) where
 --type InnerHTMLRep a = something 
-  elTag :: a b -> Elem
+  elTag :: a b -> HTag 
   attrs :: a b -> Attrs
   innerText' :: a b -> String 
   matches' :: a b -> [b]
@@ -182,7 +182,7 @@ instance ShowHTML c => InnerHTMLRep TreeHTML InnerTextHTMLTree c where
   matches = _matches
   innerText = _innerText 
   
-instance ShowHTML c => InnerHTMLRep Elem' InnerTextResult c where
+instance ShowHTML c => InnerHTMLRep Elem InnerTextResult c where
   foldHtmlMatcher = foldr foldFuncITR mempty -- partially applied, expecting some a 
   matches = _matchesITR
   innerText = _fullInner 
@@ -193,7 +193,7 @@ instance ShowHTML c => InnerHTMLRep Elem' InnerTextResult c where
 
 
 
-instance ElementRep (Elem') where
+instance ElementRep (Elem) where
   elTag = _el
   attrs = _attrs
   innerText' = innerHtmlFull
@@ -209,7 +209,7 @@ instance ElementRep (TreeHTML) where
 
 
 
-instance ShowHTML a => ShowHTML (Elem' a) where
+instance ShowHTML a => ShowHTML (Elem a) where
   showH = elemToStr 
 
 
@@ -227,7 +227,7 @@ instance ShowHTML a => ShowHTML (TreeHTML a) where
 
 
 -- | Note, this is the representation i'll be using
-data TreeHTML a = TreeHTML { _topEl :: Elem
+data TreeHTML a = TreeHTML { _topEl :: HTag 
                            , _topAttrs :: Map String String
                            --
                            , _matches' :: [a]
@@ -243,7 +243,7 @@ data InnerTextHTMLTree a = InnerTextHTMLTree { _matches :: [a]
                                              } 
 -------------------------------------------------------------------------------------------------------------------
 -- | node-like
-data Elem' a = Elem' { _el :: Elem -- change to Elem?
+data Elem a = Elem { _el :: HTag -- change to Elem?
                      , _attrs :: Map String String --Attrs needs to become map
                      , innerMatches :: [a] --will be "" if not specified
                      , innerHtmlFull :: String
@@ -274,7 +274,7 @@ data HTMLMatcher (a :: * -> *) b = IText String | Element (a b) | Match b derivi
 
 type HTMLMatcherM a = HTMLMatcher TreeHTML a
 -- data HTMLMatcher a = IText String | Match a | Element (TreeHTML a)
-type Inner a = HTMLMatcher Elem' a
+type Inner a = HTMLMatcher Elem a
 
 
 type HTMLMatcherList a = HTMLMatcher [] a
@@ -284,16 +284,16 @@ type HTMLMatcherList a = HTMLMatcher [] a
 
 -- mainly for testing
 -- allows for minimal steps and ensuring that low level parsing is working
-data HTMLBare e a = HTMLBare { tag :: Elem
+data HTMLBare e a = HTMLBare { tag :: HTag
                              , attrsss :: Attrs
                              , htmlM :: [HTMLMatcher e a]
                              }
 
 
 
-type ElemHead = (Elem, Attrs) 
+type ElemHead = (HTag, Attrs) 
 type Attrs = Map String String
-type Elem = String
+type HTag = String
 
 
 data AttrsError = IncorrectAttrs deriving Show
@@ -374,7 +374,7 @@ mkGH result = GroupHtml result (length result) ((length (innerText' (head result
                  ---- > 
   
 
-longestElem :: [Elem' a] -> Maybe (Elem' a)
+longestElem :: [Elem a] -> Maybe (Elem a)
 longestElem [] = Nothing
 longestElem (a:[]) = Just a
 longestElem (x:xs) = if length (innerText' x) > length (innerText' $ head xs)
@@ -424,7 +424,7 @@ getHrefAttrs b cUrl atribs = parseLink b cUrl =<< Map.lookup "href" atribs
 
 
 -- f
-elemToStr :: Elem' a -> String
+elemToStr :: Elem a -> String
 elemToStr elem = "<" <> elTag elem <> buildAttrs (toList (attrs elem)) <> ">" <> innerHtmlFull elem <> "</" <> elTag elem <> ">"
   where
     buildAttrs [] = ""
@@ -595,10 +595,10 @@ endTag :: Stream s m Char => String -> ParsecT s u m String
 endTag elem = try (string ("</" <> elem <> ">"))
 
 
-enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ParsecT s u m (Elem' a)
+enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ParsecT s u m (Elem a)
 enoughMatches required e a (asString, matches) = 
   if required <= (length matches)
-  then return $ Elem' e a matches (reverse asString)
+  then return $ Elem e a matches (reverse asString)
   else parserFail "not enough matches" -- should throw real error 
 
 enoughMatchesTree :: Int -> String -> Map String String -> (String, [a], Forest ElemHead) -> ParsecT s u m (TreeHTML a)
