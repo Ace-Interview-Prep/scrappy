@@ -76,13 +76,13 @@ contains'' :: (Stream s m Char, ShowHTML a) => Shell
            -> ParsecT s u m [a]
 contains'' (e,as) p = matches' <$> elemParser (Just [e]) (Just p) as
 
-parseInShell = contains 
+--parseInShell = contains 
 
 -- | This will be fully removed in the future
 -- | 99% of the time this is gonna be desired to pair with findNaive 
-{-# DEPRECATED contains "this should have been called parseInShell from the start, you probably want contains' or containsFirst" #-}
-contains :: ParsecT s u m (Elem a) -> ParsecT String () Identity b -> ParsecT s u m b
-contains shell b = do
+{-# DEPRECATED parseInShell "this should have been called parseInShell from the start, you probably want contains' or containsFirst" #-}
+parseInShell :: ParsecT s u m (Elem a) -> ParsecT String () Identity b -> ParsecT s u m b
+parseInShell shell b = do
   x <- shell
 
   let
@@ -102,11 +102,11 @@ contains shell b = do
 -- | This also naturally extends to running this same scraper on multiple pages which would allow you to recover
 -- | ample details on the number of match_A in shell_S on Page_P ~~ [[[MatchA]]] and this Match can be any
 -- | arbitarily defined type. You can further imagine pairing with NLP analysis but this is a long enough point here.
-contains' :: ShowHTML a =>
+contains :: ShowHTML a =>
              ParsecT s u m (Elem a) 
           -> ParsecT String () Identity b
           -> ParsecT s u m [b]
-contains' shell b = do
+contains shell b = do
   x <- shell
   case parse (findNaive b) "" (innerText' x) of
     Right (Just matches) -> pure matches
@@ -117,7 +117,7 @@ containsFirst :: ShowHTML a =>
                  ParsecT s u m (Elem a) 
               -> ParsecT String () Identity b
               -> ParsecT s u m b
-containsFirst shell b = head <$> contains' shell b
+containsFirst shell b = head <$> contains shell b
 
 
 sequenceHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m (a, b)
