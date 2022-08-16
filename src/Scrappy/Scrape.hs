@@ -88,11 +88,11 @@ findFit cond (x:xs) = if cond x then Just x else findFit cond xs
 
 -- | Find all occurences of a given parsing/scraping pattern
 -- | e.g. getHtml' "https://google.ca" >>= return . runScraperOnHtml (el "a" []) , would give all 'a' tag html elements on google.ca  
-runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
+runScraperOnHtml :: ScraperT a -> String -> Maybe [a]
 runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html 
 
 
-runScraperInBody :: ParsecT String () Identity a -> String -> Maybe [a]
+runScraperInBody :: ScraperT a -> String -> Maybe [a]
 runScraperInBody prsr html = fromRight Nothing $ parse (skipToInBody >> findNaive prsr) "" html
 
 skipToInBody :: Stream s m Char => ParsecT s u m ()
