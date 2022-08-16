@@ -53,7 +53,7 @@ el element attrss = elemParser (Just (element:[])) Nothing ((fmap . fmap) Just a
 -- | Generic interface for building Html element patterns where we do not differentiate based on whats inside
 -- | for control of allowable inner html patterns, see ChainHTML and/or TreeElemParser  
 elemParser :: (ShowHTML a, Stream s m Char) =>
-              Maybe [Elem]
+              Maybe [HTag]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
            -> ParsecT s u m (Elem a)
@@ -77,7 +77,7 @@ elemParser elemList innerSpec attrs = do
 -- | Generic interface for building Html element patterns where we do not differentiate based on whats inside
 -- | for control of allowable inner html patterns, see ChainHTML and/or TreeElemParser  
 elemParserWhere :: (ShowHTML a, Stream s m Char) =>
-                   Maybe [Elem]
+                   Maybe [HTag]
                 -> Maybe (ParsecT s u m a)
                 -> String -> (String -> Bool) -- GOAL: -> [(String, String -> Bool)]
                 -- ^ An attr and a predicate
@@ -122,14 +122,14 @@ clickableHref' innerPat booly cUrl = do
   
 -- instance Monad Elem' where 
 
-sameElTag :: (ShowHTML a, Stream s m Char) => Elem -> Maybe (ParsecT s u m a) -> ParsecT s u m (Elem a)
+sameElTag :: (ShowHTML a, Stream s m Char) => HTag -> Maybe (ParsecT s u m a) -> ParsecT s u m (Elem a)
 sameElTag elem parser = elemParser (Just [elem]) parser []
   
   -- innerMatches el 
   -- return $ (elemToStr el, Match $ innerMatches el)  -- allowed to return a String or Match a
 
 -- future concern for foldFuncMatchlist where Elem ~~ [] ; both of kind * -> *
-matchesInSameElTag :: (ShowHTML a, Stream s m Char) => Elem -> Maybe (ParsecT s u m a) -> ParsecT s u m [a]
+matchesInSameElTag :: (ShowHTML a, Stream s m Char) => HTag -> Maybe (ParsecT s u m a) -> ParsecT s u m [a]
 matchesInSameElTag elem parser = do
   el <- elemParser (Just [elem]) parser [] 
   return $ (matches' el)  -- allowed to return a String or Match a
@@ -246,12 +246,12 @@ matchesInSameElTag elem parser = do
 selfClosing :: [String]
 selfClosing = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]
 
-elSelfC :: Stream s m Char => Maybe [Elem] -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
+elSelfC :: Stream s m Char => Maybe [HTag] -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
 elSelfC elemOpts attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
   return $ Elem' tag attrs mempty mempty 
 
-elSelfClosing :: Stream s m Char => Maybe [Elem] -> Maybe (ParsecT s u m a) -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
+elSelfClosing :: Stream s m Char => Maybe [HTag] -> Maybe (ParsecT s u m a) -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
 elSelfClosing elemOpts innerSpec attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
   case innerSpec of
@@ -259,7 +259,7 @@ elSelfClosing elemOpts innerSpec attrsSubset = do
     Nothing -> return $ Elem' tag attrs mempty mempty 
 
 elemWithBody :: (ShowHTML a, Stream s m Char) =>
-              Maybe [Elem]
+              Maybe [HTag]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
            -> ParsecT s u m (Elem a)
@@ -269,7 +269,7 @@ elemWithBody elemList innerSpec attrs = do
   return e
   
 elemParserInternal :: (ShowHTML a, Stream s m Char) =>
-              Maybe [Elem]
+              Maybe [HTag]
            -> Maybe (ParsecT s u m a)
            -> [(String, Maybe String)]
            -> ParsecT s u m (Elem a)
@@ -434,7 +434,7 @@ stylingElem = do
 -- | Monoid may need to be implemented so that we can have mempty to help generalize
 {-# DEPRECATED parseInnerHTMLAndEndTag "use new elem parser directly" #-}
 parseInnerHTMLAndEndTag :: (Stream s m Char) =>
-                           Elem
+                           HTag
                         -> Maybe (ParsecT s u m String)
                         -> ParsecT s u m (InnerTextResult String)
 parseInnerHTMLAndEndTag elem innerPattern = do
@@ -503,7 +503,7 @@ parseInnerHTMLAndEndTag elem innerPattern = do
 -- |          attrs (Attr | AnyAttr)   maybe discr elem
 {-# DEPRECATED elemParserOld "use elemParser" #-}
 elemParserOld :: (Stream s m Char) =>
-              Maybe [Elem]
+              Maybe [HTag]
            -> Maybe (ParsecT s u m String)
            -> [(String, Maybe String)]
            -> ParsecT s u m (Elem String)
