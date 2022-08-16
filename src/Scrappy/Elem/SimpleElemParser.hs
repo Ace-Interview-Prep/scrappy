@@ -1,7 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE TupleSections #-}
---test--
+
 module Scrappy.Elem.SimpleElemParser where
 
 import Scrappy.Elem.Types
@@ -43,9 +43,10 @@ manyTill_ p end = go
       -- like 1) but seeks to carry minimal data around it / more honed in
 
 
+type HTag = String 
 
 -- | Simplest interface to building element patterns 
-el :: Stream s m Char => Elem -> [(String, String)] -> ParsecT s u m (Elem' String)
+el :: Stream s m Char => HTag -> [(String, String)] -> ParsecT s u m (Elem' String)
 el element attrss = elemParser (Just (element:[])) Nothing ((fmap . fmap) Just attrss)
 
 
