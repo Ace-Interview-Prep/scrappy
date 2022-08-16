@@ -21,6 +21,7 @@ import Data.Either (fromRight)
 
 
 type ScraperT a = ParsecT Html () Identity a 
+type Html = String 
 
 
 -- | Converts a parsing/scraping pattern to one which either returns Nothing

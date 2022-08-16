@@ -3,7 +3,6 @@
 
 module Scrappy.Scrape where
 
---test again--
 -- Basically just html patterns from testing / courtney market stuff
 import Scrappy.Elem.Types (Elem, innerText')
 import Scrappy.Elem.ElemHeadParse (hrefParser, parseOpeningTag)
@@ -21,7 +20,8 @@ import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char,
 import Control.Applicative (liftA2) 
 
 
-type ScraperT a = ParsecT String () Identity a 
+type ScraperT a = ParsecT Html () Identity a 
+type Html = String 
 
 
 
@@ -157,7 +157,7 @@ tableItem = undefined
 
 
 
-scrapeFirst :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (Maybe a)
+scrapeFirst :: Stream s m Char => ScraperT a -> ParsecT s u m (Maybe a)
 scrapeFirst p = do
   x <- findNaive p
   case x of
@@ -165,7 +165,7 @@ scrapeFirst p = do
     Nothing -> return $ Nothing
 
  
-findCount :: Stream s m Char => ParsecT s u m a -> ParsecT s u m Int
+findCount :: Stream s m Char => ScraperT a -> ParsecT s u m Int
 findCount p = do
   x <- findNaive p
   return $ length (fromMaybe [] x)
