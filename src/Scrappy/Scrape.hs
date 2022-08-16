@@ -21,7 +21,7 @@ import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char,
 import Control.Applicative (liftA2) 
 
 
-type ScraperT a = ParsecT Text () Identity a 
+type ScraperT a = ParsecT String () Identity a 
 
 
 
@@ -141,7 +141,7 @@ runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
 --     Nothing -> [] 
 
 type Name = String -- placeholder
-tableItem :: Name -> Elem' String
+tableItem :: Name -> Elem String
 tableItem = undefined
 
 
