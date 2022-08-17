@@ -8,7 +8,7 @@ module Scrappy.Elem.ChainHTML where
 import Scrappy.Find (findNaive)
 import Scrappy.Links (maybeUsefulUrl)
 import Scrappy.Elem.SimpleElemParser (elemParser)
-import Scrappy.Elem.ElemHeadParse (parseOpeningTag, hrefParser)
+import Scrappy.Elem.ElemHeadParse (ScraperT, parseOpeningTag, hrefParser)
 import Scrappy.Elem.Types (Elem, ShowHTML, ElemHead, HTag, innerText'
                   , matches')
 
@@ -20,7 +20,7 @@ import Data.Maybe (catMaybes)
 -- functions for chaining free-range html patterns based on the previous
 -- patterns to allow for maximum flexibility 
 
-nl :: Stream s m Char => ParsecT s u m ()
+nl :: ScraperT ()
 nl = optional (many $ (char '\n' <|> char ' '))
 
 manyHtml p = many $ p <* nl
@@ -30,13 +30,14 @@ someHtml p = some $ p <* nl
 manyTillHtml_ p end = manyTill_ (p <* nl) end 
 
 
-htmlTag :: Stream s m Char => ParsecT s u m ElemHead
+htmlTag :: ScraperT ElemHead
 htmlTag = parseOpeningTag (Just ["html"]) [] 
 
 
 
 
-manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)
+
+manyTill_ :: ScraperT a -> ScraperT end -> ScraperT ([a], end)
 manyTill_ p end = go
   where
     go = (([],) <$> end) <|> liftA2 (\x (xs, y) -> (x : xs, y)) p go
@@ -58,7 +59,7 @@ clean = undefined -- drop if == ( \n | \" | '\\' )
 
 
 
-mustContain :: ParsecT s u m (Elem a) -> Int -> ParsecT s u m b -> ParsecT s u m (Elem a)
+mustContain :: ScraperT (Elem a) -> Int -> ScraperT b -> ScraperT (Elem a)
 mustContain e count pat = do
   out <- e
   case parse (findNaive $ string "Search") "" (innerText' out) of
@@ -71,9 +72,9 @@ mustContain e count pat = do
 type Shell =  (HTag, [(String, Maybe String)]) 
 
 -- incomplete
-contains'' :: (Stream s m Char, ShowHTML a) => Shell 
-           -> ParsecT s u m a
-           -> ParsecT s u m [a]
+contains'' :: (ShowHTML a) => Shell 
+           -> ScraperT a
+           -> ScraperT [a]
 contains'' (e,as) p = matches' <$> elemParser (Just [e]) (Just p) as
 
 --parseInShell = contains 
@@ -81,7 +82,7 @@ contains'' (e,as) p = matches' <$> elemParser (Just [e]) (Just p) as
 -- | This will be fully removed in the future
 -- | 99% of the time this is gonna be desired to pair with findNaive 
 {-# DEPRECATED parseInShell "this should have been called parseInShell from the start, you probably want contains' or containsFirst" #-}
-parseInShell :: ParsecT s u m (Elem a) -> ParsecT String () Identity b -> ParsecT s u m b
+parseInShell :: ScraperT (Elem a) -> ParsecT String () Identity b -> ScraperT b
 parseInShell shell b = do
   x <- shell
 
@@ -103,9 +104,9 @@ parseInShell shell b = do
 -- | ample details on the number of match_A in shell_S on Page_P ~~ [[[MatchA]]] and this Match can be any
 -- | arbitarily defined type. You can further imagine pairing with NLP analysis but this is a long enough point here.
 contains :: ShowHTML a =>
-             ParsecT s u m (Elem a) 
+             ScraperT (Elem a) 
           -> ParsecT String () Identity b
-          -> ParsecT s u m [b]
+          -> ScraperT [b]
 contains shell b = do
   x <- shell
   case parse (findNaive b) "" (innerText' x) of
@@ -114,29 +115,29 @@ contains shell b = do
     Right Nothing -> parserFail "no matches in this container" 
 
 containsFirst :: ShowHTML a =>
-                 ParsecT s u m (Elem a) 
+                 ScraperT (Elem a) 
               -> ParsecT String () Identity b
-              -> ParsecT s u m b
+              -> ScraperT b
 containsFirst shell b = head <$> contains shell b
 
 
-sequenceHtml :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m (a, b)
+sequenceHtml :: ScraperT a -> ScraperT b -> ScraperT (a, b)
 sequenceHtml p1 p2 = do
   x <- p1
   _ <- many (char ' ' <|> char '\n' <|> char '\t')
   y <- p2
   return (x, y)
 
-sequenceHtml_ :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m b
+sequenceHtml_ :: ScraperT a -> ScraperT b -> ScraperT b
 sequenceHtml_ p1 p2 = do
   _ <- p1
   _ <- many (char ' ' <|> char '\n' <|> char '\t')
   p2
 
-(</>>) :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m b 
+(</>>) :: ScraperT a -> ScraperT b -> ScraperT b 
 (</>>) = sequenceHtml_
 
-(</>>=) :: Stream s m Char => ParsecT s u m a -> ParsecT s u m b -> ParsecT s u m (a, b)
+(</>>=) :: ScraperT a -> ScraperT b -> ScraperT (a, b)
 (</>>=) = sequenceHtml
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

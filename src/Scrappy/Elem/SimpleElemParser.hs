@@ -5,7 +5,7 @@
 
 module Scrappy.Elem.SimpleElemParser where
 
-import Scrappy.Elem.Types
+import Scrappy.Elem.Types 
 
 import Scrappy.Elem.ElemHeadParse (parseOpeningTag, parseOpeningTagWhere)
 import Scrappy.Links (LastUrl)
@@ -24,8 +24,6 @@ import Data.Maybe (fromMaybe)
 import Data.Functor.Identity (Identity)
 
 
-type ScraperT a = ParsecT Html () Identity a 
-type Html = String 
 -- TODO(galen): antiElemParser --- inner matches must be 0 ... maybe doesnt match any parameter 
 
 manyTill_ :: ScraperT a -> ScraperT end -> ScraperT ([a], end)
