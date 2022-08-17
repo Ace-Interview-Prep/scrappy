@@ -6,7 +6,7 @@ import Scrappy.Scrape (runScraperOnHtml)
 import Scrappy.Elem.ChainHTML (containsFirst)
 import Scrappy.Elem.SimpleElemParser (el)
 import Scrappy.Elem.Types (innerText')
-
+import Scrappy.Links (ScraperT)
 import Text.Parsec (ParsecT, Stream, many)
 import Network.HTTP.Client (Proxy, Manager, HttpException, Response, Proxy(..), responseBody, httpLbs
                            , parseRequest, newManager, useProxy, managerSetSecureProxy)
@@ -60,7 +60,7 @@ scrapeProxyList = do
   response <- getHtml' "https://free-proxy-list.net/"
   let
     parser = el "tr" [] `containsFirst` b
-    b :: Stream s m Char => ParsecT s u m [String]
+    b :: ScraperT [String]
     b = ((fmap . fmap) innerText' $ many (el "td" []))
 
     bePicky :: [[String]] -> [[String]]
