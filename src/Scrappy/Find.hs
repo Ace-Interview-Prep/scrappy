@@ -21,13 +21,13 @@ import Data.Either (fromRight)
 
 
 type ScraperT a = ParsecT Html () Identity a 
-type Html = String 
+
 
 
 -- | Converts a parsing/scraping pattern to one which either returns Nothing
 -- | or Just a list of at least 1 element. Maybe type is used so that there is a clearer
 -- | distinction between a failed search and a successful one
-findNaive :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (Maybe [a])
+findNaive :: ScraperT a -> ScraperT (Maybe [a])
 findNaive p = (justify .  (fromRight mempty) . sequenceA) <$> (find p)
   where
     justify x = if length x == 0 then Nothing else Just x 
@@ -37,16 +37,16 @@ findNaive p = (justify .  (fromRight mempty) . sequenceA) <$> (find p)
 -- givesNothing :: ParsecT e s m (Either ScrapeFail a) 
 -- givesNothing = Left NonMatch <$ anyChar
 
-findSequential :: Stream s m Char => [ParsecT s u m a] -> ParsecT s u m [Either ScrapeFail a] 
+findSequential :: [ScraperT a] -> ScraperT [Either ScrapeFail a] 
 findSequential parsers = undefined -- builds off findUntilMatch
 
-findSequential2 :: Stream s m Char => (ParsecT s u m a, ParsecT s u m b) -> ParsecT s u m (a,b)
+findSequential2 :: (ScraperT a, ScraperT b) -> ScraperT (a,b)
 findSequential2 (a,b) = do
   a' <- findUntilMatch a
   b' <- findUntilMatch b
   return (a', b')
 
-findSequential3 :: Stream s m Char => (ParsecT s u m a, ParsecT s u m b, ParsecT s u m c) -> ParsecT s u m (a,b,c)
+findSequential3 :: (ScraperT a, ScraperT b, ScraperT c) -> ScraperT (a,b,c)
 findSequential3 (a,b,c) = do
   a' <- findUntilMatch a
   
@@ -55,7 +55,7 @@ findSequential3 (a,b,c) = do
   return (a', b', c')
 
 -- | Like find naive except that finishes parsing on the first match it finds in the document
-findUntilMatch :: Stream s m Char => ParsecT s u m a -> ParsecT s u m a
+findUntilMatch :: ScraperT a -> ScraperT a
 findUntilMatch parser = do
   x <- (try (baseParser parser)) <|> givesNothing
   case x of
@@ -77,7 +77,7 @@ findUntilMatch parser = do
 
       
 -- -- Note: List will be backwards as is 
-find :: Stream s m Char => ParsecT s u m a -> ParsecT s u m [Either ScrapeFail a]
+find :: ScraperT a -> ScraperT [Either ScrapeFail a]
 find parser = do
   x <- (try (baseParser parser)) <|> givesNothing <|> endStream
   case x of
@@ -131,20 +131,20 @@ data StreamEditCase = EOF
 
 
 
-baseParser :: Stream s m Char => ParsecT s u m a -> ParsecT s u m (Either ScrapeFail a)
+baseParser :: ScraperT a -> ScraperT (Either ScrapeFail a)
 baseParser parser = fmap Right parser
 
-givesNothing :: Stream s m Char => ParsecT s u m (Either ScrapeFail a) 
+givesNothing :: ScraperT (Either ScrapeFail a) 
 givesNothing = Left NonMatch <$ anyChar
 
-endStream :: (Stream s m t, Show t) => ParsecT s u m (Either ScrapeFail a)
+endStream :: ScraperT (Either ScrapeFail a)
 endStream = try (eof) >> (return $ Left Eof)
 
 
 
 
 -- | Just since do we really care about non matches?
-findSomeHTMLNaive :: Stream s Identity Char => Parsec s () a -> s -> (Maybe [a])
+findSomeHTMLNaive :: ScraperT a -> Html -> (Maybe [a])
 findSomeHTMLNaive parser text =
   let parser' = findNaive parser  
   in 
@@ -152,7 +152,7 @@ findSomeHTMLNaive parser text =
       Left _ -> Nothing 
       Right maybe_A -> maybe_A
 
-findSomeHTML :: Stream s Identity Char => Parsec s () a -> s -> Either ParseError (Maybe [a])
+findSomeHTML :: ScraperT a -> Html -> Either ParseError (Maybe [a])
 findSomeHTML parser text =
   let parser' = findNaive parser  
   in parse parser' "from html at this url: <unimplemented - derp>" text
@@ -202,12 +202,12 @@ findAllBetween = undefined
 
 
 -- | Use with constructed for parsing datatype 
-buildSequentialElemsParser :: ParsecT s u m [a]
+buildSequentialElemsParser :: ScraperT [a]
 buildSequentialElemsParser = undefined
 -- | to be applied to inner text of listlike elem
 
 
-findOnChangeInput :: ParsecT s u m (Elem a)
+findOnChangeInput :: ScraperT (Elem a)
 findOnChangeInput = undefined
 -- eg : <select id="s-lg-sel-subjects" name="s-lg-sel-subjects" class="form-control" data-placeholder="All Subjects" onchange="springSpace.publicObj.filterAzBySubject(jQuery(this).val(), 3848);">
 
