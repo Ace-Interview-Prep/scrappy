@@ -518,7 +518,7 @@ instance ShowHTML a => ShowHTML (Maybe a) where
   showH (Just a) = showH a
   showH Nothing = "" 
 
-invalidSearchElems :: [Maybe InputElem] -> ParsecT s u m [InputElem]  
+invalidSearchElems :: [Maybe InputElem] -> ScraperT [InputElem]  
 invalidSearchElems matches = 
   if (length $ filter (==Nothing) matches) == 0
   then return $ catMaybes matches
@@ -528,7 +528,7 @@ invalidSearchElems matches =
 
 -- -- | Scape pattern that matches on search forms
 -- -- | is like formElem but forces find 
--- searchForm :: Stream s m Char => ParsecT s u m (Elem' String)
+-- searchForm :: Stream s m Char => ScraperT (Elem' String)
 -- searchForm = do
 --   let 
 --     f = (try $ string "search") <|> (try $ string "Search")
@@ -574,7 +574,7 @@ inputElem :: ScraperT (Maybe InputElem)
 inputElem = (try radioBasic') <|> (fmap Just selectEl)
 
 -- -- checks el tag then returns either radio or 
--- radioBasic :: Stream s m Char => ParsecT s u m InputElem
+-- radioBasic :: Stream s m Char => ScraperT InputElem
 -- radioBasic = do
 --   (e, attrs) <- parseOpeningTag (Just ["input"]) [] 
 --   if (fromMaybe "" $ Map.lookup "type" attrs) == "radio"
@@ -609,7 +609,7 @@ radioBasic' = do
              
 -- | Handles differences in implications from all input types
 -- | When an input given its type, would not impact the query url, it's discarded 
-processInputEl :: Attrs -> ParsecT s u m (Maybe InputElem)
+processInputEl :: Attrs -> ScraperT (Maybe InputElem)
 processInputEl attrs =
   let
     type' = fromJust $ Map.lookup "type" attrs
@@ -651,7 +651,7 @@ processInputEl attrs =
           Just a -> return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (Just $ pack a)
           Nothing -> return . Just $ Basic (pack . fromJust $ Map.lookup "name" attrs) (Just "")
 
-handleNumber :: Attrs -> ParsecT s u m (Maybe InputElem)
+handleNumber :: Attrs -> ScraperT (Maybe InputElem)
 handleNumber attrs = do
   let
     name = (pack . fromJust . (Map.lookup "name")) attrs
@@ -696,14 +696,14 @@ optionParser = do
 
 
   -- _ <- string "<option "
-  -- x <- fmap (fromRight (parserZero :: ParsecT s u m ) (attrsParser [])
+  -- x <- fmap (fromRight (parserZero :: ScraperT ) (attrsParser [])
   -- return $ (fromJust . (Map.lookup "value")) x
                
   
   
 
 
--- innerFormParser' :: Stream s m Char => ParsecT s u m [InputElem]
+-- innerFormParser' :: Stream s m Char => ScraperT [InputElem]
 -- innerFormParser' = do
 --   x <- findNaive (inputElemParser inputElems Nothing [])
 --   case x of
@@ -1084,7 +1084,7 @@ sepElems elems = go elems ([], [], [], [])
 -- | above should check if : el elem == "select"
 
 
--- f :: ParsecT s u m SelectElem
+-- f :: ScraperT SelectElem
 
 
 data SelectElem' = SelectElem' Namespace [Option]
@@ -1131,14 +1131,14 @@ optionElemsPat :: Maybe [String]
 optionElemsPat = Just ("option":[])
 
 formOptionsParser :: ScraperT [String]
-formOptionsParser = (findNaive $ elemParser optionElemsPat (Nothing :: Maybe (ParsecT s u m String)) [])
+formOptionsParser = (findNaive $ elemParser optionElemsPat (Nothing :: Maybe (ScraperT String)) [])
   >>= return . (fmap (fromJust . Map.lookup "value" . attrs)) . fromJust
 
 
 -- -- this can safely assume that no inner text exists
--- formOptionsParser :: Stream s m Char => ParsecT s u m [String]
+-- formOptionsParser :: Stream s m Char => ScraperT [String]
 -- formOptionsParser = do
---   (elems :: [Elem' String]) <- many (elemParser optionElemsPat Nothing []) -- :: (Stream s m Char, ShowHTML a) => ParsecT s u m [Elem' a]
+--   (elems :: [Elem' String]) <- many (elemParser optionElemsPat Nothing []) -- :: (Stream s m Char, ShowHTML a) => ScraperT [Elem' a]
 --   -- type Elem'
 --   -- let
 --     -- attrssToFVals :: [Map String String] -> [String]
@@ -1365,7 +1365,7 @@ findPagination :: ScraperT (TreeHTML a)
 findPagination = undefined
 
 
-structuredBrowsingLinksExist :: ParsecT s u m (TreeHTML a)
+structuredBrowsingLinksExist :: ScraperT (TreeHTML a)
 structuredBrowsingLinksExist = undefined
 -- perhaps we should have some recursive func that scopes in and tries to find the same elem+attrs
 -- for each level of nesting, to see if at any point, theres some level of repetition potentially
