@@ -24,10 +24,10 @@ import Text.Parsec (ParsecT, Stream, parserZero, string, (<|>), anyChar, char, o
                    , parserFail)
 import Data.Maybe (fromMaybe)
 import Data.Functor.Identity (Identity)
+import Scrappy.Links (ScraperT)
 
 -- Goals: eliminate need for sub tree and inner datatypes ; so Element --> foldr [HTMLMatcher] empty :: Element 
 
-type ScraperT a = ParsecT Html () Identity a 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

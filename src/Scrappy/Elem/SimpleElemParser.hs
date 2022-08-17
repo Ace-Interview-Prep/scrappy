@@ -22,6 +22,7 @@ import Data.Text (Text, unpack)
 import Data.Map (Map, toList)
 import Data.Maybe (fromMaybe)
 import Data.Functor.Identity (Identity)
+import Scrappy.Links (ScraperT)
 
 
 -- TODO(galen): antiElemParser --- inner matches must be 0 ... maybe doesnt match any parameter 

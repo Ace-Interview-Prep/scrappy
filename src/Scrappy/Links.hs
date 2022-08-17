@@ -43,7 +43,9 @@ import Data.Text (Text, pack, unpack)
 import Data.Char (toLower)
 
 import Data.Aeson.TH (defaultOptions, deriveJSON)
+import Data.Functor.Identity (Identity)
 
+type ScraperT a = ParsecT Html () Identity a 
 type PageNumber = Int
 
 -- |
@@ -197,7 +199,7 @@ getFileName = getLastPath
 
 
 
-doiParser :: ParsecT s u m DOI 
+doiParser :: ScraperT DOI 
 doiParser = undefined
   -- baseURL is doi.org
   
