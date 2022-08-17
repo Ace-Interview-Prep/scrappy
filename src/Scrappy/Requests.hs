@@ -178,7 +178,7 @@ runScrapersOnUrls = undefined
 type STM = IO 
 
 -- | Merge Maybe [a] when multiple urls 
-concurrentlyRunScrapersOnUrls :: [Link] -> [ParsecT s u m a] -> STM (Maybe [a])
+concurrentlyRunScrapersOnUrls :: [Link] -> [ScraperT a] -> STM (Maybe [a])
 concurrentlyRunScrapersOnUrls = undefined 
   -- inner will call concurrent stream functions on the given urls 
 

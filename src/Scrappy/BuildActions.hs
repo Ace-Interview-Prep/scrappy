@@ -11,7 +11,7 @@ import Replace.Megaparsec (findAll)
 
 import Scrappy.Elem.SimpleElemParser (elemParser)
 -- import Elem.ElemHeadParse 
-import Scrappy.Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)
+import Scrappy.Elem.Types (TreeHTML, HTag, Elem(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)
 import Scrappy.Elem.ElemHeadParse (hrefParser', hrefParser, attrsParser, parseOpeningTag, attrsMatch')
 -- import Links (Link, Option, Namespace, UrlPagination(..), maybeUsefulUrl)
 
@@ -132,7 +132,7 @@ fillForm (ParsedForm act'' meth formInputs) baseUrl searchTerm =
     FilledForm act' meth searchTerm tInputs subsets
 
 -- | Lazily build FilledForm so that the full list of possible querystrings is not evaluated
-mkFilledForm :: Url -> String -> Elem' String -> Either FormError FilledForm
+mkFilledForm :: Url -> String -> Elem String -> Either FormError FilledForm
 mkFilledForm baseUrl searchTerm element = case elTag element of
   "form" ->
     case parse formElem "" (innerText' element) of
@@ -170,7 +170,7 @@ mkFormInputs searchTerm (radio, var, basic, tInput) =
 
 
 --temp
-type SelectElem = Elem'
+type SelectElem = Elem
 -- I could use datakinds to promote "select"
 
 
@@ -239,7 +239,7 @@ type FormOptionRadio' = Map Namespace [Option]
                       
 
 
-getContainedUrls :: Elem' a -> Maybe [String]
+getContainedUrls :: Elem a -> Maybe [String]
 getContainedUrls e = findSomeHTMLNaive hrefParser (innerText' e)
 
 
@@ -538,9 +538,9 @@ invalidSearchElems matches =
 --     else return e
 
 -- | Like formElem except that it also checks if the form is for searching, via a dumb manner
-searchForm :: Stream s m Char => ParsecT s u m ParsedForm
+searchForm :: ScraperT ParsedForm
 searchForm = do
-  Elem' _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
+  Elem _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
   let
     count = length $ fromMaybe [] $ runScraperOnHtml ((try $ string "Search") <|> string "search") innerT
     getAction = pack . fromJust . (Map.lookup "action")
@@ -554,9 +554,9 @@ searchForm = do
   
 
 -- | Scape pattern that matches on search forms as well as extracting the action and method attributes  
-formElem :: Stream s m Char => ParsecT s u m ParsedForm
+formElem :: ScraperT ParsedForm
 formElem = do
-  Elem' _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
+  Elem _ as matches innerT <- elemParser (Just ["form"]) (Just inputElem) []
   return $ ParsedForm (getAction as) (getMethod as) (catMaybes matches) 
   where 
     getAction = pack . fromJust . (Map.lookup "action")
@@ -570,7 +570,7 @@ formElem = do
 
     
 -- | Scrape pattern for <input> element
-inputElem :: Stream s m Char => ParsecT s u m (Maybe InputElem)
+inputElem :: ScraperT (Maybe InputElem)
 inputElem = (try radioBasic') <|> (fmap Just selectEl)
 
 -- -- checks el tag then returns either radio or 
@@ -585,7 +585,7 @@ inputElem = (try radioBasic') <|> (fmap Just selectEl)
 
 -- checks el tag then returns either radio or
 -- | parserZero means we dont care, Nothing means this form is invalid
-radioBasic' :: (Stream s m Char) => ParsecT s u m (Maybe InputElem)
+radioBasic' :: ScraperT (Maybe InputElem)
 radioBasic' = do
   (e, attrs) <- parseOpeningTag (Just ["input", "textarea"]) []
   let
@@ -679,7 +679,7 @@ handleNumber attrs = do
 -- | return ParsedForm Action $ build (matches formRaw)... 
 
 -- | Matches on 
-selectEl :: Stream s m Char => ParsecT s u m InputElem
+selectEl :: ScraperT InputElem
 selectEl = do
   e <- elemParser (Just ["select", "datalist"]) (Just optionParser) []
   return $ SelectElem ((pack . fromJust . (Map.lookup "name") . attrs $ e), (reverse $ fmap pack $ matches' e))
@@ -689,7 +689,7 @@ selectEl = do
 
 -- parseOpeningTag (Just ["option"])
 
-optionParser :: Stream s m Char => ParsecT s u m String
+optionParser :: ScraperT String
 optionParser = do
   (_, a) <- parseOpeningTag (Just ["option"]) []
   return $ (fromJust . (Map.lookup "value")) a
@@ -710,7 +710,7 @@ optionParser = do
 --     Just listOfElems -> return listOfElems
 --     Nothing -> undefined --return []
 
-innerFormParser :: Stream s m Char => ParsecT s u m [Elem' String]
+innerFormParser :: ScraperT [Elem String]
 innerFormParser = do
   x <- findNaive (elemParser inputElems Nothing [])
   case x of
@@ -980,16 +980,16 @@ findForms html = runScraperOnHtml formElem html
 
 --
 
-actionAttr :: Elem' a -> Text
+actionAttr :: Elem a -> Text
 actionAttr formElem = (pack . fromJust . (Map.lookup "action") . attrs) formElem
 
 -- mkBasicPart :: Text -> [Elem' a] -> Text
 -- mkBasicPart actionAttr basicEs = actionAttr <> (createBasicQKVPairs basicEs)
 
-mkBasicParams' :: [Elem' a] -> QueryString -- [(Namespace, Option)]
+mkBasicParams' :: [Elem a] -> QueryString -- [(Namespace, Option)]
 mkBasicParams' = createBasicQKVPairs
 
-mkSubsetVars :: [Elem' a] -> [Elem' a] -> Map Namespace [Option]
+mkSubsetVars :: [Elem a] -> [Elem a] -> Map Namespace [Option]
 mkSubsetVars variable radio = union (fromList (mkOptMaps variable)) (iterRadios radio empty)
 
 searchTermSubPaths :: Map Namespace [Option] -> QueryString -> [QueryString] 
@@ -999,7 +999,7 @@ searchTermSubPaths subsetVariables basicPath = fmap (basicPath <>) (buildSearchU
 
 
 
-getAttrVal :: String -> Elem' a -> String 
+getAttrVal :: String -> Elem a -> String 
 getAttrVal name formElem = (fromJust . (Map.lookup name) . attrs) formElem
 
 -- | With a Map of an html Namespace and all its possible defined options, lazily create all possible search queries
@@ -1041,7 +1041,7 @@ sepElems2 elems = ( filter fBasic elems
 
 
 
-sepElems :: [Elem' a] -> ([Elem' a], [Elem' a], [Elem' a], [Elem' a])
+sepElems :: [Elem a] -> ([Elem a], [Elem a], [Elem a], [Elem a])
 sepElems elems = go elems ([], [], [], [])
   where go [] endState = endState
         go (elem:elems') (a,b,c,d)
@@ -1130,7 +1130,7 @@ applyFailStream = undefined
 optionElemsPat :: Maybe [String]
 optionElemsPat = Just ("option":[])
 
-formOptionsParser :: Stream s m Char => ParsecT s u m [String]
+formOptionsParser :: ScraperT [String]
 formOptionsParser = (findNaive $ elemParser optionElemsPat (Nothing :: Maybe (ParsecT s u m String)) [])
   >>= return . (fmap (fromJust . Map.lookup "value" . attrs)) . fromJust
 
@@ -1240,13 +1240,13 @@ singlefOp str ((namespace, (x:xs)):levels) = -- Divide ->
 -- | SO add the results of f :: ItemOfCurrentList -> [ItemOCL] -> [String]
   
 -- | for basic
-createBasicQKVPair :: Elem' a -> (Namespace, Option) 
+createBasicQKVPair :: Elem a -> (Namespace, Option) 
 createBasicQKVPair elem =
   (  (pack (fromJust (Map.lookup "name" (attrs elem)))) , (pack (findWithDefault "" "value" (attrs elem))) )
                           -- <> "=" <> 
                           
 
-createBasicQKVPairs :: [Elem' a] -> QueryString -- [(Namespace, Option)] 
+createBasicQKVPairs :: [Elem a] -> QueryString -- [(Namespace, Option)] 
 createBasicQKVPairs [] = []
 createBasicQKVPairs (elem:elems) = createBasicQKVPair elem : createBasicQKVPairs elems
 
@@ -1260,7 +1260,7 @@ createBasicQKVPairs (elem:elems) = createBasicQKVPair elem : createBasicQKVPairs
 
 
 -- | NOT REFERENCED
-createQKVPairWithTerm :: Text -> [Elem' a] -> [Text]
+createQKVPairWithTerm :: Text -> [Elem a] -> [Text]
 createQKVPairWithTerm _ [] = []
 createQKVPairWithTerm term (next:tInputElems) =
   (pack . fromJust) (Map.lookup "name" (attrs next)) <> "=" <> term : createQKVPairWithTerm term tInputElems
@@ -1279,7 +1279,7 @@ createQKVPairWithTerm term (next:tInputElems) =
 
 type NamespacePair = (Namespace, Option)
 
-mkNameVal :: Elem' a -> NamespacePair
+mkNameVal :: Elem a -> NamespacePair
 mkNameVal = (\a -> (pack . fromJust $ Map.lookup "name" a, pack . fromJust $ Map.lookup "value" a)) . attrs
 
 radiosToMap :: [NamespacePair] -> Map Namespace [Option]
@@ -1305,7 +1305,7 @@ radiosToMap ((name, value):nps) = insertWith (<>) name (value:[]) (radiosToMap n
 
     
                            -- Map Attr Value
-iterRadios :: [Elem' a] -> Map Namespace [Option] -> Map Namespace [Option]
+iterRadios :: [Elem a] -> Map Namespace [Option] -> Map Namespace [Option]
 iterRadios [] finalOptsMap = finalOptsMap 
 iterRadios (elem:elems) startingOptsMap =
   iterRadios elems (lookupOrInsertName (attrs elem) startingOptsMap)   
@@ -1352,7 +1352,7 @@ lookupOrInsertName attrsMap optsMap =
 
 -- | Just an arbitrarily set number of elements
 -- | Could also see if select-like elems count == 0
-searchIsBigorSmall :: [Elem' a] -> Bool
+searchIsBigorSmall :: [Elem a] -> Bool
 searchIsBigorSmall = undefined
 
 
@@ -1361,7 +1361,7 @@ searchIsBigorSmall = undefined
 
 
 -- | Should use findSomeSameEl probably
-findPagination :: ParsecT s u m (TreeHTML a)
+findPagination :: ScraperT (TreeHTML a)
 findPagination = undefined
 
 
@@ -1382,10 +1382,10 @@ structuredBrowsingLinksExist = undefined
 -- 1) Look through a parsed tree for href =
 -- 2) scan text for URI.parser ; p  
 
-validHrefs :: Stream s m Char => String -> ParsecT s u m (Maybe [String])
+validHrefs :: String -> ScraperT (Maybe [String])
 validHrefs baseUrl = findNaive (getValidHref baseUrl)
 
-getValidHref :: Stream s m Char => String ->  ParsecT s u m String
+getValidHref :: String -> ScraperT String
 getValidHref baseUrl = hrefParser' (isPrefixOf baseUrl)
   -- where
     -- cheapShit :: String -> String -> Bool 
@@ -1401,7 +1401,7 @@ getValidHref baseUrl = hrefParser' (isPrefixOf baseUrl)
 
   -- get all mutually exclusive <a> with href == actualUriParser | validURI 
   
-parseDrvPagination :: Stream s m Char => String -> ParsecT s u m UrlPagination
+parseDrvPagination :: String -> ScraperT UrlPagination
 parseDrvPagination baseUrl = do
   es <- paginationElements
   -- could instead, in order to make this reliable on all sites, return a list of trups of Elem'
@@ -1413,12 +1413,12 @@ parseDrvPagination baseUrl = do
      then return (UrlPagination pre post)
      else parserZero
 
-type PaginationElems = (Elem' String, Elem' String, Elem' String)
+type PaginationElems = (Elem String, Elem String, Elem String)
 
 derivePagination :: Url -> PaginationElems -> Maybe UrlPagination
 derivePagination baseU (el1, el2, el3) =
   let
-    href :: Elem' String -> Maybe String
+    href :: Elem String -> Maybe String
     href x = ((Map.lookup "href") . attrs) x
 
     f x = case fmap (isPrefixOf baseU) x of { (Just True) -> x; _ -> Nothing }
@@ -1438,10 +1438,10 @@ commonUrlTrups :: PaginationElems -> [(Url, Url, Url)]
 commonUrlTrups (e1, e2, e3) = commonElHUrls (hrefElHs e1) (hrefElHs e2) (hrefElHs e3) 
 
 
-hrefElHs :: Elem' String -> [ElemHead] 
+hrefElHs :: Elem String -> [ElemHead] 
 hrefElHs e = fromMaybe [] $ runScraperOnHtml validHrefElHs (innerText' e)
 
-validHrefElHs :: Stream s m Char => ParsecT s u m ElemHead
+validHrefElHs :: ScraperT ElemHead
 validHrefElHs = parseOpeningTag Nothing [("href", Nothing)]
 
 commonElHUrls :: [ElemHead] -> [ElemHead] -> [ElemHead] -> [(Url, Url, Url)]
@@ -1641,7 +1641,7 @@ funcyAf pre (x:xs) (y:ys) (z:zs) =
 
 
 -- length 3 
-paginationElements :: Stream s m Char => ParsecT s u m (Elem' String, Elem' String, Elem' String)
+paginationElements :: ScraperT (Elem String, Elem String, Elem String)
 paginationElements = do 
   let
     attrs' e = (fmap . fmap) Just $ Map.toList (attrs e)
