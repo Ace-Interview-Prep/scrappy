@@ -8,9 +8,9 @@
 module Scrappy.JS where
 
 import Scrappy.Requests (getHtml, getHtml', SessionState(..), Html)
-import Scrappy.Scrape (ScraperT, scrape, exists)
+import Scrappy.Scrape (scrape, exists)
 import Scrappy.Elem.SimpleElemParser (el, manyTill_)
-import Scrappy.Elem.Types (Elem'(..))
+import Scrappy.Elem.Types (Elem(..))
 import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink, LastUrl)
 import Scrappy.Find
 
@@ -354,10 +354,10 @@ withScript (Script a script) (JS command) = Script a (script <> ";\n"
 -- IDEA!!!! WE could also use the outputted JSVals to create a recursive interface
                                  -- that creates DOM (but why would I?) 
 
-returnJSVal :: ParsecT s u m a -> Int -> [JSVal] -> a
+returnJSVal :: ScraperT a -> Int -> [JSVal] -> a
 returnJSVal = undefined
 
-findJSVal :: ParsecT s u m a -> [JSVal] -> a
+findJSVal :: ScraperT a -> [JSVal] -> a
 findJSVal = undefined
 
 
@@ -557,7 +557,7 @@ mkScriptInterop script interactions = undefined
 -- | ^^ SO: getAST :: Parser a -> Name -> a
 
 -- -- | Never takes from State, only copies it so it will stay available in the JS context 
--- getAST :: Stream s m Char => ParsecT s u m a -> Name -> a
+-- getAST :: Stream s m Char => ScraperT a -> Name -> a
 -- getAST = undefined 
 
 setAST :: Show a => Name -> a -> MonadJS' () 
@@ -748,8 +748,8 @@ filterGets (GetByExpr newName exprJS) = Just . JS $ "console.log(\"newName:\", (
 -- and both sources must follow the same format
 
 
--- GOAL: jsStdOutParserAST :: Stream s m Char => ParsecT s u m (Html, JSAST) 
-jsStdOutParserAST :: Stream s m Char => ParsecT s u m (Html, M.Map String String) 
+-- GOAL: jsStdOutParserAST :: Stream s m Char => ScraperT (Html, JSAST) 
+jsStdOutParserAST :: ScraperT (Html, M.Map String String) 
 jsStdOutParserAST = do
   (jsvals, _) <- manyTill_ (f <* (char '\n')) (string "!@#$%^&*()")
   html <- many anyChar
@@ -851,7 +851,7 @@ fetchVDOMWith (Link url) (JS js) = do
 
 
 
-jsStdOutParser :: Stream s m Char => ParsecT s u m (Html, [JSVal]) 
+jsStdOutParser :: ScraperT (Html, [JSVal]) 
 jsStdOutParser = do
   (jsvals, _) <- manyTill_ ((some $ noneOf ['\n']) <* (char '\n')) (string "!@#$%^&*()")
   html <- many anyChar
@@ -906,7 +906,7 @@ takeJSOut n vals = reverse $ take n vals
 
 -- scrape (noneOf 
  
--- jsvals :: Stream s m Char => ParsecT s u m [JSVal]
+-- jsvals :: Stream s m Char => ScraperT [JSVal]
 -- jsvals = do
 --   x <- some $ noneOf ['\n']
 --   optional (char '\n')
