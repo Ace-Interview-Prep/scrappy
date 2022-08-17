@@ -21,7 +21,6 @@ import Control.Applicative (liftA2)
 
 
 type ScraperT a = ParsecT Html () Identity a 
-type Html = String 
 
 
 
@@ -31,7 +30,7 @@ type Html = String
 -- |
 -- | for instance (el "a" [("id", "x")]) -> let ALPHANUM = document.select(this) -> someThingUsing ALPHANUM_MATCH
 -- | in a statement --> which references [A, B, C] 
-scrapeLinked :: ScraperT a -> ParsecT s u m [String]
+scrapeLinked :: ScraperT a -> ScraperT [String]
 scrapeLinked = undefined
 
 
@@ -95,7 +94,7 @@ runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html
 runScraperInBody :: ScraperT a -> String -> Maybe [a]
 runScraperInBody prsr html = fromRight Nothing $ parse (skipToInBody >> findNaive prsr) "" html
 
-skipToInBody :: Stream s m Char => ParsecT s u m ()
+skipToInBody :: ScraperT ()
 skipToInBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>')
                </>> el "head" []
                </>> parseOpeningTag (Just ["body"]) []
@@ -106,7 +105,7 @@ skipToInBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>')
 runScraperOnBody :: ParsecT String () Identity a -> String -> Maybe [a] 
 runScraperOnBody prsr html = fromRight Nothing $ parse (skipToBody >> findNaive prsr) "" html 
 
-skipToBody :: Stream s m Char => ParsecT s u m ()
+skipToBody :: ScraperT ()
 skipToBody = manyTill anyChar (parseOpeningTag (Just ["html"]) [] >> char '>') </>> el "head" [] >> return () 
 
 
@@ -157,7 +156,7 @@ tableItem = undefined
 
 
 
-scrapeFirst :: Stream s m Char => ScraperT a -> ParsecT s u m (Maybe a)
+scrapeFirst :: ScraperT a -> ScraperT (Maybe a)
 scrapeFirst p = do
   x <- findNaive p
   case x of
@@ -165,7 +164,7 @@ scrapeFirst p = do
     Nothing -> return $ Nothing
 
  
-findCount :: Stream s m Char => ScraperT a -> ParsecT s u m Int
+findCount :: ScraperT a -> ScraperT Int
 findCount p = do
   x <- findNaive p
   return $ length (fromMaybe [] x)
