@@ -105,7 +105,7 @@ elemParserWhere elemList innerSpec attr pred = do
 
 
  
-clickableHref :: Stream s m Char => Bool -> LastUrl -> ParsecT s u m Clickable
+clickableHref :: Bool -> LastUrl -> ScraperT Clickable
 clickableHref booly cUrl = do
   elA <- parseOpeningTag Nothing [("href", Nothing)]
   href <- mapMaybe (getHrefAttrs booly cUrl) (pure $ snd elA) 
@@ -250,12 +250,12 @@ matchesInSameElTag elem parser = do
 selfClosing :: [String]
 selfClosing = ["area", "base", "br", "col", "embed", "hr", "img", "input", "link", "meta", "param", "source", "track", "wbr"]
 
-elSelfC :: Stream s m Char => Maybe [HTag] -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
+elSelfC :: Maybe [HTag] -> [(String, Maybe String)] -> ScraperT (Elem a)
 elSelfC elemOpts attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
   return $ Elem tag attrs mempty mempty 
 
-elSelfClosing :: Stream s m Char => Maybe [HTag] -> Maybe (ScraperT a) -> [(String, Maybe String)] -> ParsecT s u m (Elem a)
+elSelfClosing :: Maybe [HTag] -> Maybe (ScraperT a) -> [(String, Maybe String)] -> ScraperT (Elem a)
 elSelfClosing elemOpts innerSpec attrsSubset = do
   (tag, attrs) <- parseOpeningTag elemOpts attrsSubset
   case innerSpec of
@@ -442,7 +442,7 @@ parseInnerHTMLAndEndTag :: HTag
                         -> ScraperT (InnerTextResult String)
 parseInnerHTMLAndEndTag elem innerPattern = do
 
-  let f :: Stream s m Char => Maybe (ParsecT s u m String) -> ParsecT s u m String
+  let f :: Maybe (ScraperT String) -> ScraperT String
       f x = case x of
               Just pat -> pat
               Nothing -> string ""
@@ -452,7 +452,7 @@ parseInnerHTMLAndEndTag elem innerPattern = do
         el <- elemParserOld (Just [elem]) Nothing []
         return $ showH el
 
-      p :: Stream s m Char => ParsecT s u m String 
+      p :: ScraperT String 
       p = do
         a <- anyToken
         return (a : [])
