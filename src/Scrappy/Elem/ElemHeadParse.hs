@@ -12,17 +12,20 @@ import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, cha
 import Data.Map as Map (Map, fromList, lookup, toList) 
 import Data.Maybe (fromMaybe)
 import Witherable (mapMaybe)
+import Data.Functor.Identity (Identity)
 
 import Scrappy.Types
 
 -- | needs to use many for multiple links
 
+type ScraperT a = ParsecT Html () Identity a 
+type Html = String
 
 
-href :: Stream s m Char => Bool -> LastUrl -> ParsecT s u m Link
+href :: Bool -> LastUrl -> ScraperT Link
 href booly cUrl = ((getHrefAttrs booly cUrl) . snd) `mapMaybe` (parseOpeningTag (Just ["a"]) [])
 
-href' :: Stream s m Char => Maybe CurrentUrl -> ParsecT s u m Link
+href' :: Maybe CurrentUrl -> ScraperT Link
 href' = undefined --  bo
 
 
@@ -31,7 +34,7 @@ href' = undefined --  bo
 
 -- | Safe because it forces parse of the entire ElemHead then pulls if there
 -- | Designed for use in findSomeHtml
-parseAttrSafe :: Stream s m Char => String -> ParsecT s u m String 
+parseAttrSafe :: String -> ScraperT String 
 parseAttrSafe attrName = do
   tag <- parseOpeningTag Nothing [(attrName, Nothing)] -- i could in theory pass an expression as value
   case (Map.lookup attrName . snd) tag of
@@ -39,7 +42,7 @@ parseAttrSafe attrName = do
     Just a -> return a
 
 -- | Done like  this so that it reliably is true link and not false positive 
-hrefParser :: Stream s m Char => ParsecT s u m String --Link
+hrefParser :: ScraperT String --Link
 hrefParser = do
   tag <- parseOpeningTag Nothing [("href", Nothing)] -- i could in theory pass an expression as value
   case (Map.lookup "href" . snd) tag of
@@ -47,7 +50,7 @@ hrefParser = do
     Just a -> return a
 -- snd OR fmap snd for multiple then analyze URI
 
-parseOpeningTagF :: Stream s m Char => String -> (String -> Bool) -> ParsecT s u m ElemHead --Link
+parseOpeningTagF :: String -> (String -> Bool) -> ScraperT ElemHead --Link
 parseOpeningTagF attrib predicate = do
   (e, as) <- parseOpeningTag Nothing [(attrib, Nothing)] -- i could in theory pass an expression as value
   case Map.lookup attrib as of
@@ -55,11 +58,10 @@ parseOpeningTagF attrib predicate = do
     Just a -> if predicate a then return (e,as) else parserFail "couldnt find match parseOpeningTagF"
 
 -- | TODO(galen): make this actually generic, not just for one attr
-parseOpeningTagWhere :: Stream s m Char
-                     => Maybe [HTag]
+parseOpeningTagWhere :: Maybe [HTag]
                      -> String 
                      -> (String -> Bool)
-                     -> ParsecT s u m ElemHead --Link
+                     -> ScraperT ElemHead --Link
 parseOpeningTagWhere es attrib predicate = do
   (e, as) <- parseOpeningTag es [(attrib, Nothing)] -- i could in theory pass an expression as value
   case Map.lookup attrib as of
@@ -78,7 +80,7 @@ parseOpeningTagWhere es attrib predicate = do
 
 
 -- | Allows parsing with high level predicate 
-hrefParser' :: Stream s m Char => (String -> Bool) -> ParsecT s u m String --Link
+hrefParser' :: (String -> Bool) -> ScraperT String --Link
 hrefParser' predicate = do
   tag <- parseOpeningTag Nothing [("href", Nothing)] -- i could in theory pass an expression as value
   case (Map.lookup "href" . snd) tag of
@@ -92,7 +94,7 @@ hrefParser' predicate = do
 
 --also could be with '' not just ""
 -- | In future should add replace of apostrophe and similar issues to corresponding html representations
-attrValue :: Stream s m Char => ParsecT s u m [Char]
+attrValue :: ScraperT [Char]
 attrValue = (between (char '"') (char '"') (many (noneOf ['"'])))
             <|> (between (char '\'') (char '\'') (many (noneOf ['\''])))
 
@@ -136,7 +138,7 @@ attrValueExists (attrF:attrsOut) nextAttr-- (AttrPair nextAttrP:attrsIn)
 -- -- |  should do lookup
 
 
-attrName :: Stream s m Char => ParsecT s u m String 
+attrName :: ScraperT String 
 attrName = some (alphaNum <|> char '-' <|> char '_')
 -- | Need lower|UPPER case insensitivity
            --
@@ -144,7 +146,7 @@ attrName = some (alphaNum <|> char '-' <|> char '_')
 -- SPACE, ("), ('), (>), (/), (=)
 
 -- | for generalization sake
-attrParser :: Stream s m Char => ParsecT s u m (String, String)
+attrParser :: ScraperT (String, String)
 attrParser = do
       _ <- space
 
@@ -154,9 +156,8 @@ attrParser = do
       content <- option "" (char '=' >> attrValue)
       return (attrName', content)
                                   -- [AttrsPNew]
-attrsParser :: Stream s m Char =>
-               [(String, Maybe String)] -- Maybe (ParsecT s u m String)
-            -> ParsecT s u m (Either AttrsError (Map String String))
+attrsParser :: [(String, Maybe String)] -- Maybe (ParsecT s u m String)
+            -> ScraperT (Either AttrsError (Map String String))
             --change to Either AttrsError (Map String String) 
 attrsParser attrs = do
   -- attrPairs <- MParsec.manyTill attrParser {- this needs to also handle -} (char '/' <|> char '>')
@@ -210,9 +211,8 @@ attrsMatch ((k,v):kvs) mappy = case Map.lookup k mappy of
   Nothing -> False 
 
                                
-attrsParserDesc :: Stream s m Char =>
-               [(String, String)] -- Maybe (ParsecT s u m String)
-            -> ParsecT s u m (Map String String)
+attrsParserDesc :: [(String, String)] -- Maybe (ParsecT s u m String)
+            -> ScraperT (Map String String)
             --change to Either AttrsError (Map String String) 
 attrsParserDesc attrs = do
   attrPairs <- many attrParser -- (char '>' <|> char '/')
@@ -237,7 +237,7 @@ attrsParserDesc attrs = do
 
 
 
-parseOpeningTagDesc :: Stream s m Char => Maybe [HTag] -> [(String, String)] -> ParsecT s u m (HTag, Attrs)
+parseOpeningTagDesc :: Maybe [HTag] -> [(String, String)] -> ScraperT (HTag, Attrs)
 parseOpeningTagDesc elemOpts attrs = do
   _ <- char '<'
   elem <- mkElemtagParser elemOpts
@@ -340,7 +340,7 @@ mkAttrsDesc atrs = (fmap . fmap) digitEqFree atrs
   -- |  -> Case of input tag: <input ...."> DONE ie no innerhtml or end tag
   -- |     then this would be more efficient or even maybe we should add an option via
   -- |     a  datatype: InnerTextOpts a = DoesntExist --efficient parser | AnyText | ParserText a
-parseOpeningTag :: Stream s m Char => Maybe [HTag] -> [(String, Maybe String)] -> ParsecT s u m (HTag, Attrs)
+parseOpeningTag :: Maybe [HTag] -> [(String, Maybe String)] -> ScraperT (HTag, Attrs)
 parseOpeningTag elemOpts attrsSubset = do
   -- _ <- MParsec.manyTill anyToken (char '<' >> elemOpts >> attrsParser attrsSubset) -- the buildElemsOpts [Elem]
   _ <- char '<'
@@ -369,7 +369,7 @@ parseOpeningTag elemOpts attrsSubset = do
 --   return (attrName', content)
 
 
-mkElemtagParser :: Stream s m Char => Maybe [HTag] -> ParsecT s u m String
+mkElemtagParser :: Maybe [HTag] -> ScraperT String
 mkElemtagParser x = case x of
                    -- Nothing -> MParsec.some (noneOf [' ', '>'])
                       --commented out in case below is wrong
@@ -378,7 +378,7 @@ mkElemtagParser x = case x of
 
 
 -- | FUTURE USE CASES: buildElemsOpts :: [ParsecT s u m a] -> ParsecT s u m a -- using <|>
-buildElemsOpts :: Stream s m Char => [HTag] -> ParsecT s u m String
+buildElemsOpts :: [HTag] -> ScraperT String
 -- buildElemsOpts [] = <----- i dont think i need this
 buildElemsOpts [] = parserZero
 buildElemsOpts (x:elemsAllow) = try (string x) <|> (buildElemsOpts elemsAllow)
