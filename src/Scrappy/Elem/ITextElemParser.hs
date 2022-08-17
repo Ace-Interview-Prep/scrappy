@@ -10,7 +10,7 @@ import Scrappy.Elem.TreeElemParser (treeElemParser, sameTreeH)
 import Scrappy.Elem.SimpleElemParser (elemParser)
 import Scrappy.Elem.ElemHeadParse (parseOpeningTag, buildElemsOpts, attrsParser
                           , mkElemtagParser)
-import Scrappy.Elem.Types (HTMLMatcher(..), Elem'(..), Elem, Attrs, ShowHTML(..)
+import Scrappy.Elem.Types (HTMLMatcher(..), Elem(..), HTag, Attrs, ShowHTML(..)
                   , TreeHTML(..), endTag
                   , selfClosingTextful, noPat, innerText', _innerTree'
                   , attrs, elTag, coerceAttrs
@@ -61,8 +61,8 @@ import Scrappy.Elem.ChainHTML
 -- tree == mempty and that you try to match for a proper paragraph
 
 
-emptyTree :: (ShowHTML a, Stream s m Char) =>
-             Maybe [Elem]
+emptyTree :: (ShowHTML a) =>
+             Maybe [HTag]
           -> Maybe (ScraperT a)
           -> [(String, Maybe String)]
           -> ScraperT (TreeHTML a)
@@ -72,8 +72,7 @@ emptyTree elemOpts match attrs = do
   pure e
 
 
-preface :: Stream s m Char =>
-           ScraperT pre
+preface :: ScraperT pre
         -> ScraperT a
         -> ScraperT a
 preface pre p = p >> (fmap snd $ manyTill_ anyChar p)
@@ -109,8 +108,8 @@ class (Zero a, Singleton a, Multiple a) => Existential a where
 -- | This doesn't behave exactly like a "group" function
 -- | because it allows matching on one element
 -- | but this will also never be empty 
-emptyTreeGroup :: (ShowHTML a, Stream s m Char) =>
-                  Maybe [Elem]
+emptyTreeGroup :: (ShowHTML a) =>
+                  Maybe [HTag]
                -> Maybe (ScraperT a)
                -> [(String, Maybe String)]
                -> ScraperT [TreeHTML a]
@@ -144,7 +143,7 @@ emptyTreeGroup elemOpts match attrsSubset = do
 -- fmap (_matches) list :: mconcat $ [match] : [[match]] 
 
 
-myEl :: Stream s m Char => ScraperT (TreeHTML Paragraph)
+myEl :: ScraperT (TreeHTML Paragraph)
 myEl = emptyTree Nothing (Just paragraph) [] 
 
 
@@ -170,7 +169,7 @@ myEl = emptyTree Nothing (Just paragraph) []
 --   elemParser Nothing (Just $ abstractWord) [] `contains`
 --     findNaive (some $ elemAny paragraphOrAbstractWord)
 
-elemAny :: Stream s m Char => ScraperT (Elem' String) 
+elemAny :: ScraperT (Elem String) 
 elemAny = elemParser Nothing noPat [] 
 
 -- Start Pattern
@@ -195,10 +194,10 @@ elemAny = elemParser Nothing noPat []
               
 
               
-abstractWord :: Stream s m Char => ScraperT String
+abstractWord :: ScraperT String
 abstractWord = string "Abstract" <|> string "abstract" <|> string "Nonlinear"
 
-paragraphOrAbstractWord :: Stream s m Char => ScraperT (Either String Paragraph)
+paragraphOrAbstractWord :: ScraperT (Either String Paragraph)
 paragraphOrAbstractWord = Left <$> abstractWord <|> Right <$> paragraph
 
 
@@ -281,19 +280,19 @@ instance Monoid Paragraph where
 instance ShowHTML Paragraph where
   showH = show
 
-punctuation :: Stream s m Char => ScraperT Char
+punctuation :: ScraperT Char
 punctuation = oneOf [';', ':', '(', ')', '\"', '\"', '-','-', ','] -- dk if last one works
 
 -- | Word also means bits but I mean written specifically
 -- | This can definitely be expanded upon to increase its reach
 -- | while maintaining validity
-writtenWord :: Stream s m Char => ScraperT WrittenWord
+writtenWord :: ScraperT WrittenWord
 writtenWord = WW <$> (some $ alphaNum <|> punctuation) <* optional (char ' ')
 
 -- | For the sake of chaining these parsers, this optionally consumes
 -- | a space at the end. This is the key char diff between one and many
 -- | sentences
-sentence :: Stream s m Char => ScraperT Sentence
+sentence :: ScraperT Sentence
 sentence = do
   words <- some writtenWord
   if length words < 4 then parserZero else return () 
@@ -310,7 +309,7 @@ sentence = do
 -- | just words and so the parsers should focus on setting up the next
 -- | parser 
   
-paragraph :: Stream s m Char => ScraperT Paragraph
+paragraph :: ScraperT Paragraph
 paragraph = fmap mkParagraph $ some $ try sentence
 
 -- | This is built in a way that allows the idea of a sentence
@@ -354,7 +353,7 @@ styleTags :: [String]
 styleTags =  ["b", "strong", "i", "em", "mark", "small", "ins", "sub", "sup"]  
 
 -- | Will only match elements not specified 
-negParseOpeningTag :: Stream s m Char => [Elem] -> ScraperT (Elem, Attrs)
+negParseOpeningTag :: [HTag] -> ScraperT (HTag, Attrs)
 negParseOpeningTag elemOpts = do
   -- _ <- MParsec.manyTill anyToken (char '<' >> elemOpts >> attrsParser attrsSubset) -- the buildElemsOpts [Elem]
   _ <- char '<'
@@ -363,28 +362,28 @@ negParseOpeningTag elemOpts = do
   attrs <- attrsParser []
   pure $ (tag, fromRight mempty attrs) 
 
-textChunk :: Stream s m Char => ScraperT String 
+textChunk :: ScraperT String 
 textChunk = fmap mconcat $ manyTill plainText (try $ openOrCloseTag)
  -- also need to trim out whitespace, \n's, and script
 
 -- | This will match any element open or closing tag that is not a style tag
-openOrCloseTag :: Stream s m Char => ScraperT ()
+openOrCloseTag :: ScraperT ()
 openOrCloseTag = 
   void $ (try $ negParseOpeningTag styleTags >> char '>') <|> anyEndTag
   -- could also fit in script bit here 
 
-anyEndTag :: Stream s m Char => ScraperT Char 
+anyEndTag :: ScraperT Char 
 anyEndTag = do
   string "</" >> anyThingbut styleTags >> char '>'
 
 -- | Despite the fun name, this is just for textChunk use
-anyThingbut :: Stream s m Char => [String] -> ScraperT String
+anyThingbut :: [String] -> ScraperT String
 anyThingbut es = do
   txt <- some alphaNum
   when (elem txt es) $ parserZero
   pure txt
     
-textChunkIf :: Stream s m Char => (String -> Bool) -> ScraperT String
+textChunkIf :: (String -> Bool) -> ScraperT String
 textChunkIf f = do
   x <- textChunk
   when (not $ f x) $ parserZero
@@ -392,7 +391,7 @@ textChunkIf f = do
 
 -- parse () "" "eeee<i>hey</i><a></a>"
 
-plainText :: Stream s m Char => ScraperT String
+plainText :: ScraperT String
 plainText = do
   unit <- innerText' <$> styleElem <|> (fmap (:[]) anyChar)
   pure unit 
@@ -406,7 +405,7 @@ plainText = do
 
 -- fmap elemAny 
 
-styleElem :: Stream s m Char => ScraperT (Elem' String)
+styleElem :: ScraperT (Elem String)
 styleElem = elemParser (Just $ styleTags) noPat []
 -- closeOrOpenTag = try $ negParseOpeningTag ["i"]
 
@@ -464,13 +463,13 @@ catEithers (x:xs) = case x of
   Left _ -> catEithers xs
   -- in this case, our Right case are the ones we want to eliminate
 
-divideUp :: Stream s m Char => ScraperT String -> ScraperT [Either String String]
+divideUp :: ScraperT String -> ScraperT [Either String String]
 divideUp parser = many ((Right <$> parser) <|> ( (Left . (:[]) ) <$> anyChar)) 
 
-onlyPlainText :: Stream s m Char => ScraperT String
+onlyPlainText :: ScraperT String
 onlyPlainText = fmap (\(ACT strings) -> mconcat strings) specialElemParser 
   where
-    specialElemParser :: Stream s m Char => ScraperT (AccumITextElem String)
+    specialElemParser :: ScraperT (AccumITextElem String)
     specialElemParser = do
       (elem', attrs') <- parseOpeningTag (Just ["html"]) []  
       (localText, inTex) <- fmap (foldr textOnlyFoldr mempty)
