@@ -23,8 +23,11 @@ import Text.Megaparsec as MParsec (some)
 import Text.Parsec (ParsecT, Stream, parserZero, string, (<|>), anyChar, char, optional, try, manyTill, alphaNum
                    , parserFail)
 import Data.Maybe (fromMaybe)
+import Data.Functor.Identity (Identity)
+
 -- Goals: eliminate need for sub tree and inner datatypes ; so Element --> foldr [HTMLMatcher] empty :: Element 
 
+type ScraperT a = ParsecT Html () Identity a 
 
 ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -85,7 +88,7 @@ class (ShowHTML c, ElementRep a) => InnerHTMLRep (a :: * -> *)  (b :: * -> *) c 
 
 
 
-noPat :: Maybe (ParsecT s u m String)
+noPat :: Maybe (ScraperT String)
 noPat = Nothing
 
 -- | Parser is configured via the return type but gives the input type 
@@ -591,17 +594,17 @@ makeBranch treeH = Node (elTag treeH, attrs treeH) (_innerTree' treeH) -- 2 case
 
 
 
-endTag :: Stream s m Char => String -> ParsecT s u m String 
+endTag :: String -> ScraperT String 
 endTag elem = try (string ("</" <> elem <> ">"))
 
 
-enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ParsecT s u m (Elem a)
+enoughMatches :: Int -> String -> Map String String -> (String, [a]) -> ScraperT (Elem a)
 enoughMatches required e a (asString, matches) = 
   if required <= (length matches)
   then return $ Elem e a matches (reverse asString)
   else parserFail "not enough matches" -- should throw real error 
 
-enoughMatchesTree :: Int -> String -> Map String String -> (String, [a], Forest ElemHead) -> ParsecT s u m (TreeHTML a)
+enoughMatchesTree :: Int -> String -> Map String String -> (String, [a], Forest ElemHead) -> ScraperT (TreeHTML a)
 enoughMatchesTree required e a (asString, matches, forest) = 
   if required <= (length matches)
   then return $ TreeHTML e a matches (reverse asString) forest
@@ -611,9 +614,9 @@ enoughMatchesTree required e a (asString, matches, forest) =
 -- | This is valid according to my knowledge but need to see if better to
 -- maybe instead: do some text >>= (\x -> char '\n' >> x) with source being RequestBody
 -- If i recall correctly, self-closing tags dont allow embedded elements
-selfClosingTextful :: (ShowHTML a, Stream s m Char) =>
-                      Maybe (ParsecT s u m a)
-                   -> ParsecT s u m [HTMLMatcher e a]
+selfClosingTextful :: (ShowHTML a) =>
+                      Maybe (ScraperT a)
+                   -> ScraperT [HTMLMatcher e a]
 selfClosingTextful innerP =
   -- Fix: all is prefixed with 
   
