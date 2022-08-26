@@ -19,7 +19,7 @@ import Scrappy.Find (findNaive)
 import Scrappy.Elem.ChainHTML (contains)
 import Scrappy.Elem.SimpleElemParser (el)
 import Scrappy.Elem.Types (innerText', ElemHead, Clickable(..))
-import Scrappy.Links (BaseUrl, Link(..), renderLink)
+import Scrappy.Links (BaseUrl, Link(..), renderLink, Html)
 import Scrappy.Types (CookieManager(..))
 
 import Test.WebDriver (WD, getSource, runWD, openPage, getCurrentURL, executeJS)
@@ -101,7 +101,7 @@ data ExistT m a = ExistT { runExistT :: MaybeT m a }
 type ParsecError = ParseError
 
 
-type Html = String
+
 
 -- runScraperM "" $ \html -> do
 --   ...

@@ -7,11 +7,11 @@
 
 module Scrappy.JS where
 
-import Scrappy.Requests (getHtml, getHtml', SessionState(..), Html)
+import Scrappy.Requests (getHtml, getHtml', SessionState(..))
 import Scrappy.Scrape (ScraperT, scrape, exists)
 import Scrappy.Elem.SimpleElemParser (el, manyTill_)
 import Scrappy.Elem.Types (Elem'(..))
-import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink, LastUrl)
+import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink, LastUrl, Html)
 import Scrappy.Find
 
 import Language.Haskell.TH (recover)
