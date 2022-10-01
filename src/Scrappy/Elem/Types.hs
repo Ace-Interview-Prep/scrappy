@@ -608,17 +608,26 @@ enoughMatchesTree required e a (asString, matches, forest) =
   else parserFail "not enough matches" -- should throw real error 
 
 
--- | This is valid according to my knowledge but need to see if better to
--- maybe instead: do some text >>= (\x -> char '\n' >> x) with source being RequestBody
--- If i recall correctly, self-closing tags dont allow embedded elements
+
+-- | Explanation: This is for the edge case of <p> tags that are allowed to "contain" text without actually having
+-- | an end tag
+-- | If i recall correctly, self-closing tags dont allow embedded elements, only plaintext.
+-- | this means that the text belonging to the tag read, is that up until the next HTML control section
 selfClosingTextful :: (ShowHTML a, Stream s m Char) =>
                       Maybe (ParsecT s u m a)
                    -> ParsecT s u m [HTMLMatcher e a]
-selfClosingTextful innerP =
+selfClosingTextful innerP = do
   -- Fix: all is prefixed with 
   
   char '>'
-  >> manyTill ((try (Match <$> innerP')) <|> (try ((IText . (:[])) <$> anyChar))) ((try anyEndTag) <|> (char '<' >> some alphaNum))
+  manyTill
+    (
+      (try (Match <$> innerP'))
+      <|> (try ((IText . (:[])) <$> anyChar))
+    )
+    (
+      (try anyEndTag) <|> (char '<' >> some alphaNum)
+    )
   where anyEndTag = (try (char '<'
                        >> (optional (char '/'))
                        >> MParsec.some anyChar

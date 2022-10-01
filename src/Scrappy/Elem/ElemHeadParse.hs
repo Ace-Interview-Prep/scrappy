@@ -150,7 +150,7 @@ attrParser = do
 
       --re-implement anyAttr
         --needs to include weird edge cases
-      attrName' <- attrName
+      attrName' <- try attrName
       content <- option "" (char '=' >> attrValue)
       return (attrName', content)
                                   -- [AttrsPNew]

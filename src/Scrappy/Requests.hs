@@ -212,7 +212,7 @@ getHtml mgr url = do
     req = requ { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
                , secure = True
                }
-  (mgr', r) <- catchIO (fmap ((mgr,) . extractDadBod) $ httpLbs requ mgr) (recoverMgr' url)
+  (mgr', r) <- catch (fmap ((mgr,) . extractDadBod) $ httpLbs requ mgr) (recoverMgr' url)
   return (mgr', r)
 
 
