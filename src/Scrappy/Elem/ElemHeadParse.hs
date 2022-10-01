@@ -160,7 +160,7 @@ attrsParser :: Stream s m Char =>
             --change to Either AttrsError (Map String String) 
 attrsParser attrs = do
   -- attrPairs <- MParsec.manyTill attrParser {- this needs to also handle -} (char '/' <|> char '>')
-  attrPairs <- many attrParser -- (char '>' <|> char '/')
+  attrPairs <- many $ try attrParser -- (char '>' <|> char '/')
   let
     attrPairsMap = fromList attrPairs
   case isAttrsMatch attrPairsMap attrs of
@@ -221,13 +221,6 @@ attrsParserDesc attrs = do
   if attrsMatch attrs attrPairsMap  
     then return attrPairsMap
     else parserFail $ "incorrect attrs:" <> (show $ unfit attrs attrPairsMap)
-
-
-
-
-
-
-
     
   -- let
     -- attrPairsMap = fromList attrPairs
