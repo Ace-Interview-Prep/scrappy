@@ -60,7 +60,6 @@ elemParser :: (ShowHTML a, Stream s m Char) =>
            -> ParsecT s u m (Elem' a)
 elemParser elemList innerSpec attrs = do
   (elem', attrs') <- parseOpeningTag elemList attrs
-  optional (many space) 
   -- we should now read the elem' to see if in list of self-closing tags
   -- TODO(galen): What about when the self closing tag actually doesnt?
   case elem elem' selfClosing of

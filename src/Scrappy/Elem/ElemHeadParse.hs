@@ -8,7 +8,7 @@ import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAtt
 
 import Text.Megaparsec as MParsec (some, manyTill)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
-                   alphaNum, many1, between, many, letter, parserFail)
+                   alphaNum, many1, between, many, letter, parserFail, optional)
 import Data.Map as Map (Map, fromList, lookup, toList) 
 import Data.Maybe (fromMaybe)
 import Witherable (mapMaybe)
@@ -150,7 +150,7 @@ attrParser = do
 
       --re-implement anyAttr
         --needs to include weird edge cases
-      attrName' <- try attrName
+      attrName' <- attrName
       content <- option "" (char '=' >> attrValue)
       return (attrName', content)
                                   -- [AttrsPNew]
@@ -339,7 +339,7 @@ parseOpeningTag elemOpts attrsSubset = do
   _ <- char '<'
   elem <- mkElemtagParser elemOpts
   attrs <- attrsParser attrsSubset
-
+  optional (many space)
   case attrs of
     Left IncorrectAttrs -> parserZero
     Right whateva -> return (elem, whateva)
