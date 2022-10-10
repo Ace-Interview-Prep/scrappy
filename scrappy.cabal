@@ -80,6 +80,7 @@ library
   exposed-modules:    Scrappy.Find
                     , Scrappy.Scrape
                     , Scrappy.BuildActions
+                    , Scrappy.Elem
                     , Scrappy.Elem.Types
                     , Scrappy.Elem.TreeElemParser
                     , Scrappy.Elem.SimpleElemParser
@@ -93,6 +94,7 @@ library
                     , Scrappy.Proxies
                     , Scrappy.Types
                     , Scrappy.JS
+                    
                     -- , Scrappy.JSFFI
 
 
