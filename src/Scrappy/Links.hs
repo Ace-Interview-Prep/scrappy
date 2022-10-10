@@ -243,7 +243,7 @@ data DOMLink = Href' Href
 -- scrapeLinks = undefined
 
 
-newtype Link = Link Url deriving (Eq, Show, Ord)
+newtype Link = Link Url deriving (Eq, Show, Read, Ord)
 
 -- | This is a general interface for extracting a raw link
 -- | from scraping according to specs about the scraper itself
