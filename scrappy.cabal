@@ -127,7 +127,6 @@ library
                      , http-types
                      , stm
                      , parallel
-                     , webdriver
                      , directory
                      , bibtex
                      , lens
