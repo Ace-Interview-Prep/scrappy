@@ -22,13 +22,13 @@ import Scrappy.Elem.Types (innerText', ElemHead, Clickable(..))
 import Scrappy.Links (BaseUrl, Link(..), renderLink, Html)
 import Scrappy.Types (CookieManager(..))
 
-import Test.WebDriver (WD, getSource, runWD, openPage, getCurrentURL, executeJS)
-import Test.WebDriver.Commands.Wait (waitUntil, expect, )
-import Test.WebDriver.Commands ( Selector(ById, ByXPath), findElem )
-import qualified Test.WebDriver.Commands as WD (click)
-import Test.WebDriver.Exceptions (InvalidURL(..))
-import Test.WebDriver.JSON (ignoreReturn)
-import Test.WebDriver.Session (getSession, WDSession)
+-- import Test.WebDriver (WD, getSource, runWD, openPage, getCurrentURL, executeJS)
+-- import Test.WebDriver.Commands.Wait (waitUntil, expect, )
+-- import Test.WebDriver.Commands ( Selector(ById, ByXPath), findElem )
+-- import qualified Test.WebDriver.Commands as WD (click)
+-- import Test.WebDriver.Exceptions (InvalidURL(..))
+-- import Test.WebDriver.JSON (ignoreReturn)
+-- import Test.WebDriver.Session (getSession, WDSession)
 
 import Control.Concurrent (threadDelay)
 import Network.HTTP.Types.Header 
@@ -680,57 +680,57 @@ instance SessionState CookieManager where
 
 
 
-instance SessionState WDSession where
-  getHtmlST = getHtmlWD -- use runWD to run a WD action where you do
-                                         -- 1) Get html (getSource)
-                                         -- 2) tuple with result of getSession
+-- instance SessionState WDSession where
+--   getHtmlST = getHtmlWD -- use runWD to run a WD action where you do
+--                                          -- 1) Get html (getSource)
+--                                          -- 2) tuple with result of getSession
 
-  getHtmlAndUrl = getHtmlUWD
-
-
+--   getHtmlAndUrl = getHtmlUWD
 
 
-                                                                             --(qStr:qStrs)
-  -- submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio []) =
-  submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio (qStr:qStrs)) = do
-    if reqMethod' == methodGet
-      then
-      do
-        liftIO $ print "do get"
-        -- write Url then fetch it
 
-        truple@(html, (Link url), wdSesh') <- liftIO $ runWD wdSesh (wdSubmitFormGET actionUrl (head tio <> qStr))
-        return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
-      else
-      do
-        liftIO $ print "do post"
-        -- write form elem with static (namespace,value) then hit submit
 
-        truple@(html,(Link url),wdSesh') <- liftIO $ runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
-        return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
+--                                                                              --(qStr:qStrs)
+--   -- submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio []) =
+--   submitForm wdSesh (FilledForm actionUrl reqMethod' searchTerm' tio (qStr:qStrs)) = do
+--     if reqMethod' == methodGet
+--       then
+--       do
+--         liftIO $ print "do get"
+--         -- write Url then fetch it
 
-  -- this should be written to not be only for pdfs ideally
-  -- Currently though this is more like clickFile 
-  click downloadFolder wdSesh (Clickable (e, attrs) url) = do
-    files_i <- liftIO $ listDirectory downloadFolder -- statically written function
-    wdSesh' <- liftIO $ runWD wdSesh (do
-                                elmnt <- findElem (ByXPath . pack $ xpath (e, attrs))
-                                WD.click elmnt
-                                getSession
-                            )
---    persist untilOneBigger contstrainedBy (< 10 seconds)
-    now <- liftIO $ getSystemTime
-    files_f <- liftIO $ persistUntilSafe (PersistentAction
-                                 (listDirectory downloadFolder)
-                                 1
-                                 (\dir -> length dir > length files_i)
-                                 Nothing
-                                 (Just (addTenSeconds now))
-                                )
-    let filePath = head $ exclusive files_i files_f
-        exclusive fis1 fis2 = filter (\fi -> not $ elem fi fis2) fis1
-    pdf <- liftIO $ readFile filePath
-    pure $ (pdf, wdSesh')
+--         truple@(html, (Link url), wdSesh') <- liftIO $ runWD wdSesh (wdSubmitFormGET actionUrl (head tio <> qStr))
+--         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
+--       else
+--       do
+--         liftIO $ print "do post"
+--         -- write form elem with static (namespace,value) then hit submit
+
+--         truple@(html,(Link url),wdSesh') <- liftIO $ runWD wdSesh (submitPostFormWD $ writeForm (pack actionUrl) (head tio <> qStr))
+--         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
+
+--   -- this should be written to not be only for pdfs ideally
+--   -- Currently though this is more like clickFile 
+--   click downloadFolder wdSesh (Clickable (e, attrs) url) = do
+--     files_i <- liftIO $ listDirectory downloadFolder -- statically written function
+--     wdSesh' <- liftIO $ runWD wdSesh (do
+--                                 elmnt <- findElem (ByXPath . pack $ xpath (e, attrs))
+--                                 WD.click elmnt
+--                                 getSession
+--                             )
+-- --    persist untilOneBigger contstrainedBy (< 10 seconds)
+--     now <- liftIO $ getSystemTime
+--     files_f <- liftIO $ persistUntilSafe (PersistentAction
+--                                  (listDirectory downloadFolder)
+--                                  1
+--                                  (\dir -> length dir > length files_i)
+--                                  Nothing
+--                                  (Just (addTenSeconds now))
+--                                 )
+--     let filePath = head $ exclusive files_i files_f
+--         exclusive fis1 fis2 = filter (\fi -> not $ elem fi fis2) fis1
+--     pdf <- liftIO $ readFile filePath
+--     pure $ (pdf, wdSesh')
 
 
 -- data PersistentAction a = PersistentAction { action :: IO a
@@ -1050,15 +1050,15 @@ attrsXpath m =
         -- openPage $ baseU <> "/" <> (unpack $ aAttr <> (showQString $ (head tio) <> (head qStrVari)))
         -- (,,) <$> (fmap unpack getSource) <*> getCurrentURL <*> getSession
 
-wdSubmitFormGET :: Url -> QueryString -> WD (String, Link, WDSession)
-wdSubmitFormGET actionUrl tioqStrVari = do
-  openPage (actionUrl <> "?" <> (unpack (showQString $ tioqStrVari)))
-  src <- waitUntil 10 (do
-                          src <- getSource
-                          expect (if ((length (unpack src)) < 50000) then False else True)
-                          return $ unpack src
-                      )
-  (,,) <$> (fmap unpack getSource) <*> (Link <$> getCurrentURL) <*> getSession
+-- wdSubmitFormGET :: Url -> QueryString -> WD (String, Link, WDSession)
+-- wdSubmitFormGET actionUrl tioqStrVari = do
+--   openPage (actionUrl <> "?" <> (unpack (showQString $ tioqStrVari)))
+--   src <- waitUntil 10 (do
+--                           src <- getSource
+--                           expect (if ((length (unpack src)) < 50000) then False else True)
+--                           return $ unpack src
+--                       )
+--   (,,) <$> (fmap unpack getSource) <*> (Link <$> getCurrentURL) <*> getSession
 
 
 -- postFormWD :: WDSession -> FilledForm -> IO (Html, Url, WDSession)
@@ -1105,21 +1105,22 @@ writeParam (n, v) =
   <> " value=\"" <> v <> "\""
   <> ">"
 
-submitPostFormWD :: Text -> WD (Html, Link, WDSession)
-submitPostFormWD formString = do
-  -- liftIO $ print "the magic expression is!!!"
-  -- liftIO $ print formString
-  ignoreReturn $ executeJS [] ("document.body.innerHTML = '" <> formString <> "'") --formString)
-  -- ignoreReturn $ executeJS [] formString
+-- submitPostFormWD :: Text -> WD (Html, Link, WDSession)
 
-  -- liftIO $ print "expr 1 of 4 run"
-  ignoreReturn $ executeJS [] "console.log('hello')"
-  -- liftIO $ print "expr 2 of 4 run"
-  ignoreReturn $ executeJS [] "document.getElementById('myBullshitForm').submit()"
+-- submitPostFormWD formString = do
+--   -- liftIO $ print "the magic expression is!!!"
+--   -- liftIO $ print formString
+--   ignoreReturn $ executeJS [] ("document.body.innerHTML = '" <> formString <> "'") --formString)
+--   -- ignoreReturn $ executeJS [] formString
 
-  src <- waitUntil 10
-         (do { src <- getSource; expect (if ((length (unpack src)) < 50000) then False else True); return src })
-  (unpack src,,) <$> (Link <$> getCurrentURL) <*> getSession
+--   -- liftIO $ print "expr 1 of 4 run"
+--   ignoreReturn $ executeJS [] "console.log('hello')"
+--   -- liftIO $ print "expr 2 of 4 run"
+--   ignoreReturn $ executeJS [] "document.getElementById('myBullshitForm').submit()"
+
+--   src <- waitUntil 10
+--          (do { src <- getSource; expect (if ((length (unpack src)) < 50000) then False else True); return src })
+--   (unpack src,,) <$> (Link <$> getCurrentURL) <*> getSession
 
   -- getHtmlFlex manager req = getHtmlFlexWd
 
@@ -1136,34 +1137,34 @@ submitPostFormWD formString = do
 --     Right res -> ""
 --     Left _ -> ""
 
-getHtmlWD :: MonadIO m => WDSession -> Link -> m (Html, WDSession)
-getHtmlWD seshVar (Link url) = liftIO $ runWD seshVar (wd url)
-  where
-    wd :: Url -> WD (Html, WDSession)
-    wd urlI = do
-      openPage urlI
-      src <- waitUntil 10 (do
-                              src <- getSource
-                              expect (if ((length (unpack src)) < 10000) then False else True)
-                              return src
-                          )
-      (unpack src,) <$> getSession
-    -- where
+-- getHtmlWD :: MonadIO m => WDSession -> Link -> m (Html, WDSession)
+-- getHtmlWD seshVar (Link url) = liftIO $ runWD seshVar (wd url)
+--   where
+--     wd :: Url -> WD (Html, WDSession)
+--     wd urlI = do
+--       openPage urlI
+--       src <- waitUntil 10 (do
+--                               src <- getSource
+--                               expect (if ((length (unpack src)) < 10000) then False else True)
+--                               return src
+--                           )
+--       (unpack src,) <$> getSession
+--     -- where
       -- f = src <- waitUntil 10 (do
                                   -- src <- getSource
                                   -- expect (if ((length (unpack src)) < 2000) then False else True)
                                   -- return src
                               -- )
-getHtmlUWD :: MonadIO m => WDSession -> Link -> m (Html, Link, WDSession)
-getHtmlUWD sv (Link url) = liftIO $ runWD sv (f_ url)
-  where 
-    f_ :: Url -> WD (Html, Link, WDSession)
-    f_ url = do
-      -- openPage url
-      openPage url
-      src <- waitUntil 10
-             (do { src <- getSource; expect (if ((length (unpack src)) < 10000) then False else True); return src })
-      (unpack src,,) <$>  (Link <$> getCurrentURL) <*> getSession
+-- getHtmlUWD :: MonadIO m => WDSession -> Link -> m (Html, Link, WDSession)
+-- getHtmlUWD sv (Link url) = liftIO $ runWD sv (f_ url)
+--   where 
+--     f_ :: Url -> WD (Html, Link, WDSession)
+--     f_ url = do
+--       -- openPage url
+--       openPage url
+--       src <- waitUntil 10
+--              (do { src <- getSource; expect (if ((length (unpack src)) < 10000) then False else True); return src })
+--       (unpack src,,) <$>  (Link <$> getCurrentURL) <*> getSession
 
 
 
