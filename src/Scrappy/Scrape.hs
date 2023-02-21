@@ -169,3 +169,17 @@ findCount p = do
   x <- findNaive p
   return $ length (fromMaybe [] x)
 
+
+
+
+type Prefix' = String
+{-# DEPRECATED scrapeBracketed "experimental, first attempt" #-}
+scrapeBracketed :: Prefix' -> ScraperT a -> Html -> Maybe [a]
+scrapeBracketed pre scraper html = mconcat <$> scrape (string pre >> manyTill scraper (string pre)) html
+
+
+
+type Prefix = String 
+scrapePrefixed :: Prefix -> ScraperT a -> Html -> Maybe [a]
+scrapePrefixed pre scraper html = scrape (string pre >> scraper) html
+
