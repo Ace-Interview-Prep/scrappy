@@ -16,7 +16,7 @@ import Data.Functor.Identity (Identity)
 import Witherable (Filterable, mapMaybe)
 import Data.Either (fromRight)
 import Data.Maybe (catMaybes, fromMaybe)
-import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char, many, try)
+import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char, many, try, string )
 import Control.Applicative (liftA2) 
 
 
