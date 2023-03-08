@@ -358,6 +358,9 @@ instance SessionState Manager where
       -- Invalidate normal HTML responses here------
       -- AND if file did not download then this was not a PdfLink like expected
 
+  click = undefined 
+  clickWriteFile = undefined 
+  clickWriteFile' = undefined 
 
 
 -- we only actually wanna do this in the case of
@@ -655,6 +658,8 @@ instance SessionState CookieManager where
     liftIO $ writeFile filepath pdf
     return $ Right mgr
  
+  clickWriteFile = undefined 
+  clickWriteFile' = undefined 
     -- (html, cm) <- getHtmlST cmanager req 
     -- pure ((html, cm), drop1qStrVar form)
  
