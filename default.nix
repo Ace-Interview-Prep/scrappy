@@ -3,7 +3,7 @@
 , lens, lib, megaparsec, modern-uri, mtl, parallel, parsec
 , replace-megaparsec, stm, text, time, transformers
 , witherable, jsaddle, which, pkgs, raw-strings-qq, MissingH, nodejs
-, cabal-install
+, cabal-install, temporary
 }:
 let
   # TODO(galen): figure out if these even matter or just nodejs or something 
@@ -28,7 +28,7 @@ mkDerivation {
     http-client http-client-tls http-types lens megaparsec modern-uri
     mtl parallel parsec replace-megaparsec stm text time transformers
     witherable jsaddle which
-    raw-strings-qq MissingH
+    raw-strings-qq MissingH temporary
     # nodejs
     # nodeDeps
     
