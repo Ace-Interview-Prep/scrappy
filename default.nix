@@ -33,11 +33,11 @@ mkDerivation {
     # nodeDeps
     
     nodejs
-    cabal-install
+    #cabal-install
     # Note that staticWhich 
   ];
   librarySystemDepends = [ nodejs ]; # nodejs nodeDeps nodeWithJSDom ]; # nodeDeps
-  executableSystemDepends = [ nodejs ] 
+  executableSystemDepends = [ nodejs ];
   testHaskellDepends = [ base ];
   homepage = "https://github.com/Ace-Interview-Prep/scrappy";
   description = "html pattern matching library and high-level interface concurrent requests lib for webscraping";
