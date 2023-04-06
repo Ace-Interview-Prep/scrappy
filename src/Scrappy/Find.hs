@@ -86,7 +86,7 @@ find parser = do
 
 -- | Should never throw Left or I did it wrong
 streamEdit :: ParsecT String () Identity a -> (a -> String) -> String -> String
-streamEdit p f src = fromRight undefined $ parse (findEdit f p) "" src
+streamEdit p f src = fromRight undefined $ parse (try $ findEdit f p) "" src
 
 
 -- -- Note: List will be backwards as is 
