@@ -15,7 +15,7 @@ import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink, LastUr
 import Scrappy.Find
 
 import Language.Haskell.TH (recover)
-import System.Which (staticWhichNix, staticWhich)
+import System.Which (staticWhich)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import System.Process (CreateProcess(..), proc, readCreateProcess)
@@ -241,7 +241,7 @@ type Body = Text
 nodePath :: FilePath
 -- nodePath = $(recover (staticWhichNix "node") (staticWhich "node")) 
 nodePath = --- $(staticWhich "node")
- $(recover (staticWhichNix "node") (staticWhich "node"))
+ $(staticWhich "node")
 
 
 
