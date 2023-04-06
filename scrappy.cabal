@@ -128,7 +128,6 @@ library
                      , stm
                      , parallel
                      , directory
-                     , bibtex
                      , lens
                      -- , witherable
                      , jsaddle

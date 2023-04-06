@@ -1,4 +1,4 @@
-{ mkDerivation, aeson, base, bibtex, bytestring, containers
+{ mkDerivation, aeson, base, bytestring, containers
 , deepseq, directory, exceptions, extra, http-client
 , http-client-tls, http-types, jsaddle, lens, lib, megaparsec
 , MissingH, modern-uri, mtl, network-uri, parallel, parsec, process
@@ -10,7 +10,7 @@ mkDerivation {
   version = "0.1.0.4";
   src = ./.;
   libraryHaskellDepends = [
-    aeson base bibtex bytestring containers deepseq directory
+    aeson base bytestring containers deepseq directory
     exceptions extra http-client http-client-tls http-types
     jsaddle lens megaparsec MissingH modern-uri mtl network-uri
     parallel parsec process random raw-strings-qq 
