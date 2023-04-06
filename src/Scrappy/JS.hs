@@ -39,7 +39,7 @@ import Data.Text (Text, pack, unpack)
 import Data.List.Extra (isInfixOf)
 import Data.ByteString.Lazy (ByteString)
 
-import Text.RawString.QQ (r)
+--import Text.RawString.QQ (r)
 
 import Data.Aeson.TH (defaultOptions, deriveJSON)
 

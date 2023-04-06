@@ -137,7 +137,6 @@ library
                      , which
                      , process
                      , temporary
-                     , raw-strings-qq
                      , network-uri
                      , aeson
                      -- , raw-strings-qq
