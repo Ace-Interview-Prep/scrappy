@@ -1,7 +1,7 @@
 { mkDerivation, aeson, base, bytestring, containers
 , deepseq, directory, exceptions, extra, http-client
 , http-client-tls, http-types, jsaddle, lens, lib, megaparsec
-, MissingH, modern-uri, mtl, network-uri, parallel, parsec, process
+, modern-uri, mtl, network-uri, parallel, parsec, process
 , random, raw-strings-qq, stm, template-haskell
 , temporary, text, time, transformers, which, nodejs
 }:
@@ -12,7 +12,7 @@ mkDerivation {
   libraryHaskellDepends = [
     aeson base bytestring containers deepseq directory
     exceptions extra http-client http-client-tls http-types
-    jsaddle lens megaparsec MissingH modern-uri mtl network-uri
+    jsaddle lens megaparsec modern-uri mtl network-uri
     parallel parsec process random raw-strings-qq 
     stm template-haskell temporary text time transformers which
   ];

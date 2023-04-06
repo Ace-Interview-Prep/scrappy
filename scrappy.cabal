@@ -137,7 +137,6 @@ library
                      , which
                      , process
                      , temporary
-                     , MissingH
                      , raw-strings-qq
                      , network-uri
                      , aeson

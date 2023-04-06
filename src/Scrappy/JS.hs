@@ -38,7 +38,6 @@ import qualified Data.Map as M
 import Data.Text (Text, pack, unpack)
 import Data.List.Extra (isInfixOf)
 import Data.ByteString.Lazy (ByteString)
-import Data.String.Utils (strip)
 
 import Text.RawString.QQ (r)
 
