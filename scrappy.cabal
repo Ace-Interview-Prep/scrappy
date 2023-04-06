@@ -115,7 +115,7 @@ library
                      , extra 
                      , modern-uri
                      , http-client
-                     , HTTP
+--                     , HTTP
                      , http-client-tls
                      , containers
                      , text
