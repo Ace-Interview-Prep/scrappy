@@ -111,7 +111,7 @@ library
                      , parsec 
                      , megaparsec
 -- == 8.0.*
-                     , replace-megaparsec
+--                     , replace-megaparsec
                      , extra 
                      , modern-uri
                      , http-client
