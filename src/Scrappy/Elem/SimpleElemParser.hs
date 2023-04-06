@@ -13,7 +13,7 @@ import Scrappy.Types -- for witherable instance
 
 import Control.Monad (when)  
 import Control.Applicative (liftA2)
-import Witherable (mapMaybe)
+--import Witherable (mapMaybe)
 import Text.Megaparsec as MParsec (eitherP, some, manyTill)
 import Text.Parsec (ParsecT, Stream, string, try, (<|>), parserZero, anyChar, char, optional, anyToken, parserFail
                    , many, space)

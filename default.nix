@@ -2,7 +2,7 @@
 , exceptions, extra, HTTP, http-client, http-client-tls, http-types
 , lens, lib, megaparsec, modern-uri, mtl, parallel, parsec
 , replace-megaparsec, stm, text, time, transformers
-, witherable, jsaddle, which, pkgs, raw-strings-qq, MissingH, nodejs
+, jsaddle, which, pkgs, raw-strings-qq, MissingH, nodejs
 , cabal-install, temporary
 }:
 let
@@ -27,7 +27,7 @@ mkDerivation {
     base bibtex bytestring containers directory exceptions extra HTTP
     http-client http-client-tls http-types lens megaparsec modern-uri
     mtl parallel parsec replace-megaparsec stm text time transformers
-    witherable jsaddle which
+    jsaddle which
     raw-strings-qq MissingH temporary
     # nodejs
     # nodeDeps

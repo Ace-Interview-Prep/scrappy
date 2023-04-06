@@ -130,7 +130,7 @@ library
                      , directory
                      , bibtex
                      , lens
-                     , witherable
+                     -- , witherable
                      , jsaddle
                      , deepseq
                      , random

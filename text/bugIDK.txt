@@ -1,0 +1,17 @@
+<p>A striking aspect of the interaction between mathematics and physics is when mathematics drives research in physics. This is illustrated by the discoveries of the <a href="/wiki/Positron" title="Positron">positron</a> and the <a href="/wiki/Omega_baryon" title="Omega baryon">baryon</a> <span class="mwe-math-element"><span class="mwe-math-mathml-inline mwe-math-mathml-a11y" style="display: none;"><math xmlns="http://www.w3.org/1998/Math/MathML" alttext="{\displaystyle \Omega ^{-}.}">
+  <semantics>
+    <mrow class="MJX-TeXAtom-ORD">
+      <mstyle scriptlevel="0" displaystyle="true">
+        <msup>
+          <mi mathvariant="normal">Ω<!-- Ω --></mi>
+          <mrow class="MJX-TeXAtom-ORD">
+            <mo>−<!-- − --></mo>
+          </mrow>
+        </msup>
+        <mo>.</mo>
+      </mstyle>
+    </mrow>
+    <annotation encoding="application/x-tex">{\displaystyle \Omega ^{-}.}</annotation>
+  </semantics>
+</math></span><img src="https://wikimedia.org/api/rest_v1/media/math/render/svg/ef44bf9fda1defbf63ab871817d3193ef64683ae" class="mwe-math-fallback-image-inline" aria-hidden="true" style="vertical-align: -0.338ex; width:3.836ex; height:2.509ex;" alt="{\displaystyle \Omega ^{-}.}"></span> In both cases, the equations of the theories had unexplained solutions, which led to conjecture the existence of an unknown <a href="/wiki/Particle" title="Particle">particle</a>, and to search these particles. In both cases, these particles were discovered a few years later by specific experiments.<sup id="cite_ref-borel_132-0" class="reference"><a href="#cite_note-borel-132">[128]</a></sup><sup id="cite_ref-133" class="reference"><a href="#cite_note-133">[129]</a></sup><sup id="cite_ref-134" class="reference"><a href="#cite_note-134">[130]</a></sup>
+</p>
