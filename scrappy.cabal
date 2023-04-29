@@ -94,6 +94,7 @@ library
                     , Scrappy.Proxies
                     , Scrappy.Types
                     , Scrappy.JS
+                    , Scrappy.Template
                     -- , QuickProjectss                    
                     -- , Scrappy.JSFFI
 

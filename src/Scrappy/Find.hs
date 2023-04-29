@@ -2,9 +2,9 @@
 
 module Scrappy.Find where
 
-import Scrappy.Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', TreeHTML, ShowHTML)
+--import Scrappy.Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', TreeHTML, ShowHTML)
 -- import Elem.TreeElemParser (findSameTreeH)
-import Scrappy.Types (ScrapeFail(..))
+--import Scrappy.Types (ScrapeFail(..))
 
 import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero, anyChar
                    , many) 
@@ -12,6 +12,8 @@ import Data.Text (Text)
 import Data.Functor.Identity (Identity)
 import Data.Either (fromRight)
 
+
+data ScrapeFail = Eof | NonMatch
 
 -- | This module provides an interface for getting patterns seperated by whatever in a given source
 -- | that you plan to parse
@@ -205,8 +207,8 @@ buildSequentialElemsParser = undefined
 -- | to be applied to inner text of listlike elem
 
 
-findOnChangeInput :: ParsecT s u m (Elem' a)
-findOnChangeInput = undefined
+-- findOnChangeInput :: ParsecT s u m (Elem' a)
+-- findOnChangeInput = undefined
 -- eg : <select id="s-lg-sel-subjects" name="s-lg-sel-subjects" class="form-control" data-placeholder="All Subjects" onchange="springSpace.publicObj.filterAzBySubject(jQuery(this).val(), 3848);">
 
 

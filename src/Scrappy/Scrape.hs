@@ -3,13 +3,13 @@
 
 module Scrappy.Scrape where
 
--- Basically just html patterns from testing / courtney market stuff
+-- -- Basically just html patterns from testing / courtney market stuff
 import Scrappy.Elem.Types (Elem', innerText')
 import Scrappy.Elem.ElemHeadParse (hrefParser, parseOpeningTag)
 import Scrappy.Elem.SimpleElemParser (el)
 import Scrappy.Elem.ChainHTML ((</>>))
 import Scrappy.Find (findNaive)
-import Scrappy.Links (Html, maybeUsefulUrl)
+-- import Scrappy.Links (Html, maybeUsefulUrl)
 
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Data.Functor.Identity (Identity)
@@ -20,7 +20,7 @@ import Control.Applicative (liftA2)
 
 
 type ScraperT a = ParsecT Html () Identity a 
-
+type Html = String
 
 
 -- | Generate a scraping expression where when found, it will generate and link in a data structure
@@ -138,9 +138,9 @@ runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
 --     Just [] -> []
 --     Nothing -> [] 
 
-type Name = String -- placeholder
-tableItem :: Name -> Elem' String
-tableItem = undefined
+-- type Name = String -- placeholder
+-- tableItem :: Name -> Elem' String
+-- tableItem = undefined
 
 
 
