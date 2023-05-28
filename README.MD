@@ -7,7 +7,7 @@ provides a number of functions that allow for easily scraping certain patterns f
 
 ## Scraping ## 
 
-Scraping is parsing, where we don't care about the placement of our match in a chunk of data. 
+Scraping is parsing, where we don't care about the placement of our match in a chunk of data. ScraperT is really just ParsecT (ParsecT String () Identity a)
 
 ## Main functions ## 
 
@@ -21,12 +21,12 @@ scrape :: ScraperT a -> Html -> Maybe [a]
 -- | For more advanced control over inner structure see Elem.TreeElemParser
 elemParser :: Elem -> [(String, Maybe String)] 
             -> Maybe (ParsecT s u m a) -- Optionally scraped pattern inside this el, if specified, return element must have at least 1 
-            -> ParsecT s u m (Elem' a)
+            -> ScraperT (Elem' a)
 
-el :: Elem -> [(String, String)] -> ParsecT s u m (Elem' String)
+el :: Elem -> [(String, String)] -> ScraperT (Elem' String)
 
 -- | Find any expressive pattern as long as it is inside of some HTML context 
-contains :: ParsecT s u m (Elem' a) -> ParsecT s u m a -> ParsecT s u m a 
+contains :: ParsecT s u m (Elem' a) -> ScraperT a -> ScraperT a 
 
 
 :t fmap snd getHtml' "https://google.com" >>= return . (runScraperOnHtml (el "a" [])   
