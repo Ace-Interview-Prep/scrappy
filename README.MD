@@ -16,7 +16,7 @@ Scraping is parsing, where we don't care about the placement of our match in a c
 getHtml :: Manager -> Url -> IO (Manager, Html) 
 getHtml' :: Url -> IO Html
 
-runScraperOnHtml :: ParsecT s u Identity a -> Html -> Maybe [a]
+scrape :: ScraperT a -> Html -> Maybe [a]
 
 -- | For more advanced control over inner structure see Elem.TreeElemParser
 elemParser :: Elem -> [(String, Maybe String)] 
