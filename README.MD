@@ -26,7 +26,7 @@ elemParser :: Elem -> [(String, Maybe String)]
 el :: Elem -> [(String, String)] -> ScraperT (Elem' String)
 
 -- | Find any expressive pattern as long as it is inside of some HTML context 
-contains :: ParsecT s u m (Elem' a) -> ScraperT a -> ScraperT a 
+contains :: ScraperT (Elem' a) -> ScraperT a -> ScraperT a 
 
 
 :t fmap snd getHtml' "https://google.com" >>= return . (runScraperOnHtml (el "a" [])   
