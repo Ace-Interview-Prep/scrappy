@@ -12,11 +12,11 @@ import Scrappy.Links (LastUrl)
 import Scrappy.Types -- for witherable instance
 
 import Control.Monad (when)  
-import Control.Applicative (liftA2)
+import Control.Applicative (Alternative, liftA2, some, (<|>))
 import Witherable (mapMaybe)
-import Text.Megaparsec as MParsec (eitherP, some, manyTill)
-import Text.Parsec (ParsecT, Stream, string, try, (<|>), parserZero, anyChar, char, optional, anyToken, parserFail
-                   , many, space)
+--import Text.Megaparsec as MParsec (eitherP, some, manyTill)
+import Text.Parsec (ParsecT, Stream, string, try, parserZero, anyChar, char, optional, anyToken, parserFail
+                   , many, space, manyTill)
 import Text.URI (URI, render)
 import Data.Text (Text, unpack)
 import Data.Map (Map, toList)
@@ -24,6 +24,10 @@ import Data.Maybe (fromMaybe)
 
 
 -- TODO(galen): antiElemParser --- inner matches must be 0 ... maybe doesnt match any parameter 
+
+
+eitherP :: Alternative m => m a -> m b -> m (Either a b)
+eitherP a b = (Left <$> a) <|> (Right <$> b)
 
 manyTill_ :: ParsecT s u m a -> ParsecT s u m end -> ParsecT s u m ([a], end)
 manyTill_ p end = go
@@ -469,14 +473,14 @@ parseInnerHTMLAndEndTag elem innerPattern = do
       anyTagInner innerP = baseParser innerP (try (char '<'
                                                    >> (optional (char '/'))
 ----------------------------------------------------DOES THIS ACTUALLY WORK BELOW?--------------------
-                                                   >> MParsec.some anyChar -- end tag 
+                                                   >> some anyChar -- end tag 
                                                    >> (string " " <|> string ">")))
 
       normal :: Stream s m Char => Maybe (ParsecT s u m String) -> ParsecT s u m (InnerTextResult String)
       normal innerP = baseParser innerP (try (string ("</" <> elem <> ">")))
       
 
-  x <- MParsec.eitherP (try (string "/>")) (normal innerPattern <|> anyTagInner innerPattern)
+  x <- eitherP (try (string "/>")) (normal innerPattern <|> anyTagInner innerPattern)
   case x of
      Left  a ->
        case innerPattern of

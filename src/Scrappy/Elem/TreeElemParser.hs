@@ -21,10 +21,9 @@ import Scrappy.Elem.SimpleElemParser (elemParser)
 import Scrappy.Find (findNaive)
 
 import Control.Monad (when)
-import Control.Applicative (liftA2)
-import Text.Megaparsec as MParsec (many, skipManyTill, manyTill, some)
-import Text.Parsec (Stream, ParsecT, anyChar, (<|>), try, parserZero, parserFail, string, parse
-                   , char, noneOf, option, space, alphaNum, notFollowedBy, (<?>), optional)
+import Control.Applicative (Alternative, liftA2, many, (<|>), some)
+import Text.Parsec (Stream, ParsecT, anyChar, try, parserZero, parserFail, string, parse
+                   , char, noneOf, option, space, alphaNum, notFollowedBy, (<?>), optional, manyTill)
 import qualified Data.Map as Map (Map, toList, fromList, adjust) 
 import Data.Graph (Tree (Node), Forest)
 import Data.Tree (rootLabel)
@@ -35,6 +34,11 @@ import Data.List
 import Data.Text (Text, splitOn)
 
 
+skipManyTill :: Alternative m => m a -> m end -> m end
+skipManyTill p end = go
+  where
+    go = end <|> (p *> go)
+{-# INLINE skipManyTill #-}
 
 -- | Note for research on Parsers/Scrapers + AI research -> if a scraper does provide only
 -- | a slow method for processing (Picture -> *) that we might be able to solve this issue with

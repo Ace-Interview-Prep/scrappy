@@ -10,7 +10,7 @@ import Network.HTTP.Client (CookieJar, requestBody, method, destroyCookieJar, re
 import Control.Concurrent (ThreadId)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.State.Lazy (StateT)
-import Data.Time.Clock.System
+--import Data.Time.Clock.System
 import Data.Text (Text)
 
 import Text.Parsec (ParsecT, parserZero)

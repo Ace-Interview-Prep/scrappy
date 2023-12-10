@@ -6,9 +6,9 @@ module Scrappy.Elem.ElemHeadParse where
 import Scrappy.Links (Link, LastUrl, CurrentUrl)
 import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs), getHrefAttrs) -- Attr)
 
-import Text.Megaparsec as MParsec (some, manyTill)
+import Control.Applicative (some)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
-                   alphaNum, many1, between, many, letter, parserFail, optional)
+                   alphaNum, many1, between, many, letter, parserFail, optional, manyTill)
 import Data.Map as Map (Map, fromList, lookup, toList) 
 import Data.Maybe (fromMaybe)
 import Witherable (mapMaybe)
@@ -366,7 +366,7 @@ mkElemtagParser :: Stream s m Char => Maybe [Elem] -> ParsecT s u m String
 mkElemtagParser x = case x of
                    -- Nothing -> MParsec.some (noneOf [' ', '>'])
                       --commented out in case below is wrong
-                      Nothing -> MParsec.some alphaNum
+                      Nothing -> some alphaNum
                       Just elemsOpts -> buildElemsOpts elemsOpts
 
 

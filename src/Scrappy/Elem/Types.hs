@@ -19,7 +19,8 @@ import Data.Map (Map, toList)
 import qualified Data.Map as Map
 
 import Data.Graph (Tree (Node), Forest)
-import Text.Megaparsec as MParsec (some)
+--import Text.Megaparsec as MParsec (some)
+import Control.Applicative (some)
 import Text.Parsec (ParsecT, Stream, parserZero, string, (<|>), anyChar, char, optional, try, manyTill, alphaNum
                    , parserFail)
 import Data.Maybe (fromMaybe)
@@ -630,7 +631,7 @@ selfClosingTextful innerP = do
     )
   where anyEndTag = (try (char '<'
                        >> (optional (char '/'))
-                       >> MParsec.some anyChar
+                       >> some anyChar
                        >> (string " " <|> string ">")))
         innerP' = fromMaybe parserZero innerP
 

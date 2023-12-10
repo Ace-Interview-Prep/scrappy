@@ -93,7 +93,7 @@ library
                     -- , Concurrencies
                     , Scrappy.Proxies
                     , Scrappy.Types
-                    , Scrappy.JS
+--                    , Scrappy.JS
                     
                     -- , Scrappy.JSFFI
 
@@ -107,43 +107,77 @@ library
 
   -- Other library packages from which modules are imported.
   build-depends:       base
-                       -->=4.12 && <4.13
-                     , parsec 
-                     , megaparsec
--- == 8.0.*
-                     , replace-megaparsec
-                     , extra 
-                     , modern-uri
-                     , http-client
-                     , HTTP
-                     , http-client-tls
+                     , aeson
+                     , bytestring
                      , containers
+                     , directory
+                     , http-client
+                     , http-client-tls
+                     , http-types
+                     , lens
+                     , modern-uri
+                     -- ^ less maintained?
+                     , network-uri
+                     , parsec
                      , text
-                     , bytestring 
                      , time
                      , transformers
-                     , mtl
-                     , exceptions
-                     , http-types
-                     , stm
-                     , parallel
-                     , webdriver
-                     , directory
-                     , bibtex
-                     , lens
                      , witherable
-                     , jsaddle
-                     , deepseq
-                     , random
-                     , template-haskell
-                     , which
-                     , process
-                     , temporary
-                     , MissingH
-                     , raw-strings-qq
-                     , network-uri
-                     , aeson
+                     ------------------
+                     -- we should only need one for exceptions and also mtl exports transformers
+                     -- , transformers
+                     , exceptions
+                     , mtl
+                     ------------------
+                     , webdriver
+                     
+                     
+                     
+                       -->=4.12 && <4.13
+--                      , parsec 
+--                      , megaparsec
+-- -- == 8.0.*
+--                      , replace-megaparsec
+--                      , extra 
+--                      , modern-uri
+--                      , http-client
+--                      , HTTP
+--                      , http-client-tls
+--                      , containers
+--                      , text
+--                      , bytestring 
+--                      , time
+-- --                     , transformers
+--                      , mtl
+--                      , exceptions
+--                      , http-types
+--                      , stm
+--                      , parallel
+--                      -- , webdriver
+--                      , directory
+-- --                     , bibtex
+--                      , lens
+--                      , vector 
+--                      -- , witherable
+--                      , jsaddle
+--                      , deepseq
+--                      , random
+--                      , template-haskell
+--                      , which
+--                      , process
+--                      , temporary
+--                      , MissingH
+--                      , raw-strings-qq
+--                      , network-uri
+--                      , aeson
+--                      , attoparsec
+--                      , lifted-base
+--                      --, MonadCatchIO-transformers
+--                      , primitive
+-- --                     , transformers
+--                      , monad-control
                      -- , raw-strings-qq
+                     
   -- Directories containing source files.
   hs-source-dirs:      src
 

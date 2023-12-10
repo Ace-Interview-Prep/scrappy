@@ -16,11 +16,12 @@ import Scrappy.Elem.Types (HTMLMatcher(..), Elem'(..), Elem, Attrs, ShowHTML(..)
                   , attrs, elTag, coerceAttrs
                   )
 
-import Text.Megaparsec as MParsec (some)
+
 import Text.Parsec (parse, ParsecT, Stream, string, (<|>), anyChar, char
                    , optional, try, manyTill, many, runParserT, ParseError
                    , parserZero, alphaNum, oneOf)
 import Control.Monad
+import Control.Applicative (some)
 import Data.Either (fromRight)
 import Data.List (intercalate)
 

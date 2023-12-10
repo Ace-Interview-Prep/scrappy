@@ -13,5 +13,7 @@ let
   drv = variant (haskellPackages.callPackage scrappy {});
 
 in
-
-  if pkgs.lib.inNixShell then drv.env else drv
+pkgs.mkShell {
+  buildInputs = [ pkgs.cabal-install ];
+  inputsFrom = [ (if pkgs.lib.inNixShell then drv.env else drv) ];
+} 
