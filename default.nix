@@ -55,7 +55,7 @@ mkDerivation {
       webdriver
       witherable
     ];
-  librarySystemDepends = [ myPkgs.nodejs pkgs.zlib ];
+  librarySystemDepends = [ myPkgs.nodejs pkgs.zlib pkgs.gmp ];
   homepage = "https://github.com/Ace-Interview-Prep/scrappy";
   description = "html pattern matching library and high-level interface concurrent requests lib for webscraping";
   license = lib.licenses.bsd3;

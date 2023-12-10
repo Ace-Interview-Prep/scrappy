@@ -1,13 +1,27 @@
+
 module Main (main) where
 
+import Test.WebDriver
+import Test.WebDriver.Session
+import Test.WebDriver.Common.Profile
+import Control.Monad.IO.Class
+
+import Scrappy.Links
+import Scrappy.Requests
+
+import Control.Monad (void)
+import Data.Char (toLower)
+
+
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented."
+main = void $ testWebdriver
 
-
+lower = fmap toLower
 
 testWebdriver = do
-  wdSesh <- mkWDSesh
-  getHtmlST wdSesh $ parseLink $ Link "http://localhost:8020/main/home"
+  wdSesh <- runSession defaultConfig $ getSession  --mkWDSesh
+  getHtmlST wdSesh $ Link "http://localhost:8020/main/home"
   
 
 mkWDSesh :: IO WDSession 
