@@ -493,7 +493,9 @@ foldFuncTrup hMatcher itr = case hMatcher of
   --
   -- we will test how an element named "div" inside of "a" element would behave
 
-
+-- | TODO(galen): As we advance scrappy we need to be more realistic in what a clickable is
+-- | since here we really have a LinkEl rather than a button (which is clickable but doesn't fit here)
+-- | and can emit a side effect such as that of a LinkEl or some other event like we can handle with lazy-js
 data Clickable = Clickable ElemHead Link deriving (Eq, Show)
 
 

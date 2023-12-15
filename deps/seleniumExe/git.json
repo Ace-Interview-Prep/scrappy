@@ -1,0 +1,8 @@
+{
+  "url": "ssh://git@github.com/Ace-Interview-Prep/selenium-standalone-exe.git",
+  "rev": "71435115b9bfa178117452cb6dcc407963c1ea43",
+  "sha256": "0jykc42pylxkp9ly2l9z2sbxb3ay8crx4s5qzj7nzw2svxly2myl",
+  "private": true,
+  "fetchSubmodules": false,
+  "branch": "master"
+}

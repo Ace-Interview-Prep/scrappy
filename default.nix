@@ -48,7 +48,7 @@ mkDerivation {
       mtl
       network-uri
       parsec
-      streaming-commons # required by http-client
+      streaming-commons # required by http-client # TODO: try without, may just need zlib
       time
       text
       transformers
@@ -56,6 +56,19 @@ mkDerivation {
       witherable
     ];
   librarySystemDepends = [ myPkgs.nodejs pkgs.zlib pkgs.gmp ];
+  testHaskellDepends = with myPkgs.haskellPackages;
+    [
+      process
+      webdriver
+      process
+      which
+      transformers
+      parsec
+      text
+      exceptions
+      lifted-base
+      monad-control
+    ];
   homepage = "https://github.com/Ace-Interview-Prep/scrappy";
   description = "html pattern matching library and high-level interface concurrent requests lib for webscraping";
   license = lib.licenses.bsd3;

@@ -211,3 +211,12 @@ test-suite scrappy-test
         base
       , scrappy
       , webdriver
+      , process
+      , which
+      , transformers
+      , parsec
+      , text
+      , exceptions
+      , lifted-base
+      , monad-control 
+      
