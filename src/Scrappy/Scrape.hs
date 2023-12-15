@@ -11,6 +11,7 @@ import Scrappy.Elem.ChainHTML ((</>>))
 import Scrappy.Find (findNaive)
 import Scrappy.Links (Html, maybeUsefulUrl)
 
+import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Data.Functor.Identity (Identity)
 import Witherable (Filterable, mapMaybe)
@@ -169,3 +170,18 @@ findCount p = do
   x <- findNaive p
   return $ length (fromMaybe [] x)
 
+
+
+successesM :: Monad m => (a -> MaybeT m b) -> [a] -> MaybeT m [b]
+successesM fm inputs =
+  lift . (fmap catMaybes) . sequenceA $ fmap (runMaybeT . fm) inputs
+
+successesM_ :: Monad m => (a -> MaybeT m b) -> [a] -> MaybeT m ()
+successesM_ a b = successesM a b >> return ()
+
+successes :: [a] -> (a -> Maybe b) -> Maybe [b]
+successes inputs f =
+  case catMaybes $ fmap f inputs of
+    [] -> Nothing
+    xs -> Just xs
+    

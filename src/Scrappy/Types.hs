@@ -3,7 +3,7 @@
 module Scrappy.Types where
 
 -- may change Types + Links -> Navigation + Something else 
-
+import Scrappy.Links
 
 
 import Network.HTTP.Client (CookieJar, requestBody, method, destroyCookieJar, responseCookieJar, httpLbs, RequestBody (RequestBodyBS, RequestBodyLBS), parseRequest, newManager, responseBody, Manager)
@@ -11,6 +11,7 @@ import Control.Concurrent (ThreadId)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.State.Lazy (StateT)
 import Data.Time.Clock.System
+import Data.Map as Map 
 import Data.Text (Text)
 
 import Text.Parsec (ParsecT, parserZero)
@@ -37,9 +38,9 @@ data ScrapeFail = Eof | NonMatch
   --elemParser should be better for greedy
 
 
+type SiteTree = Map Link BPageState
 
-
-
+data BPageState = NotChecked | Checked deriving (Eq, Ord, Show)
 
   
 
@@ -52,3 +53,8 @@ data ScrapeFail = Eof | NonMatch
 -- as scrape coin 
 
 -- |  data Processor a b = Processor ThreadId { runFunc :: (a -> b) }
+
+
+-- | For composing questions about a piece of an elem (for example) after the fact of parsing
+andAll :: a -> [(a -> Bool)] -> Bool
+andAll s checks = all ($ s) checks

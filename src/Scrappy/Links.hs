@@ -472,6 +472,8 @@ maybeUsefulUrl (Link baseUrl) url = do
 -- getLastPath :: Url -> String
 -- getLastPath url = unpack (unRText (NE.last (snd (fromJust (fromJust (fmap uriPath (mkURI (pack url))))))))
 
+
+
 getLastPath :: Link -> Maybe String
 getLastPath (Link url) = do 
   x <- mkURI $ pack url 
@@ -495,3 +497,4 @@ numberOfQueryParamsIsZero (Link uri) = do
 
 
 deriveJSON defaultOptions ''Link
+

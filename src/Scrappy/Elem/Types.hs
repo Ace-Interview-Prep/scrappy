@@ -533,6 +533,11 @@ mkClickable booly cUrl e = do
 getLink :: Clickable -> Link
 getLink (Clickable _ link) = link
 
+-- MOVE TO SCRAPPY
+getUrl :: Clickable -> Url
+getUrl = renderLink . getLink
+
+
 getSrc = undefined -- just like getHref xo
 
 -- -- |data ElemHead = (Elem/Text, Attrs)

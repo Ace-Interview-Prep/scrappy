@@ -67,6 +67,8 @@ data ExistT m a = ExistT { runExistT :: MaybeT m a }
 
 
 
+newCookiedManager :: IO CookieManager
+newCookiedManager = fmap (CookieManager mempty) $ newManager tlsManagerSettings
 
 
 -- runSomeFunc :: MonadIO m => FilePath -> Url -> (Html -> MaybeT m a) -> MaybeT m a
