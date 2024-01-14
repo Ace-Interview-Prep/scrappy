@@ -39,3 +39,40 @@ example = runScraperOnUrl url $ el "div" [("class", "xyz")] `contains`
 
 
 ```
+
+
+## TODO ## 
+
+As this is an Open Source ambitious project, there is much that is left to do which follows from the potential of this library as a result of it's inner workings
+
+- Improve `contains` and similar functions to be able to somehow apply the 'contained' parser to inside the start and end tags
+- More Generic typing and Monads for a SiteT, HistoryT, and WebT (an accumulator of new undiscovered sites)
+   - I have a number of complicated Monads all with their own varied implementations that could be greatly reduced to a SiteT which keeps state of what branches of the Site tree have been visited or seen.
+      - With a SiteT it would easily allow for logic to gather all new links (see Scrappy.Links) upon getting a new HTML via getHTML or sibling functions, and perhaps a new sibling function like getNextHTML which gets the next untouched HTML page 
+      - SiteT extension would mean that we could create functions like `scrapeSite` which might look for all pattern matches across the site-tree. By extension this could apply to HistoryT and WebT via an incredibly simple interface. 
+   - The concept of a SiteT implies there may be use in a HistoryT (ie all Sites visited with their respective site-trees) and a WebT which is meant to represent the entire web in the sense that it continues to extend and is not constrained to past history.
+   - Hopefully this gives intriguing ideas to why scrappy-nlp might be so powerful
+- Concurrency with streamEdits 
+   - This functionality will help both for making it easier+quicker to perform concurrency when scraping (which is actually quite easy for different pages due to forkIO and standard library functions) but also makes a scrappy-DOM (see below) much easier to imagine as a robust web framework (imagine how long 10+ prerender-like scrapers would take or rather 10 passthroughs). I see this as the biggest blocker to a 1st version of scrappy-DOM (which wouldn't yet have FRP or GHCJS functionality.. you could still write raw JavaScript in V1 though) 
+   - Extending this idea, lazy-js (see below) is effectively a streamEdit performer and so this logic would also provide incredible speed to this 'category' of the DOM as well. 
+- Break up into scrappy-core and scrappy-requests
+   - This is so that scrappy-core can be used in frontend apps that are built using GHCJS. GHCJS purposely doesn't build networking packages. 
+- Fork a streamEdit package
+   - A lot of streamEdit packages are exceptionally complex while library functions like Data.Text leave much to be desired. scrappy-streamEdit would be a perfect medium
+- Fork a scrappy-staleLink (or better name) package 
+   - For use with [Obelisk](https://github.com/obsidiansystems/obelisk) the static directory which will provide a list of static assets which are no longer in use and might be good to delete
+- Fork a scrappy-templates package
+   - This is in the works currently for templating files/strings with variables such as large prompts for GPT-*, for example you could template a prompt for resumes that is job dependent in an ergonomic/easy-to-use way
+   - See Scrappy.Templates
+   - To reduce runtime errors from performing IO, it would be nice to have a staticFile finder like with staticWhich: a package that ensures an executable's existence *at compile time* 
+- scrappy + nlp
+   - It would be advantageous to use certain functions like a recursive scraper from pageN -> page(N+M), where M is based on a stop condition and/or the arrow a successful pattern match (see Scrappy.Run). While this can be easily done with HTML patterns, this extends and lends well to NLP analysis for the text that is contained in the structural HTML
+- scrappy-DOM
+   - I currently have a bone to pick with the `prerender` function from [reflex-dom](https://github.com/reflex-frp/reflex-dom) as it can easily fail. For example, if the browser insists on inserting a <tbody> inside a <table> tag then reflex-dom panics because the DOM is not as expected, even if the DOM area is on a completely different branch and way earlier than it. Intuitively, using streamEdit on an element with an attribute like prerenderID="some unique string" would be an incredibly dependable solution. 
+   - The blockers to this are of course that it's only worth doing if it will be an improvement to reflex-dom as a whole (or maybe we integrate with reflex-dom) and reflex-dom is truly exceptional with FRP, GHCJS bindings, and mobile-readiness 
+- scrappy-headless
+   - This is effectively a headless browser which has the ability to read and run JS in response to events. A lot of work has been done on this in the Scrappy.BuildActions module and in [lazy-js](https://github.com/augyg/lazy-js) which is a fork of this project
+   - Also need to implement httpHistory in a more robust way to make a headless browser more legit 
+- lazy-js 
+   - This is a foundational project for both scrappy-headless and scrappy-DOM which is a lazy reader and writer of JavaScript. An example use is virtualizing clicking a link to bypass any JavaScript bot detectors and/or just to follow JavaScript based events like a button which calls some JS to change window.location (like a fancy href)
+
