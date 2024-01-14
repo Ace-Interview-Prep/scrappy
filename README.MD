@@ -9,9 +9,59 @@ provides a number of functions that allow for easily scraping certain patterns f
 
 Scraping is parsing, where we don't care about the placement of our match in a chunk of data. ScraperT is really just ParsecT (ParsecT String () Identity a)
 
-## Main functions ## 
+## How to depend on this project ## 
+
+Scrappy is currently not on Hackage because I honestly don't have time to perfect version bounds however through [Nix](https://nixos.org/download) you can get the package the following way:
+
+OR!! Just clone scrappy-tutorial and rename it 
+
+OR if you really want to learn (hey good for you!) 
+
+```bash 
+# assuming you've done nix-setup... I'd show you how but it depends what setup you prefer and its super simple
+nix-env -f https://github.com/obsidiansystems/nix-thunk/archive/master.tar.gz -iA command
+nix-shell -p cabal2nix
+cd yourProjectDirectory
+cabal init 
+# follow prompts
+mkdir deps 
+git clone https://github.com/Ace-Interview-Prep/scrappy.git deps/scrappy # or SSH url 
+nix-thunk pack deps/scrappy # this is technically optional but recommended
+# add scrappy to your cabal file under build-depends
+cabal2nix . --shell > shell.nix -- this will create an easy to use shell.nix file with all of your build depends
+nix-shell #you could also do nix-shell shell.nix
+cabal run my-project-name-in-cabal-file 
+```
+
+
+## Tutorials ## 
+
+- https://medium.com/p/135283dc2af
+- https://github.com/Ace-Interview-Prep/scrappy-tutorial
+
+## Main functions, Types, and Classes ## 
 
 ```haskell
+
+class ElementRep (a :: * -> *) where
+--type InnerHTMLRep a = something 
+  elTag :: a b -> Elem
+  attrs :: a b -> Attrs
+  innerText' :: a b -> String 
+  matches' :: a b -> [b]
+
+instance ElementRep (Elem') where
+  elTag = _el
+  attrs = _attrs
+  innerText' = innerHtmlFull
+  matches' = innerMatches
+
+data Elem' a = Elem' { _el :: Elem 
+                     , _attrs :: Map String String 
+                     , innerMatches :: [a] 
+                     , innerHtmlFull :: String
+                     } deriving Show
+
 -- | Manager returned may be a new manager, if the given manager failed 
 getHtml :: Manager -> Url -> IO (Manager, Html) 
 getHtml' :: Url -> IO Html
@@ -34,17 +84,39 @@ contains :: ScraperT (Elem' a) -> ScraperT a -> ScraperT a
 
 -- Will get all <a id="link"> 's on the url that are inside
 -- divs with a class of xyz
+example :: IO (Maybe [Elem' a])
 example = runScraperOnUrl url $ el "div" [("class", "xyz")] `contains`
         el "a" [("id", "link")]
 
 
 ```
 
+Currently with this library you can request HTML and run a multitude of scraper-patterns on it, for example:
+- Scrape an element
+- Scrape an element with a specific inner pattern
+- Scrape an element with an attribute that fits a specific parser-pattern 
+- Scrape an element with a specific inner DOM-tree 
+- Scrape a group of elements that *kinda* repeats 
+   - For example, if you want a complex group that varies from page to page but to the user's eye looks the exact same (think of search results on a nice website) or even largely the same, then use the `htmlGroup` function from Scrappy.Elem.TreeElemParser  
+- Scrape any **arbitrary** parser from the [parsec library](https://hackage.haskell.org/package/parsec)
+
+You can also deeply chain! 
+- Inside any instance of the ElementRep class (Elem', TreeHTML) through contains and contains'! 
+   - For example use: think of getting all prices 
+- In a sequence!
+   - skipToBody: to avoid matches in the <head>
+   - (</>>=) and (</>>) which are sequencers that take two parsers like Monadic actions (hence the characters chosen) but unlike running two parsers one after the other, there may be whatever random stuff in between! 
+
 
 ## TODO ## 
 
 As this is an Open Source ambitious project, there is much that is left to do which follows from the potential of this library as a result of it's inner workings
 
+- Upload to Hackage
+- Be included in the haskellPackages attribute of nixpkgs
+- grep/regex replacement (and streamEdit across multiple files, see below) 
+  - I hate ReGeX with a burning passion. No way will I ever come back to an expression and say "Oh that must match on emails!". 
+  - It would be neat to have a way to write haskell at the command line like "grepScrappy -sR "char 'a' >> some digit >> char 'b'" but this string would quickly get massive so I wonder if there's a happy medium that exists such as shortforms for the most common parsers (char, many, some, digit, string, etc) that while we would still allow for any haskell string (which typifies to a ParsecT) there would be ways to shorten expressions
 - Improve `contains` and similar functions to be able to somehow apply the 'contained' parser to inside the start and end tags
 - More Generic typing and Monads for a SiteT, HistoryT, and WebT (an accumulator of new undiscovered sites)
    - I have a number of complicated Monads all with their own varied implementations that could be greatly reduced to a SiteT which keeps state of what branches of the Site tree have been visited or seen.
