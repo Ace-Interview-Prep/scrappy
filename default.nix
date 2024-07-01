@@ -60,7 +60,7 @@ mkDerivation {
   testHaskellDepends = with myPkgs.haskellPackages;
     [
       process
-      webdriver
+      (haskellLib.doJailbreak webdriver)
       process
       which
       transformers
