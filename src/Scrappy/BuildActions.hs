@@ -7,8 +7,6 @@
 module Scrappy.BuildActions where
 
 
-
-
 import Scrappy.Elem.SimpleElemParser (elemParser)
 -- import Elem.ElemHeadParse 
 import Scrappy.Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)

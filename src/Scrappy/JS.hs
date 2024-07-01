@@ -15,7 +15,7 @@ import Scrappy.Links (BaseUrl, Src, Link(..), fixRelativeUrl, renderLink, LastUr
 import Scrappy.Find
 
 import Language.Haskell.TH (recover)
-import System.Which (staticWhichNix, staticWhich)
+import System.Which (staticWhich)
 import Network.HTTP.Client (newManager)
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import System.Process (CreateProcess(..), proc, readCreateProcess)
@@ -38,9 +38,8 @@ import qualified Data.Map as M
 import Data.Text (Text, pack, unpack)
 import Data.List.Extra (isInfixOf)
 import Data.ByteString.Lazy (ByteString)
-import Data.String.Utils (strip)
 
-import Text.RawString.QQ (r)
+--import Text.RawString.QQ (r)
 
 import Data.Aeson.TH (defaultOptions, deriveJSON)
 
@@ -241,7 +240,7 @@ type Body = Text
 nodePath :: FilePath
 -- nodePath = $(recover (staticWhichNix "node") (staticWhich "node")) 
 nodePath = --- $(staticWhich "node")
- $(recover (staticWhichNix "node") (staticWhich "node"))
+ $(staticWhich "node")
 
 
 

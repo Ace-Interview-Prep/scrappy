@@ -12,7 +12,7 @@ import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, cha
                    alphaNum, many1, between, many, letter, parserFail, optional, manyTill)
 import Data.Map as Map (Map, fromList, lookup, toList) 
 import Data.Maybe (fromMaybe)
-import Witherable (mapMaybe)
+--import Witherable (mapMaybe)
 
 import Scrappy.Types
 

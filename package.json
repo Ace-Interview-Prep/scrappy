@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "jsdom": "^19.0.0"
+      "jsdom": "^19.0.0",
+      "canvas": "2.11.0"
   }
 }

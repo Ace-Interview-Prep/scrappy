@@ -3,7 +3,7 @@
 
 module Scrappy.Scrape where
 
--- Basically just html patterns from testing / courtney market stuff
+-- -- Basically just html patterns from testing / courtney market stuff
 import Scrappy.Elem.Types (Elem', innerText')
 import Scrappy.Elem.ElemHeadParse (hrefParser, parseOpeningTag)
 import Scrappy.Elem.SimpleElemParser (el)
@@ -14,15 +14,13 @@ import Scrappy.Links (Html, maybeUsefulUrl)
 import Control.Monad.Trans.Maybe (MaybeT(..))
 import Control.Monad.IO.Class (MonadIO)
 import Data.Functor.Identity (Identity)
-import Witherable (Filterable, mapMaybe)
 import Data.Either (fromRight)
 import Data.Maybe (catMaybes, fromMaybe)
 import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char, many, try, runParserT)
 import Control.Applicative (liftA2) 
 
-
 type ScraperT a = ParsecT Html () Identity a 
-
+type Html = String
 
 
 -- | Generate a scraping expression where when found, it will generate and link in a data structure
@@ -148,9 +146,9 @@ runScraperOnHtml1 p = (fmap head) . runScraperOnHtml p
 --     Just [] -> []
 --     Nothing -> [] 
 
-type Name = String -- placeholder
-tableItem :: Name -> Elem' String
-tableItem = undefined
+-- type Name = String -- placeholder
+-- tableItem :: Name -> Elem' String
+-- tableItem = undefined
 
 
 
@@ -177,4 +175,18 @@ findCount :: Stream s m Char => ParsecT s u m a -> ParsecT s u m Int
 findCount p = do
   x <- findNaive p
   return $ length (fromMaybe [] x)
+
+
+
+
+type Prefix' = String
+{-# DEPRECATED scrapeBracketed "experimental, first attempt" #-}
+scrapeBracketed :: Prefix' -> ScraperT a -> Html -> Maybe [a]
+scrapeBracketed pre scraper html = mconcat <$> scrape (string pre >> manyTill scraper (string pre)) html
+
+
+
+type Prefix = String 
+scrapePrefixed :: Prefix -> ScraperT a -> Html -> Maybe [a]
+scrapePrefixed pre scraper html = scrape (string pre >> scraper) html
 

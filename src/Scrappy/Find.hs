@@ -2,9 +2,9 @@
 
 module Scrappy.Find where
 
-import Scrappy.Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', TreeHTML, ShowHTML)
+--import Scrappy.Elem.Types (ElementRep, GroupHtml(GroupHtml), Elem, mkGH, Elem', TreeHTML, ShowHTML)
 -- import Elem.TreeElemParser (findSameTreeH)
-import Scrappy.Types (ScrapeFail(..))
+--import Scrappy.Types (ScrapeFail(..))
 
 import Control.Monad.IO.Class
 import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero, anyChar
@@ -13,6 +13,8 @@ import Data.Text (Text)
 import Data.Functor.Identity (Identity)
 import Data.Either (fromRight)
 
+
+data ScrapeFail = Eof | NonMatch
 
 -- | This module provides an interface for getting patterns seperated by whatever in a given source
 -- | that you plan to parse
@@ -103,7 +105,7 @@ find parser = do
 
 -- | Should never throw Left or I did it wrong
 streamEdit :: ParsecT String () Identity a -> (a -> String) -> String -> String
-streamEdit p f src = fromRight undefined $ parse (findEdit f p) "" src
+streamEdit p f src = fromRight undefined $ parse (try $ findEdit f p) "" src
 
 
 -- -- Note: List will be backwards as is 
@@ -222,8 +224,8 @@ buildSequentialElemsParser = undefined
 -- | to be applied to inner text of listlike elem
 
 
-findOnChangeInput :: ParsecT s u m (Elem' a)
-findOnChangeInput = undefined
+-- findOnChangeInput :: ParsecT s u m (Elem' a)
+-- findOnChangeInput = undefined
 -- eg : <select id="s-lg-sel-subjects" name="s-lg-sel-subjects" class="form-control" data-placeholder="All Subjects" onchange="springSpace.publicObj.filterAzBySubject(jQuery(this).val(), 3848);">
 
 
