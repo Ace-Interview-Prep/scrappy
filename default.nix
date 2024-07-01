@@ -25,6 +25,7 @@ let
   nix-thunk = import nix-thunkSrc {};
   webdriverSrc = nix-thunk.thunkSource ./deps/haskell-webdriver;
   webdriver = myPkgs.haskellPackages.callCabal2nix "webdriver" webdriverSrc {};
+  haskellLib = pkgs.haskell.lib;
   #webdriver = pkgs.haskellPackages.callHackage "webdriver" "0.10.0.0" {};
 in
 mkDerivation {
@@ -52,7 +53,7 @@ mkDerivation {
       time
       text
       transformers
-      webdriver
+      (haskellLib.doJailbreak webdriver)
       witherable
     ];
   librarySystemDepends = [ myPkgs.nodejs pkgs.zlib pkgs.gmp ];
