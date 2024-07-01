@@ -119,6 +119,7 @@ library
                      -- ^ less maintained?
                      , network-uri
                      , parsec
+                     , parser-combinators
                      , text
                      , time
                      , transformers
@@ -209,6 +210,7 @@ test-suite scrappy-test
     -- Test dependencies.
     build-depends:
         base
+      , containers
       , scrappy
       , webdriver
       , process
@@ -218,5 +220,10 @@ test-suite scrappy-test
       , text
       , exceptions
       , lifted-base
-      , monad-control 
-      
+      , monad-control
+      , random
+      , aeson
+      , bytestring
+      , http-client
+      , http-types
+      , http-client-tls

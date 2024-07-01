@@ -44,7 +44,13 @@ let
       pkgs.chromedriver;
 in
 pkgs.mkShell {
-  buildInputs = [ pkgs.cabal-install (pkgs.selenium-server-standalone) ];
+  buildInputs = [
+    pkgs.cabal-install
+    pkgs.selenium-server-standalone
+    pkgs.busybox
+    # to run fuser -k tcp/8020 when using `ob run` (for developing tests+app)
+    # but could use in general for more reliable process killing 
+  ];
   inputsFrom = [ (if pkgs.lib.inNixShell then drv.env else drv) ];
   shellHook = '' 
     export PATH=$PATH:${chromedriver}/bin

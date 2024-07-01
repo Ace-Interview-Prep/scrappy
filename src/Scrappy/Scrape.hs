@@ -8,15 +8,16 @@ import Scrappy.Elem.Types (Elem', innerText')
 import Scrappy.Elem.ElemHeadParse (hrefParser, parseOpeningTag)
 import Scrappy.Elem.SimpleElemParser (el)
 import Scrappy.Elem.ChainHTML ((</>>))
-import Scrappy.Find (findNaive)
+import Scrappy.Find (findNaive, findNaiveIO)
 import Scrappy.Links (Html, maybeUsefulUrl)
 
 import Control.Monad.Trans.Maybe (MaybeT(..))
+import Control.Monad.IO.Class (MonadIO)
 import Data.Functor.Identity (Identity)
 import Witherable (Filterable, mapMaybe)
 import Data.Either (fromRight)
 import Data.Maybe (catMaybes, fromMaybe)
-import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char, many, try)
+import Text.Parsec (Stream, ParsecT, parse, parserZero, anyChar, manyTill, char, many, try, runParserT)
 import Control.Applicative (liftA2) 
 
 
@@ -26,7 +27,7 @@ type ScraperT a = ParsecT Html () Identity a
 
 -- | Generate a scraping expression where when found, it will generate and link in a data structure
 -- | to a relevant next pattern. For instance, an element of interest being found then switches the
--- | scraper expression to be a reference to itself
+-- | scraper expression to be a reference to itselfo
 -- |
 -- | for instance (el "a" [("id", "x")]) -> let ALPHANUM = document.select(this) -> someThingUsing ALPHANUM_MATCH
 -- | in a statement --> which references [A, B, C] 
@@ -90,6 +91,14 @@ findFit cond (x:xs) = if cond x then Just x else findFit cond xs
 runScraperOnHtml :: ParsecT String () Identity a -> String -> Maybe [a]
 runScraperOnHtml p html = fromRight Nothing $ parse (findNaive $ p) "" html 
 
+
+runScraperOnHtmlIO :: (MonadIO m, Show a, Stream String m Char) => ParsecT String () m a -> String -> m (Maybe [a])
+runScraperOnHtmlIO p html = do
+  x <- runParserT (findNaiveIO $ p) () "" html 
+  pure $ fromRight Nothing x 
+
+scrapeIO :: (MonadIO m, Show a, Stream String m Char) => ParsecT String () m a -> String -> m (Maybe [a])
+scrapeIO = runScraperOnHtmlIO 
 
 runScraperInBody :: ParsecT String () Identity a -> String -> Maybe [a]
 runScraperInBody prsr html = fromRight Nothing $ parse (skipToInBody >> findNaive prsr) "" html

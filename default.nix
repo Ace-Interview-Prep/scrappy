@@ -68,6 +68,7 @@ mkDerivation {
       exceptions
       lifted-base
       monad-control
+      random
     ];
   homepage = "https://github.com/Ace-Interview-Prep/scrappy";
   description = "html pattern matching library and high-level interface concurrent requests lib for webscraping";

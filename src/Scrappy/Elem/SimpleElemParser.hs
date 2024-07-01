@@ -22,6 +22,7 @@ import Data.Text (Text, unpack)
 import Data.Map (Map, toList)
 import Data.Maybe (fromMaybe)
 
+import Control.Monad.IO.Class
 
 -- TODO(galen): antiElemParser --- inner matches must be 0 ... maybe doesnt match any parameter 
 
@@ -63,7 +64,8 @@ elemParser :: (ShowHTML a, Stream s m Char) =>
            -> [(String, Maybe String)]
            -> ParsecT s u m (Elem' a)
 elemParser elemList innerSpec attrs = do
-  (elem', attrs') <- parseOpeningTag elemList attrs
+  -- liftIO $ print "hey"
+  (elem', attrs') <- parseOpeningTag elemList attrs 
   -- we should now read the elem' to see if in list of self-closing tags
   -- TODO(galen): What about when the self closing tag actually doesnt?
   case elem elem' selfClosing of

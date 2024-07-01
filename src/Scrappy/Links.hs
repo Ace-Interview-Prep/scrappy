@@ -1,5 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 
 {-|
@@ -39,7 +40,8 @@ import Data.Either (fromRight, isRight)
 import Data.Maybe (catMaybes, fromJust, fromMaybe)
 import Data.List (isSuffixOf, isInfixOf, isPrefixOf)
 import qualified Data.List.NonEmpty as NE (length, last)
-import Data.Text (Text, pack, unpack)
+import Data.Text (Text, pack, unpack, splitOn
+                 )
 import Data.Char (toLower)
 
 import Data.Aeson.TH (defaultOptions, deriveJSON)
@@ -248,122 +250,44 @@ newtype Link = Link Url deriving (Eq, Show, Read, Ord)
 -- | This is a general interface for extracting a raw link
 -- | from scraping according to specs about the scraper itself
 -- | IE if it is 100% same site
--- parseLink :: Bool -> Link -> Url -> Maybe Link
--- parseLink False lastUrl someLink =
---   --- Can be any Authority 
---   if elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI someLink)) ["https:", "http:"]
---   then 
---     if (join $ fmap uriScheme $ mkURI . pack $ someLink) /= Nothing
---     then Just . Link $ someLink
---     else Just . Link $ fixRelativeUrl (fromJust $ deriveBaseUrl lastUrl) someLink
---   else
---     Nothing 
--- parseLink True lastUrl someLink 
---   | sameAuthority someLink lastUrl
---     && (elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI someLink)) ["https:", "http:"])
---   = Just . Link $ fixURL lastUrl someLink
-
---   | otherwise = Nothing
-
-
--- | TODO(galen): fix this broken bullshitachen with Text.URI vs Network.URI
--- | generally Network.URI is better but it doesnt work with relative URLs
-
 parseLink :: Bool -> Link -> Url -> Maybe Link
-parseLink sameSite lastLink newLink = 
-  case (join $ fmap uriScheme $ mkURI . pack $ newLink) == Nothing of
-    True ->
-      -- must be same site
-      -- it doesnt matter the preference/restriction
-      Just . Link $ fixRelativeUrl (fromJust $ deriveBaseUrl lastLink) newLink
-    False ->
-      case elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI newLink)) ["https:", "http:"] of
-        True ->
-          let
-            f sSite lastL newL
-              | sSite && sameAuthority newL lastL = Just . Link $ fixURL lastL newL -- overkill but idc 
-              | sSite && (not $ sameAuthority newL lastL) = Nothing 
-              | not sSite = Just . Link $ newL -- must be full url
-              | otherwise = undefined -- can this happen?
-          in
-            f sameSite lastLink newLink 
-
-          -- -- if must be same site and is then Just Link
-          -- -- for no pref
-          -- if sameSite && sameAuthority newLink lastLink
-          -- then Just . Link $ fixURL lastUrl someLink
-          -- else
-          --   if sameSite && (not $ sameAuthority newLink lastLink)
-          --   then Nothing
-          --   else 
-          
-        False ->
-          -- always nothing 
-          Nothing 
-           
-      
-      -- might not be same site
-      -- must be of [http, https]
-    
-
--- -- | This assumes two full paths aka Link's 
--- diffAuthority :: Url -> Link -> Bool 
--- diffAuthority a (Link b) =
---   let
---     authA = maybe (Left False) uriAuthority (mkURI $ pack a)
---     authB = maybe (Left False) uriAuthority (mkURI $ pack b)
---   in (isRight authA) && (isRight authB) && (authA /= authB)   
+parseLink onlySameSite lastLink newLink = 
+  case hasNoURIScheme newLink of
+    True -> Just . Link $ fixRelativeUrl (fromJust $ deriveBaseUrl lastLink) newLink
+    False -> case isHTTP newLink of
+      False -> Nothing 
+      True -> case onlySameSite of
+        False ->  Just . Link $ newLink
+        True -> case sameAuthority newLink lastLink of
+          False -> Nothing
+          True -> Just . Link $ newLink
+  where
+    hasNoURIScheme url = (join $ fmap uriScheme $ mkURI . pack $ url) == Nothing
+    isHTTP url = elem (fromMaybe "" (fmap NURI.uriScheme $ NURI.parseURI url)) ["https:", "http:"]
 
 sameAuthority :: Url -> Link -> Bool
 sameAuthority href (Link linky) =
   let
-    authA = fmap (NURI.uriRegName) $ NURI.uriAuthority =<< NURI.parseURI href
-    authB = fmap (NURI.uriRegName) $ NURI.uriAuthority =<< NURI.parseURI linky
-  in
-    case (==) <$> authA <*> authB of
-      Just True -> True -- cuz asked if diff
-      _ -> False
-  
--- scrapeSameSiteLinks :: CurrentUrl -> 
-
-
-
+    getMainAuthority = last . splitOn "." . pack
+    getRegName l = fmap (getMainAuthority . NURI.uriRegName) $ NURI.uriAuthority =<< NURI.parseURI l
+  in case (==) <$> (getRegName href) <*> (getRegName linky) of
+    Nothing -> False 
+    Just b -> b
 
 
 type HostName = String 
 -- MOVE TO SCRAPPY
 getHostName :: Link -> Maybe HostName
 getHostName (Link url) = do 
-  -- let
-  --   -- this really shouldnt happen and if it is truly invalid, an error
-  --   -- will happen from getHtml'
-  --   uri = fromRight emptyURI $ mkURI $ pack url
-
-    
-    
-  -- in fmap (unpack . unRText . (^. UL.authHost)) (uri ^. UL.uriAuthority)
-
-  -- case mkURI $ pack url of 
-  --   Just a -> ""
-  --   Nothing 
-
   uri <- mkURI $ pack url
   case fmap (unpack . unRText . (^. UL.authHost)) (uri ^. UL.uriAuthority) of
     Right hn -> Just hn
     _ -> Nothing 
     
-
--- getHostName :: Link -> Either Bool HostName
--- getHostName 
-
-  
 -- | Only exported interface 
 instance IsLink Link where
   renderLink (Link url) = url 
 
-
-
--- newtype SameSiteT m a = SameSiteT { runSST :: StateT LastUrl m a } 
 
 --getHtmlST :: sv -> Link -> m (sv, Html) 
 

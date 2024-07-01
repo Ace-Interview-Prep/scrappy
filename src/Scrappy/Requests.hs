@@ -2,7 +2,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Scrappy.Requests where 
+module Scrappy.Requests where
 
 -- Idea: a language extension that allows module organization like:
 
@@ -31,9 +31,9 @@ import Test.WebDriver.JSON (ignoreReturn)
 import Test.WebDriver.Session (getSession, WDSession)
 
 import Control.Concurrent (threadDelay)
-import Network.HTTP.Types.Header 
+import Network.HTTP.Types.Header
 import Network.HTTP.Client.TLS (tlsManagerSettings)
-import Network.HTTP.Client 
+import Network.HTTP.Client
 import Network.HTTP.Types.Method (methodGet, Method,)
 
 import System.Directory (removeFile, copyFile, getAccessTime, listDirectory)
@@ -41,11 +41,12 @@ import Text.Parsec (ParsecT, Parsec, ParseError, parse, Stream, many)
 import Control.Monad.IO.Class (MonadIO, liftIO )
 import Control.Monad.Trans.State (StateT, gets, put, get)
 import Control.Monad.Trans.Class (lift)
-import Control.Monad.Trans.Except (ExceptT, )
+import Control.Monad (when)
+import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Maybe (MaybeT, runMaybeT)
 import Data.Functor.Identity (Identity)
 import Control.Exception (Exception)
-import Control.Monad.Except (throwError, when)
+import Control.Monad.Except (throwError)
 import Control.Monad.Catch (MonadCatch, MonadThrow, catch)
 import Data.Maybe (catMaybes, fromMaybe)
 import Data.Map (Map, toList)
@@ -54,15 +55,19 @@ import Data.Text (Text, unpack, pack)
 import Data.Text.Encoding (encodeUtf8, decodeUtf8, decodeUtf8With)
 import qualified Data.Text.Lazy as LazyTX (toStrict, Text)
 import qualified Data.Text.Lazy.Encoding as Lazy (decodeUtf8With)
-import qualified Data.ByteString.Lazy as LBS 
-import qualified Data.ByteString as BS 
+import qualified Data.ByteString.Lazy as LBS
+import qualified Data.ByteString as BS
 import Data.Time.Clock (UTCTime)
 import Data.Time.Clock.System (SystemTime(MkSystemTime), getSystemTime, systemSeconds)
 import Data.Int (Int64)
 
 import Data.Aeson (encodeFile)
 
-data ExistT m a = ExistT { runExistT :: MaybeT m a } 
+data ExistT m a = ExistT { runExistT :: MaybeT m a }
+
+
+
+
 
 
 
@@ -71,7 +76,7 @@ data ExistT m a = ExistT { runExistT :: MaybeT m a }
 -- runSomeFunc :: MonadIO m => FilePath -> Url -> (Html -> MaybeT m a) -> MaybeT m a
 -- runSomeFunc fp url someFunc = do
 --   (html, _) <- liftIO $ getHtmlST url
-  
+
 --   case someFunc html of
 --     Just a -> pure a
 --     Nothing -> do
@@ -79,7 +84,7 @@ data ExistT m a = ExistT { runExistT :: MaybeT m a }
 --       case someFunc htmlV of
 --         Just a -> pure . Just $ a
 --         Nothing -> do
--- --          encodeFile (mkFileUrl url) 
+-- --          encodeFile (mkFileUrl url)
 --           pure . Just $ Nothing
 
 
@@ -89,8 +94,8 @@ data ExistT m a = ExistT { runExistT :: MaybeT m a }
 
 --   -> The browser gets the index.html (like we do with getHtml, getHtml' ((which should be renamed to getHtmlRaw))
 --   -> When the browser gets this it parses the entire HTML structure and finds what it needs to request
---     --> links for css (currently negligible) and scripts which do not exist in the code but have a src attribute 
---   -> Also if an action attribute is 0 then it's the current URL 
+--     --> links for css (currently negligible) and scripts which do not exist in the code but have a src attribute
+--   -> Also if an action attribute is 0 then it's the current URL
 
 
 
@@ -126,8 +131,8 @@ successes inputs f =
 
 ------------------
 
-runScraperM :: Url -> (Html -> MaybeT IO a) -> MaybeT IO a 
-runScraperM url scraper = (liftIO $ getHtml' url) >>= scraper 
+runScraperM :: Url -> (Html -> MaybeT IO a) -> MaybeT IO a
+runScraperM url scraper = (liftIO $ getHtml' url) >>= scraper
 
 
 
@@ -135,15 +140,15 @@ trySiteLink :: MonadIO m => Link -> (Html -> MaybeT m ()) -> MaybeT m Link
 trySiteLink url scraperBasedEffects = do
   html <- liftIO $ getHtml' (renderLink url)
   scraperBasedEffects html
-  return url 
+  return url
 
 
 -- | propogate to requests module
 runScraperOnUrl' :: (MonadIO m, MonadThrow m) => Link -> ScraperT a -> m (Maybe [a])
 runScraperOnUrl' url p = fmap (runScraperOnHtml p) (getHtml'' url)
 
- 
--- | Get html with no Proxy 
+
+-- | Get html with no Proxy
 getHtml'' :: (MonadThrow m, MonadIO m) => Link -> m Html
 getHtml'' url = do
   mgrHttps <- liftIO $ newManager tlsManagerSettings
@@ -154,16 +159,16 @@ getHtml'' url = do
 
 -- aside
 
--- Also need to generalize to MonadIO 
+-- Also need to generalize to MonadIO
 
 -- | Should change these to name_ and then make these names do same thing except read in a
--- | session variable 
-type Url = String 
+-- | session variable
+type Url = String
 runScraperOnUrl :: Link -> Parsec Html () a -> IO (Maybe [a])
 runScraperOnUrl (Link url) p = fmap (runScraperOnHtml p) (getHtml' url)
 
 runScraperOnUrls :: [Link] -> Parsec Html () a -> IO (Maybe [a])
-runScraperOnUrls urls p = fmap (foldr (<>) Nothing) $ mapM (flip runScraperOnUrl p) urls 
+runScraperOnUrls urls p = fmap (foldr (<>) Nothing) $ mapM (flip runScraperOnUrl p) urls
 
 
 -- foldr :: (a -> b -> c)
@@ -174,17 +179,17 @@ foldFunc = undefined
 runScrapersOnUrls = undefined
 
 --- this is meant to be pseudo code at the moment
-type STM = IO 
+type STM = IO
 
--- | Merge Maybe [a] when multiple urls 
+-- | Merge Maybe [a] when multiple urls
 concurrentlyRunScrapersOnUrls :: [Link] -> [ParsecT s u m a] -> STM (Maybe [a])
-concurrentlyRunScrapersOnUrls = undefined 
-  -- inner will call concurrent stream functions on the given urls 
+concurrentlyRunScrapersOnUrls = undefined
+  -- inner will call concurrent stream functions on the given urls
 
 
 
--- doSignin :: ElemHead -> ElemHead -> Url 
- 
+-- doSignin :: ElemHead -> ElemHead -> Url
+
 -- | Get html with no Proxy
 -- | Raw af
 getHtml' :: Url -> IO Html
@@ -193,12 +198,12 @@ getHtml' url = do
   requ <- parseRequest url
   response <- httpLbs requ mgrHttps
   return $ extractDadBod response
-  
 
 
 
 
--- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails 
+
+-- | Gurantees retrieval of Html by replacing the proxy if we are blocked or the proxy fails
 getHtml :: Manager -> Link -> IO (Manager, Html)
 getHtml mgr url = do
   requ <- parseRequest (renderLink url)
@@ -222,7 +227,7 @@ recoverMgr' url _ = mkProxdManager >>= flip getHtml url
 
 
 
--- -- type SiteNew sv = ReaderT (MVar [FreeSite], sv, Url) (ExceptT ScrapeException' IO) Url 
+-- -- type SiteNew sv = ReaderT (MVar [FreeSite], sv, Url) (ExceptT ScrapeException' IO) Url
 -- -- maybe but really just want this:
 
 --       scrape patttern -- implicit State
@@ -240,14 +245,14 @@ recoverMgr' url _ = mkProxdManager >>= flip getHtml url
 
 -- -- A site could also keep hold of a Map of all urls on site
 --   -- We could also use this informatsion for patterns
---   -- ie a Contact us section would probably be shallower a tree 
+--   -- ie a Contact us section would probably be shallower a tree
 
 
 -- class MultiSite where
 --   -- really just would be a construct for this is not constrained to a single site via getUsefulLinks
 --   -- could also do where if we do fetch another site, we have a mechanism to hold
---   -- MVars of site data from previously viewed sites performed upon fetch 
-  
+--   -- MVars of site data from previously viewed sites performed upon fetch
+
 -- -- | Where the sv is effectively constrained to SessionState sv => sv
 type SiteM hasSv e a = StateT hasSv (ExceptT e IO) a
 
@@ -265,11 +270,11 @@ newtype SiteT sv e a = SiteT { runSite :: StateT sv (ExceptT e IO) a }
 -- stepTrajectory = do
   -- x <- gets siteState
   -- x' <- performSiteState x
-  -- putsSiteState 
-  
--- mkProxy :: Proxy 
+  -- putsSiteState
+
+-- mkProxy :: Proxy
 -- mkProxy = Proxy { proxyHost = fst fromScrapeProxies
---                 , proxyPort = snd fromSrapeProxies  
+--                 , proxyPort = snd fromSrapeProxies
 --                 }
 type Host = String
 type Port = String
@@ -319,13 +324,13 @@ class SessionState a where
   --  Download a pdf link
   clickWritePdf :: (MonadThrow m, MonadIO m) => a -> FilePath -> Clickable -> m (Either ScrapeException a)
   clickWriteFile :: (MonadThrow m, MonadIO m) => a -> FileExtension -> Clickable -> m (Either ScrapeException (), a)
-  clickWriteFile' :: a 
+  clickWriteFile' :: a
                   -> FileExtension -- desired file extension to match
                   -> FilePath -- where to save
-                  -> Clickable 
-                  -> IO (Either ScrapeException (), a) 
+                  -> Clickable
+                  -> IO (Either ScrapeException (), a)
 
-  -- askCookies :: m CookieJar 
+  -- askCookies :: m CookieJar
 
 
 
@@ -375,18 +380,18 @@ instance SessionState Manager where
 -- getHtmlST :: Url || Form ||
 
 --- - MonadIO m, HasSessionState s) => SiteT s m a
- 
+
 -- we dont fucking need this, just take idea with seshVar (get, put set up)
 -- class HasSessionState a sv | a -> sv where
 --   takeSession :: SessionState sv => a -> sv
 --   writeSession :: SessionState sv => sv -> a -> a
-                    
+
 setCJ :: CookieJar -> Request -> Request
 setCJ cj req = req { cookieJar = Just cj }
 
 setBasicHeaders :: Request -> Request
 setBasicHeaders req =
-  let   
+  let
     headers = [ (hUserAgent, "Mozilla/5.0 (X11; Linux x86_64; rv:98.0) Gecko/20100101 Firefox/98.0")
               , (hAcceptLanguage, "en-US,en;q=0.5")
               --, (hAcceptEncoding, "gzip, deflate, br")
@@ -395,7 +400,7 @@ setBasicHeaders req =
   in req { requestHeaders = (fmap . fmap) (encodeUtf8 . pack) headers
          , secure = True
          }
-  
+
 
 buildReq :: MonadThrow m => CookieJar -> Link -> m Request
 buildReq cj (Link url) = do
@@ -453,7 +458,7 @@ getHtmlHeaderMgr headers mgr url = do
   (mgr, res) <- persistGet mgr =<< mkReq headers url
   res' <- readMyBody $ hrFinalResponse res
   pure (mgr, res')
-  
+
 
 mkReq :: MonadThrow m => [Header] -> Url -> m Request
 mkReq headers url = fmap (setHeaders headers) $ parseRequest url
@@ -476,7 +481,7 @@ getHtmlHistoried :: MonadIO m => Manager
                 -> m (Manager, HistoriedResponse BodyReader)
 getHtmlHistoried m r = liftIO $ fmap (m,) $ responseOpenHistory r m
 
-  
+
     --getHtmlFlex manager req = catch (baseGetHtml manager req) (saveReq getHtmlFlex req)
 
 
@@ -509,16 +514,16 @@ mkFormRequest url reqMethod qString = do
              }
 
 
--- extractDadBod :: Response ByteString -> String 
+-- extractDadBod :: Response ByteString -> String
 -- extractDadBod response = (unpack . LazyTX.toStrict . mySafeDecoder . responseBody) response
 
- 
+
 -- mySafeDecoder :: ByteString -> LazyTX.Text
 -- mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
 
 
- 
--- | Get html with no Proxy 
+
+-- | Get html with no Proxy
 getHtmlText :: Url -> IO Text
 getHtmlText url = do
   mgrHttps <- newManager tlsManagerSettings
@@ -538,21 +543,21 @@ getHtmlText url = do
 
 
 
-  
+
 
 extractDadBodText :: Response LBS.ByteString -> Text
 extractDadBodText = LazyTX.toStrict . mySafeDecoder . responseBody
 
 
 
-extractDadBod :: Response LBS.ByteString -> String 
+extractDadBod :: Response LBS.ByteString -> String
 extractDadBod = unpack . LazyTX.toStrict . mySafeDecoder . responseBody
 
-extractDadBod' :: LBS.ByteString -> String 
+extractDadBod' :: LBS.ByteString -> String
 extractDadBod' = unpack . LazyTX.toStrict . mySafeDecoder
 
 mySafeDecoder :: LBS.ByteString -> LazyTX.Text
-mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Just '?')
+mySafeDecoder = Lazy.decodeUtf8With (\_ _ -> Nothing) -- Just '?')
 
 getHistoriedBody res = fmap (readHtml . LBS.fromStrict) $ brRead . responseBody $ res
 
@@ -573,11 +578,11 @@ httpHistLbs req man = withResponseHistory req man $ \hRes -> do
 --  return $ hRes { responseBody = LBS.fromChunks bss }
   pure $ f' hRes (f (hrFinalResponse hRes) (LBS.fromChunks bss))
   where
-    f' hr r = hr { hrFinalResponse = r } 
-    f res b = res { responseBody = b }  
+    f' hr r = hr { hrFinalResponse = r }
+    f res b = res { responseBody = b }
 
 -- httpHistLbs = withResponseHistory req man $ \hrbr ->
---   pure () 
+--   pure ()
 
 
 test2 = do
@@ -589,7 +594,7 @@ test2 = do
   -- print $ responseBody . hrFinalResponse $ hRes
   pure ()
 
-readMyBody :: Response (IO BS.ByteString) -> IO Html 
+readMyBody :: Response (IO BS.ByteString) -> IO Html
 readMyBody res = do
   chunks <- brConsume $ ((responseBody $ res) :: BodyReader)
   chunk <- brRead . responseBody $ res
@@ -603,7 +608,7 @@ readMyBody res = do
   where
     mySafeDeco :: LBS.ByteString -> LazyTX.Text
     mySafeDeco = Lazy.decodeUtf8With (\_ _ -> Just '?')
-  
+
 readHtml :: LBS.ByteString -> Html
 readHtml = unpack . LazyTX.toStrict . mySafeDecoder
 
@@ -611,7 +616,7 @@ mkRGateUrl pgNum term = rGateBaseUrl <> "/search/publication?q=" <> term <> "&pa
 
 rGateBaseUrl = "https://www.researchgate.net"
 
--- TODO(galen): rewrite these funcs to use httpHistLbs where applicable 
+-- TODO(galen): rewrite these funcs to use httpHistLbs where applicable
 instance SessionState CookieManager where
   getHtmlST cm@(CookieManager cj mgr) link = do
     req <- buildReq cj link
@@ -624,13 +629,13 @@ instance SessionState CookieManager where
     (manager, response) <- persistGet mgr req
     let
       finalResponse = hrFinalResponse response
-      
+
       newCookies = responseCookieJar finalResponse
       lastUrl = getURL $ hrFinalRequest response
     html <- liftIO $ readMyBody finalResponse
     return (html, Link lastUrl, CookieManager (cj <> newCookies) manager)
-    
-    -- (html, ) getHtmlST cm url 
+
+    -- (html, ) getHtmlST cm url
     -- req <- parseRequest url
     -- catch (baseGetHtml manager req) (saveReq' url getHtmlAndUrl)
 
@@ -639,7 +644,7 @@ instance SessionState CookieManager where
     (manager, response) <- persistGet mgr req
     let
       finalResponse = hrFinalResponse response
-      
+
       newCookies = responseCookieJar finalResponse
     -- undefined cuz it needs to be removed --> this is never used here
     html <- liftIO $ readMyBody finalResponse
@@ -648,15 +653,15 @@ instance SessionState CookieManager where
   -- in future we could use applyJS or something to make perfect
   -- in future this could return a WebDocument
   click _ cmanager (Clickable _ url) = getHtmlST cmanager url
-  
+
   clickWritePdf cmanager filepath x@(Clickable _ url) = do
     (pdf, mgr) <- getHtmlST cmanager url
     liftIO $ writeFile filepath pdf
     return $ Right mgr
- 
-    -- (html, cm) <- getHtmlST cmanager req 
+
+    -- (html, cm) <- getHtmlST cmanager req
     -- pure ((html, cm), drop1qStrVar form)
- 
+
   -- -- Note: qStrVari has data on basic params factored in
   -- submitForm manager (FilledForm actionUrl reqM term tInput qStrVari) = do
   --   req <- parseRequest actionUrl
@@ -666,10 +671,10 @@ instance SessionState CookieManager where
   --                                $ head tInput <> head qStrVari }
   --     formToDo = FilledForm actionUrl reqM term tInput (tail qStrVari)
   --   fmap (, formToDo) $ catch (baseGetHtml manager req2) (saveReq req2 baseGetHtml)
- 
+
   -- clickWritePdf cmanager filepath x@(Clickable baseU _ url) = do
   --   (pdf, mgr) <- getHtmlST cmanager url
-  --   -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf 
+  --   -- path <- liftIO $ resultPath searchTerm (getHost baseU) (Paper x) >>= flip writeFile pdf
   --   writeFile filepath pdf
   --   return $ Right mgr
       -- Invalidate HTML responses here------
@@ -709,7 +714,7 @@ instance SessionState WDSession where
         return (truple, FilledForm actionUrl reqMethod' searchTerm' tio qStrs) --qStrs)
 
   -- this should be written to not be only for pdfs ideally
-  -- Currently though this is more like clickFile 
+  -- Currently though this is more like clickFile
   click downloadFolder wdSesh (Clickable (e, attrs) url) = do
     files_i <- liftIO $ listDirectory downloadFolder -- statically written function
     wdSesh' <- liftIO $ runWD wdSesh (do
@@ -739,13 +744,13 @@ instance SessionState WDSession where
 --                                            , cutoffTime :: Maybe SystemTime
 --                                            -- ^ absolute time
 --                                            }
-                  
-  
+
+
 --  clickWritePdf wdSesh (Clickable baseU (e, attrs) url) =
   -- also need to check state of previous download folder
   -- since we have to do this, might as well test old `cropFrom` new
-  -- and result should be a single file OR notReadyYet 
-  
+  -- and result should be a single file OR notReadyYet
+
     -- if isSuffixOf ".pdf" url
     -- then
     --   do
@@ -788,17 +793,17 @@ persistUntilUnsafe actn test = do
   x <- actn
   if test x
     then pure x
-    else persistUntilUnsafe actn test 
+    else persistUntilUnsafe actn test
 
 
 toMilli :: Int -> Int
-toMilli = (*) 1000000  
+toMilli = (*) 1000000
 
 heatDeathOfTheUniverse :: Int64
 heatDeathOfTheUniverse = 100000000000000000
-   
-  
-  
+
+
+
 persistUntilSafe :: PersistentAction a -> IO a
 persistUntilSafe (PersistentAction actn ri test cutR cutT) = do
   x <- actn
@@ -811,9 +816,9 @@ persistUntilSafe (PersistentAction actn ri test cutR cutT) = do
          else
            do
              threadDelay $ toMilli ri
-             persistUntilSafe $ PersistentAction actn ri test cutR cutT  
-  
-     
+             persistUntilSafe $ PersistentAction actn ri test cutR cutT
+
+
 data PersistentAction a = PersistentAction { action :: IO a
                                            , retryInterval :: Int
                                            , test :: a -> Bool
@@ -832,16 +837,16 @@ data PersistentActionM m a = PersistentActionM { actionM :: m a
                                                -- ^ absolute timex
                                              }
 
-                          
-  
+
+
 coerceE2M :: Either a b -> Maybe b
 coerceE2M (Left _) = Nothing
-coerceE2M (Right a) = Just a 
+coerceE2M (Right a) = Just a
 
 coerceM2E :: e -> Maybe a -> Either e a
 coerceM2E e Nothing = Left e
 coerceM2E _ (Just a) = Right a
- 
+
 -- readPage >>= writeSuccesses
 --          >>/= tryNextPage (=<< ifSuccessfulFindLink) .. loop
 
@@ -851,15 +856,15 @@ coerceM2E _ (Just a) = Right a
 
 -- should change to : click :: sv -> Clickable -> IO WebDocument
 
-  
-  
+
+
 
 
   -- results <- successesM (someRecursiveFunc sv) $ fromMaybe [] $ scrape pdfLink html
-  -- return (local <> results) 
+  -- return (local <> results)
 
 
---grabResearchResults --> Nothing then this link in the SearchItem is Invalid 
+--grabResearchResults --> Nothing then this link in the SearchItem is Invalid
 
 -- couldn't I use TemplateHaskell to "teach" a domain in webscraping to a scraper?
 
@@ -868,31 +873,31 @@ coerceM2E _ (Just a) = Right a
 
 -- performResearchItem = do
 --   scrape abstract html
---   pdf 
+--   pdf
 
 
 -- someRecursiveFunc :: sv -> Url -> MaybeT m [ResearchResult]
- 
+
 
 firstSucc :: (a -> MaybeT IO b) -> [a] -> MaybeT IO b
-firstSucc _ [] = hoistMaybe Nothing 
+firstSucc _ [] = hoistMaybe Nothing
 firstSucc fm (a:as) = f $ fmap (runMaybeT . fm) as
   where
     f (actn:actns) = do
       x <- liftIO actn
       case x of
-        Just a -> pure a 
-        Nothing -> f actns 
-  
+        Just a -> pure a
+        Nothing -> f actns
+
   -- let
-  --   save :: 
+  --   save ::
   -- catch (fm a) (\_ -> firstSucc fm as)
 
 
 
 -- Could eventually open this up to further extensions
 -- If something is a tree like string structure then we could extend to MessyTreeMatch which is
--- configurable to Open and Close 
+-- configurable to Open and Close
 type FileExtension = FilePath
 
 data ScrapeException = --NoAdvSearchJustBasic
@@ -920,7 +925,7 @@ instance Exception ScrapeException
 -- |
 -- | data ResearchGate = PdfPage _x_ | RelatedToPage _y_ | GetPdf? | other
 -- | and the site has a recursive layout / papers do so this can just infinitely recurse between the opts
--- | we could also institute some runner Function that runs the trajectory some given N times 
+-- | we could also institute some runner Function that runs the trajectory some given N times
 class Eq s => Trajectory s where
   end :: s
   -- could also call this stepTrajectory
@@ -972,7 +977,7 @@ saveReq' :: Link
 saveReq' link func _ = do
   newManager <- mkProxdManager
   func newManager link
- 
+
     -- hrFinalRequest res
 
     -- mgr <- newManager tlsManagerSettings
@@ -1001,7 +1006,7 @@ saveReq' link func _ = do
 
 type DownloadsFolder = FilePath
 
--- | Pulls newest file in downloads folder into program/IO scope 
+-- | Pulls newest file in downloads folder into program/IO scope
 takeNewestFile :: DownloadsFolder -> Clickable -> BaseUrl -> ExceptT ScrapeException IO String
 takeNewestFile dwnlds clickable baseU = do
   dirNames <- liftIO $ listDirectory dwnlds
@@ -1016,7 +1021,7 @@ takeNewestFile dwnlds clickable baseU = do
   --Invalidate normal HTML responses here------
   -- AND if file did not download then this was not a PdfLink like expected
   ---------------------------------------------
-  -- liftIO $ copyFile (fst newFile) filepath 
+  -- liftIO $ copyFile (fst newFile) filepath
   liftIO $ readFile (fst newFile) <* (removeFile $ fst newFile)
   -- return pdf
 
@@ -1141,11 +1146,13 @@ getHtmlWD seshVar (Link url) = liftIO $ runWD seshVar (wd url)
     wd :: Url -> WD (Html, WDSession)
     wd urlI = do
       openPage urlI
-      src <- waitUntil 10 (do
-                              src <- getSource
-                              expect (if ((length (unpack src)) < 10000) then False else True)
-                              return src
-                          )
+      -- sleep $ 1000000
+      src <- getSource
+      -- src <- waitUntil 10 (do
+      --                         src <- getSource
+      --                         expect (if ((length (unpack src)) < 10000) then False else True)
+      --                         return src
+      --                     )
       (unpack src,) <$> getSession
     -- where
       -- f = src <- waitUntil 10 (do
@@ -1155,7 +1162,7 @@ getHtmlWD seshVar (Link url) = liftIO $ runWD seshVar (wd url)
                               -- )
 getHtmlUWD :: MonadIO m => WDSession -> Link -> m (Html, Link, WDSession)
 getHtmlUWD sv (Link url) = liftIO $ runWD sv (f_ url)
-  where 
+  where
     f_ :: Url -> WD (Html, Link, WDSession)
     f_ url = do
       -- openPage url
