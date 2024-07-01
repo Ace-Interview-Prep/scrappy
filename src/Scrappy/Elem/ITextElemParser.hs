@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE LambdaCase #-}
 
 
 -- | This will eventually be a beautiful interface between NLP and scrappy
@@ -16,13 +17,20 @@ import Scrappy.Elem.Types (HTMLMatcher(..), Elem'(..), Elem, Attrs, ShowHTML(..)
                   , attrs, elTag, coerceAttrs
                   )
 
-import Text.Megaparsec as MParsec (some)
+
 import Text.Parsec (parse, ParsecT, Stream, string, (<|>), anyChar, char
                    , optional, try, manyTill, many, runParserT, ParseError
-                   , parserZero, alphaNum, oneOf)
+                   , parserZero, alphaNum, oneOf
+                   , digit
+                   , option
+                   , letter
+                   , space
+                   )
 import Control.Monad
-import Data.Either (fromRight)
-import Data.List (intercalate)
+import Control.Applicative (some)
+import Control.Applicative.Combinators (some, eitherP)
+import Data.Either (fromRight, isRight)
+import Data.List (intercalate, intersperse)
 
 -- testing writersAbstract
 import Scrappy.Find 
@@ -49,7 +57,6 @@ import Scrappy.Elem.ChainHTML
 --   fanExistential links
 
   -- but actually this would fail due to circularity ; the site is a graph of links
-
 
 -- writersAbstractSimple = do
 --   abstract
@@ -144,8 +151,8 @@ emptyTreeGroup elemOpts match attrsSubset = do
 -- fmap (_matches) list :: mconcat $ [match] : [[match]] 
 
 
-myEl :: Stream s m Char => ParsecT s u m (TreeHTML Paragraph)
-myEl = emptyTree Nothing (Just paragraph) [] 
+-- myEl :: Stream s m Char => ParsecT s u m (TreeHTML Paragraph)
+-- myEl = emptyTree Nothing (Just paragraph) [] 
 
 
 -- abstractPattern >> skipManyTIll $ htmlGroupEmptyTree `eachContain` paragraph 
@@ -195,11 +202,11 @@ elemAny = elemParser Nothing noPat []
               
 
               
-abstractWord :: Stream s m Char => ParsecT s u m String
-abstractWord = string "Abstract" <|> string "abstract" <|> string "Nonlinear"
+-- abstractWord :: Stream s m Char => ParsecT s u m String
+-- abstractWord = string "Abstract" <|> string "abstract" <|> string "Nonlinear"
 
-paragraphOrAbstractWord :: Stream s m Char => ParsecT s u m (Either String Paragraph)
-paragraphOrAbstractWord = Left <$> abstractWord <|> Right <$> paragraph
+-- paragraphOrAbstractWord :: Stream s m Char => ParsecT s u m (Either String Paragraph)
+-- paragraphOrAbstractWord = Left <$> abstractWord <|> Right <$> paragraph
 
 
 -- revalation:
@@ -253,11 +260,23 @@ paragraphOrAbstractWord = Left <$> abstractWord <|> Right <$> paragraph
 type ResearchResult = String 
 
 -- type Paragraph = [[String]]
-data Paragraph = Paragraph String deriving Show 
+-- | TODO(galen): these should build off each other
+data Paragraph = Paragraph { unParagraph :: [Sentence] } 
 
-data Sentence = Sentence String
+data Sentence = Sentence { unSentence :: [WrittenWord] }
 
-data WrittenWord = WW String
+data WrittenWord = WW { unWord :: String }
+
+instance Show Paragraph where
+  show (Paragraph sentences) = intercalate " " $ show <$> sentences
+
+instance Show Sentence where
+  show (Sentence words) = (intercalate " " $ show <$> words) <> "."
+
+instance Show WrittenWord where
+  show (WW s) = s
+
+  
 
 instance Semigroup WrittenWord where
   (WW w1) <> (WW w2) = WW $ w1 <> " " <> w2
@@ -267,22 +286,26 @@ instance Monoid WrittenWord where
   mempty = WW ""
 
 instance Semigroup Sentence where
-  (Sentence s1) <> (Sentence s2) = Sentence $ s1 <> ". " <> s2
+  (Sentence s1) <> (Sentence s2) = Sentence $ s1 <> s2
 
 instance Monoid Sentence where
-  mempty = Sentence ""
+  mempty = Sentence []
 
 instance Semigroup Paragraph where
-  (Paragraph p) <> (Paragraph p2) = Paragraph $ p <> ". " <> ('\n':[]) <> p2
+  (Paragraph p) <> (Paragraph p2) = Paragraph $ p <> p2
 
 instance Monoid Paragraph where
-  mempty = Paragraph "" 
+  mempty = Paragraph []
 
 instance ShowHTML Paragraph where
-  showH = show
+  showH (Paragraph s) = mconcat $ fmap showH s 
+
+instance ShowHTML Sentence where
+  showH (Sentence words) = intercalate "" (fmap unWord words) <> "."
+  --where
 
 punctuation :: Stream s m Char => ParsecT s u m Char
-punctuation = oneOf [';', ':', '(', ')', '\"', '\"', '-','-', ','] -- dk if last one works
+punctuation = oneOf [';', ':', '(', ')', '\"', '\'', '-', ','] -- dk if last one works
 
 -- | Word also means bits but I mean written specifically
 -- | This can definitely be expanded upon to increase its reach
@@ -290,16 +313,116 @@ punctuation = oneOf [';', ':', '(', ')', '\"', '\"', '-','-', ','] -- dk if last
 writtenWord :: Stream s m Char => ParsecT s u m WrittenWord
 writtenWord = WW <$> (some $ alphaNum <|> punctuation) <* optional (char ' ')
 
+
+
+
+
+
+
+wordSeparator, comma, colon, semiColon ::  Stream s m Char => ParsecT s u m String
+wordSeparator = ((:[]) <$> space) <|> comma <|> colon <|> semiColon 
+comma = do
+  c <- char ','
+  s <- option "" $ (:[]) <$> space
+  pure $ c : s  
+colon = do 
+  c <- char ':'
+  s <- option "" $ (:[]) <$> space
+  pure $ c : s  
+semiColon = do
+  c <- char ';'
+  s <- option "" $ (:[]) <$> space
+  pure $ c : s  
+
+word' :: Stream s m Char => ParsecT s u m String
+word' = a_ <|> else'
+  where
+    a_ = do
+      head_ <- char 'a'
+      tail_ <- many $ letter <|> (char '\'') <|> (char '-')
+      pure $ head_ : tail_
+    
+    else' = some (letter <|> (char '\'') <|> (char '-'))
+
+capitalizedWord :: Stream s m Char => ParsecT s u m String
+capitalizedWord = try ia <|> else'
+  where
+    ia = do
+      head_ <- oneOf ['I', 'A']
+      tail_ <- many $ letter <|> (char '\'') <|> (char '-')
+      pure $ head_ : tail_
+    else' = do
+      head_ <- oneOf $ ['B'..'H'] <> ['J'..'Z']
+      tail_ <- some (letter <|> (char '\'') <|> (char '-'))
+      pure $ head_ : tail_ 
+
+number :: Stream s m Char => ParsecT s u m String
+number = do
+  whole <- some digit
+  dec <- option "" $ do
+    (:) <$> char '.' <*> some digit
+  pure $ whole <> dec
+
+sentence :: Stream s m Char => ParsecT s u m Sentence
+sentence = sentenceWhere (const True)
+  
+sentenceWhere :: Stream s m Char => ([WrittenWord] -> Bool) ->  ParsecT s u m Sentence
+sentenceWhere test = do
+  tokens <- eitherP capitalizedWord number >>= \case
+    Left word -> do
+      eitherP wordSeparator (char '.') >>= \case
+        Right period -> pure [WW word]
+        Left separator -> (WW (word <> separator) :) <$> sentenceTail False
+    Right number -> do
+      eitherP wordSeparator (char '.') >>= \case
+        Right period -> pure [WW number]
+        Left separator -> (WW (number <> separator) :) <$> sentenceTail True
+
+  toSentence test tokens
+  where
+    toSentence :: Stream s m Char => ([WrittenWord] -> Bool) -> [WrittenWord] -> ParsecT s u m Sentence
+    toSentence test words = case test words of
+      False -> parserZero
+      True -> pure  $ Sentence words -- $ Sentence $ intercalate "" (fmap unWord words) <> "."
+    unWord (WW s) = s
+
+sentenceTail :: Stream s m Char => Bool -> ParsecT s u m [WrittenWord]
+sentenceTail previousWasNumber = do
+  token <- case previousWasNumber of
+    True -> Left <$> word'
+    False -> eitherP word' number 
+  eitherP wordSeparator (char '.') >>= \case    
+    Left separator -> do
+      tokens <- sentenceTail $ isRight token
+      pure $ WW (either id id token <> separator) : tokens 
+    Right period -> pure $ [WW $ either id id token]
+
+
+-- sentenceTail = \case
+--   True -> do
+--     -- was number
+--     some (word'  >> 
+  
+
+  
+--   a <|> b
+--   where
+--     a = parseMaybe (number <* optional space) >> some word' >> (number <* optional space) >> (endSentence <|> recSentence)  
+      
+
+
+             
+
 -- | For the sake of chaining these parsers, this optionally consumes
 -- | a space at the end. This is the key char diff between one and many
 -- | sentences
-sentence :: Stream s m Char => ParsecT s u m Sentence
-sentence = do
-  words <- some writtenWord
-  if length words < 4 then parserZero else return () 
-  period <- char '.'
-  optional (char ' ')
-  pure . mkSentence $ words 
+-- sentence :: Stream s m Char => ParsecT s u m Sentence
+-- sentence = do
+--   words <- some writtenWord
+--   if length words < 4 then parserZero else return () 
+--   period <- char '.'
+--   optional (char ' ')
+--   pure . mkSentence $ words 
  -- pure words
 
 -- *** for research: new concept: reliable generalizations of thinking
@@ -310,25 +433,25 @@ sentence = do
 -- | just words and so the parsers should focus on setting up the next
 -- | parser 
   
-paragraph :: Stream s m Char => ParsecT s u m Paragraph
-paragraph = fmap mkParagraph $ some $ try sentence
+-- paragraph :: Stream s m Char => ParsecT s u m Paragraph
+-- paragraph = fmap mkParagraph $ some $ try sentence
 
 -- | This is built in a way that allows the idea of a sentence
 -- | to be as internally valid as possible; the sentence controls
 -- | the period 
-mkParagraph :: [Sentence] -> Paragraph
-mkParagraph ss = Paragraph . mkParagraph' $ ss
-  where
-    mkParagraph' :: [Sentence] -> String
-    mkParagraph' ((Sentence s):[]) = s <> ('\n':[])
-    mkParagraph' ((Sentence s):ss) = s <> " " <> (mkParagraph' ss)
+-- mkParagraph :: [Sentence] -> Paragraph
+-- mkParagraph ss = Paragraph . mkParagraph' $ ss
+--   where
+--     mkParagraph' :: [Sentence] -> String
+--     mkParagraph' ((Sentence s):[]) = s <> ('\n':[])
+--     mkParagraph' ((Sentence s):ss) = s <> " " <> (mkParagraph' ss)
 
-mkSentence :: [WrittenWord] -> Sentence
-mkSentence words = Sentence . mkSentence' $ words
-  where 
-    mkSentence' :: [WrittenWord] -> String 
-    mkSentence' ((WW lastWord):[]) = lastWord <> "." 
-    mkSentence' ((WW word):words) = word <> " " <> (mkSentence' words)
+-- mkSentence :: [WrittenWord] -> Sentence
+-- mkSentence words = Sentence . mkSentence' $ words
+--   where 
+--     mkSentence' :: [WrittenWord] -> String 
+--     mkSentence' ((WW lastWord):[]) = lastWord <> "." 
+--     mkSentence' ((WW word):words) = word <> " " <> (mkSentence' words)
 
 -- paragraph' :: Stream s m Char => ParsecT s u m String
 -- paragraph' = fmap ((intercalate " ") . mconcat) $ some $ try sentence
@@ -468,7 +591,7 @@ divideUp :: Stream s m Char => ParsecT s u m String -> ParsecT s u m [Either Str
 divideUp parser = many ((Right <$> parser) <|> ( (Left . (:[]) ) <$> anyChar)) 
 
 onlyPlainText :: Stream s m Char => ParsecT s u m String
-onlyPlainText = fmap (\(ACT strings) -> mconcat strings) specialElemParser 
+onlyPlainText = fmap (\(ACT strings) -> mconcat $ reverse strings) specialElemParser 
   where
     specialElemParser :: Stream s m Char => ParsecT s u m (AccumITextElem String)
     specialElemParser = do

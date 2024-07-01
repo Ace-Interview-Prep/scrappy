@@ -102,10 +102,12 @@ contains shell b = do
 -- | This also naturally extends to running this same scraper on multiple pages which would allow you to recover
 -- | ample details on the number of match_A in shell_S on Page_P ~~ [[[MatchA]]] and this Match can be any
 -- | arbitarily defined type. You can further imagine pairing with NLP analysis but this is a long enough point here.
-contains' :: ShowHTML a =>
-             ParsecT s u m (Elem' a) 
-          -> ParsecT String () Identity b
-          -> ParsecT s u m [b]
+containsMany, contains'
+  :: ShowHTML a =>
+     ParsecT s u m (Elem' a) 
+  -> ParsecT String () Identity b
+  -> ParsecT s u m [b]
+containsMany = contains' -- legacy
 contains' shell b = do
   x <- shell
   case parse (findNaive b) "" (innerText' x) of

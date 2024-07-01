@@ -6,6 +6,7 @@ module Scrappy.Find where
 -- import Elem.TreeElemParser (findSameTreeH)
 --import Scrappy.Types (ScrapeFail(..))
 
+import Control.Monad.IO.Class
 import Text.Parsec (ParsecT, ParseError, Parsec, Stream, parse, eof, anyChar, (<|>), try, parserZero, anyChar
                    , many) 
 import Data.Text (Text)
@@ -32,6 +33,22 @@ findNaive p = (justify .  (fromRight mempty) . sequenceA) <$> (find p)
   where
     justify x = if length x == 0 then Nothing else Just x 
 
+
+findNaiveIO :: (MonadIO m, Stream s m Char, Show a) => ParsecT s u m a -> ParsecT s u m (Maybe [a])
+findNaiveIO p = (justify .  (fromRight mempty) . sequenceA) <$> (findIO p)
+  where
+    justify x = if length x == 0 then Nothing else Just x 
+
+
+-- | Great for debugging
+findIO :: (MonadIO m, Stream s m Char, Show a) => ParsecT s u m a -> ParsecT s u m [Either ScrapeFail a]
+findIO parser = do
+  x <- (try (baseParser parser)) <|> givesNothing <|> endStream
+  liftIO $ print x
+  case x of
+    Right a -> fmap (x :) (find parser)
+    Left Eof -> return []
+    Left NonMatch -> find parser
 
 
 -- givesNothing :: ParsecT e s m (Either ScrapeFail a) 

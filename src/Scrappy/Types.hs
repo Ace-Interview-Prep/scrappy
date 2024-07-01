@@ -10,7 +10,7 @@ import Network.HTTP.Client (CookieJar, requestBody, method, destroyCookieJar, re
 import Control.Concurrent (ThreadId)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.State.Lazy (StateT)
-import Data.Time.Clock.System
+--import Data.Time.Clock.System
 import Data.Text (Text)
 
 import Text.Parsec (ParsecT, parserZero)
@@ -40,7 +40,7 @@ data CookieManager = CookieManager CookieJar Manager
     
 
 
-data ScrapeFail = Eof | NonMatch
+data ScrapeFail = Eof | NonMatch deriving Show
 
 -- | Note: both elemParser and treeElemParser are capable of doing greedy or non-greedy matching
   --treeElemParser (unless its really slow) should be better for non-greedy/focused
@@ -48,6 +48,8 @@ data ScrapeFail = Eof | NonMatch
 
 
 
+-- eitherP :: Alternative m => m a -> m b -> m (Either a b)
+-- eitherP a b = (Left <$> a) <|> (Right <$> b)
 
 
 

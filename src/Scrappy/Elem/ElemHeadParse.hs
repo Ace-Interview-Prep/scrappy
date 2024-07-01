@@ -1,4 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 
 module Scrappy.Elem.ElemHeadParse where
@@ -6,9 +7,9 @@ module Scrappy.Elem.ElemHeadParse where
 import Scrappy.Links (Link, LastUrl, CurrentUrl)
 import Scrappy.Elem.Types (Elem, Elem', ElemHead, Attrs, AttrsError(IncorrectAttrs), getHrefAttrs) -- Attr)
 
-import Text.Megaparsec as MParsec (some, manyTill)
+import Control.Applicative (some)
 import Text.Parsec (Stream, ParsecT, (<|>), string, try, noneOf, parserZero, char, option, space,
-                   alphaNum, many1, between, many, letter, parserFail, optional)
+                   alphaNum, many1, between, many, letter, parserFail, optional, manyTill)
 import Data.Map as Map (Map, fromList, lookup, toList) 
 import Data.Maybe (fromMaybe)
 --import Witherable (mapMaybe)
@@ -18,12 +19,12 @@ import Scrappy.Types
 -- | needs to use many for multiple links
 
 
-
 href :: Stream s m Char => Bool -> LastUrl -> ParsecT s u m Link
 href booly cUrl = ((getHrefAttrs booly cUrl) . snd) `mapMaybe` (parseOpeningTag (Just ["a"]) [])
 
 href' :: Stream s m Char => Maybe CurrentUrl -> ParsecT s u m Link
 href' = undefined --  bo
+
 
 
 
@@ -146,7 +147,7 @@ attrName = some (alphaNum <|> char '-' <|> char '_')
 -- | for generalization sake
 attrParser :: Stream s m Char => ParsecT s u m (String, String)
 attrParser = do
-      _ <- space
+      _ <- many (space <|> char '\n' <|> char '\t')
 
       --re-implement anyAttr
         --needs to include weird edge cases
@@ -366,7 +367,7 @@ mkElemtagParser :: Stream s m Char => Maybe [Elem] -> ParsecT s u m String
 mkElemtagParser x = case x of
                    -- Nothing -> MParsec.some (noneOf [' ', '>'])
                       --commented out in case below is wrong
-                      Nothing -> MParsec.some alphaNum
+                      Nothing -> some (alphaNum <|> char '-')
                       Just elemsOpts -> buildElemsOpts elemsOpts
 
 

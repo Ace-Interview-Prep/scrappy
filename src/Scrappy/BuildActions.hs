@@ -7,8 +7,6 @@
 module Scrappy.BuildActions where
 
 
---import Replace.Megaparsec (findAll)
-
 import Scrappy.Elem.SimpleElemParser (elemParser)
 -- import Elem.ElemHeadParse 
 import Scrappy.Elem.Types (TreeHTML, Elem, Elem'(..), ElemHead, ElementRep, Attrs, ShowHTML, innerText', elTag, attrs, UrlPagination(..), matches', showH)
@@ -22,7 +20,7 @@ import Scrappy.Types (CookieManager)
 
 import Network.HTTP.Client (Request, queryString, method, parseRequest)
 import Network.HTTP.Types.Method (Method, methodPost, methodGet)
-import Control.Monad.Catch (MonadThrow)
+--import Control.Monad.Catch (MonadThrow)
 import Control.Monad (when)
 import Text.Parsec (ParsecT, ParseError, Stream, many, parse, string, (<|>), parserZero, try)
 import Text.Parsec.Error (Message (Message))
